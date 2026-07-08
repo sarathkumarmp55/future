@@ -6,21 +6,15 @@ app_email = "sarath@gmail.com"
 app_license = "mit"
 
 
-
-
 fixtures = [
-    
-	
-	{"dt":"Property Setter",
-		"filters": [
-			["doc_type", "in", (
-				"Lead",
-               
-			)]
-		]
-	},
-
-   
+    {
+        "dt": "Property Setter",
+        "filters": [
+            ["name", "in", (
+                "Lead-status-options",
+            )]
+        ]
+    }
 ]
 
 
