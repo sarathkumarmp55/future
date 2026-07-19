@@ -165,6 +165,7 @@ app_license = "mit"
 doctype_js = {
     
     "Lead" : "public/js/lead.js",
+    "Opportunity" : "public/js/opportunity.js",
     
 }
 

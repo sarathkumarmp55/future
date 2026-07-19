@@ -1,0 +1,194 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-07-19 14:23:19.612265",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_deym",
+  "lead_reference",
+  "opportunity_reference",
+  "column_break_ymxw",
+  "naming_series",
+  "payment_status",
+  "student_details_section",
+  "student_name",
+  "age",
+  "gender",
+  "email_id",
+  "column_break_jrwg",
+  "mobile_number",
+  "course_category",
+  "class",
+  "board",
+  "section_break_jkdr",
+  "date",
+  "student",
+  "column_break_lkwr",
+  "attach",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_deym",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Payment Approval Log",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "default": "PAL-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "PAL-",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ymxw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Payment Status",
+   "options": "Pending\nApproved\nRejected",
+   "reqd": 1
+  },
+  {
+   "fieldname": "lead_reference",
+   "fieldtype": "Link",
+   "label": "Lead Reference",
+   "options": "Lead",
+   "read_only": 1
+  },
+  {
+   "fieldname": "opportunity_reference",
+   "fieldtype": "Link",
+   "label": "Opportunity Reference",
+   "options": "Opportunity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_jkdr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_lkwr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attach",
+   "fieldtype": "Attach",
+   "label": "Attach"
+  },
+  {
+   "fieldname": "student_details_section",
+   "fieldtype": "Section Break",
+   "label": "Student Details"
+  },
+  {
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Student Name"
+  },
+  {
+   "fieldname": "age",
+   "fieldtype": "Data",
+   "label": "Age"
+  },
+  {
+   "fieldname": "column_break_jrwg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mobile_number",
+   "fieldtype": "Data",
+   "label": "Mobile Number"
+  },
+  {
+   "fetch_from": "lead_reference.custom_course_categories",
+   "fieldname": "course_category",
+   "fieldtype": "Data",
+   "label": "Course Category",
+   "read_only": 1
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Data",
+   "label": "Gender"
+  },
+  {
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "label": "Email Id"
+  },
+  {
+   "fetch_from": "lead_reference.custom_class",
+   "fieldname": "class",
+   "fieldtype": "Data",
+   "label": "Class",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "lead_reference.custom_board",
+   "fieldname": "board",
+   "fieldtype": "Data",
+   "label": "Board",
+   "read_only": 1
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "label": "Student",
+   "options": "Student",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-19 16:32:31.121199",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Payment Approval Log",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
