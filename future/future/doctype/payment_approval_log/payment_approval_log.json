@@ -22,12 +22,23 @@
   "course_category",
   "class",
   "board",
+  "fee_details_section",
+  "fee_structure",
+  "program",
+  "total_amount",
+  "balance",
+  "column_break_smff",
+  "received_amount",
+  "academic_year",
+  "mode_of_payment",
+  "account_paid_to",
   "section_break_jkdr",
   "date",
   "student",
   "column_break_lkwr",
   "attach",
-  "amended_from"
+  "amended_from",
+  "company"
  ],
  "fields": [
   {
@@ -162,12 +173,100 @@
    "label": "Student",
    "options": "Student",
    "read_only": 1
+  },
+  {
+   "fieldname": "fee_details_section",
+   "fieldtype": "Section Break",
+   "label": "Fee Details"
+  },
+  {
+   "fieldname": "fee_structure",
+   "fieldtype": "Link",
+   "label": "Fee Structure",
+   "mandatory_depends_on": "eval:doc.payment_status ===\"Approved\"",
+   "options": "Fee Structure"
+  },
+  {
+   "fieldname": "column_break_smff",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "fee_structure.academic_year",
+   "fieldname": "academic_year",
+   "fieldtype": "Link",
+   "label": "Academic Year",
+   "options": "Academic Year",
+   "read_only": 1
+  },
+  {
+   "fieldname": "received_amount",
+   "fieldtype": "Data",
+   "label": "Received Amount",
+   "mandatory_depends_on": "eval:doc.payment_status ===\"Approved\""
+  },
+  {
+   "fetch_from": "fee_structure.total_amount",
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "fee_structure.program",
+   "fieldname": "program",
+   "fieldtype": "Link",
+   "label": "Program",
+   "options": "Program",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "depends_on": "eval:doc.payment_status ===\"Approved\"",
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Link",
+   "label": "Mode of Payment",
+   "mandatory_depends_on": "eval:doc.payment_status ===\"Approved\"",
+   "options": "Mode of Payment"
+  },
+  {
+   "fieldname": "account_paid_to",
+   "fieldtype": "Link",
+   "label": "Account Paid To",
+   "options": "Account"
+  },
+  {
+   "fieldname": "balance",
+   "fieldtype": "Data",
+   "label": "Balance",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2026-07-19 16:32:31.121199",
+ "links": [
+  {
+   "link_doctype": "Student",
+   "link_fieldname": "custom_payment_approval_log"
+  },
+  {
+   "link_doctype": "Program Enrollment",
+   "link_fieldname": "custom_payment_approvallog"
+  },
+  {
+   "link_doctype": "Fees",
+   "link_fieldname": "custom_payment_approval_log"
+  },
+  {
+   "link_doctype": "Payment Entry",
+   "link_fieldname": "custom_payment_approval_log"
+  }
+ ],
+ "modified": "2026-07-22 01:11:47.284533",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",
