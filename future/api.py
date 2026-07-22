@@ -1,10 +1,11 @@
 # pyrefly: ignore [missing-import]
 import frappe
 
-
 @frappe.whitelist()
 def create_payment_approval_log(opportunity_name, party_name):
-    # Fetch the Lead's lead_name (Opportunity.party_name is linked to Lead)
+
+    opportunity = frappe.get_doc("Opportunity", opportunity_name)
+
     lead_name = frappe.db.get_value("Lead", party_name, "lead_name")
     lead_age = frappe.db.get_value("Lead", party_name, "custom_age")
     lead_custom_course_categories = frappe.db.get_value("Lead", party_name, "custom_course_categories")
@@ -14,25 +15,40 @@ def create_payment_approval_log(opportunity_name, party_name):
     lead_class = frappe.db.get_value("Lead", party_name, "custom_class")
     lead_mobile_no = frappe.db.get_value("Lead", party_name, "mobile_no")
 
-    # Create and save Payment Approval Log as Draft
     log = frappe.get_doc({
         "doctype": "Payment Approval Log",
         "lead_reference": party_name,
-        "opportunity_reference": opportunity_name,
+        "opportunity_reference": opportunity.name,
         "student_name": lead_name,
         "age": lead_age,
         "course_category": lead_custom_course_categories,
         "board": lead_custom_board,
         "gender": lead_gender,
         "email_id": lead_email_id,
+
+        "fee_structure": opportunity.custom_fee_structure,
+        "received_amount": opportunity.custom_received_amount,
+        "program": opportunity.custom_program,
+        "academic_year": opportunity.custom_academic_year,
+        "total_amount": opportunity.custom_total_amount,
+        "mode_of_payment": opportunity.custom_mode_of_payment,
+        "account_paid_to": opportunity.custom_account_paid_to,
+        "balance": opportunity.custom_balance,
+
         "class": lead_class,
         "mobile_number": lead_mobile_no,
         "date": frappe.utils.today()
     })
+
     log.insert(ignore_permissions=True)
 
-    # Update Opportunity status directly in DB — avoids making the form dirty
-    frappe.db.set_value("Opportunity", opportunity_name, "status", "Payment Approval Pending")
+    frappe.db.set_value(
+        "Opportunity",
+        opportunity.name,
+        "status",
+        "Payment Approval Pending"
+    )
+
     frappe.db.commit()
 
     return log.name

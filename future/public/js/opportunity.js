@@ -44,5 +44,27 @@ frappe.ui.form.on("Opportunity", {
                 });
             }
         }
-    }
+    },
+    custom_mode_of_payment: function (frm) {
+        if (frm.doc.custom_mode_of_payment) {
+            frappe.db.get_doc("Mode of Payment", frm.doc.custom_mode_of_payment)
+                .then((doc) => {
+                    if (doc.accounts && doc.accounts.length > 0) {
+                        frm.set_value(
+                            "custom_account_paid_to",
+                            doc.accounts[0].default_account
+                        );
+                    }
+                });
+        }
+    },
+    custom_received_amount: function (frm) {
+        if (frm.doc.custom_received_amount) {
+
+            frm.set_value(
+                "custom_balance",
+                frm.doc.custom_total_amount - frm.doc.custom_received_amount
+            );
+        }
+    },
 });
