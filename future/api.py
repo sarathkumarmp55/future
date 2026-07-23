@@ -25,7 +25,11 @@ def create_payment_approval_log(opportunity_name, party_name):
         "board": lead_custom_board,
         "gender": lead_gender,
         "email_id": lead_email_id,
-
+        "location": opportunity.custom_location,
+        "hostel_facility": opportunity.custom_hostel_facility,
+        "hostel_type": opportunity.custom_hostel_type,
+        "transaction_date": opportunity.custom_payment_date,
+        "transaction_id": opportunity.custom_transaction_id,
         "fee_structure": opportunity.custom_fee_structure,
         "received_amount": opportunity.custom_received_amount,
         "program": opportunity.custom_program,

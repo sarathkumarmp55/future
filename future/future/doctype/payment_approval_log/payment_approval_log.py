@@ -90,6 +90,8 @@ class PaymentApprovalLog(Document):
 					"target_exchange_rate": 1,
 					"company": self.company,
 					"custom_payment_approval_log": self.name,
+					"reference_no": self.transaction_id,
+					"reference_date": self.transaction_date,
 					"cost_center": fee_structure_doc.cost_center,
 					"paid_from": fee_structure_doc.receivable_account,
 					"paid_to" : self.account_paid_to,

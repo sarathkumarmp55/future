@@ -17,21 +17,26 @@
   "age",
   "gender",
   "email_id",
+  "hostel_facility",
+  "hostel_type",
   "column_break_jrwg",
   "mobile_number",
   "course_category",
   "class",
   "board",
+  "location",
   "fee_details_section",
   "fee_structure",
   "program",
   "total_amount",
   "balance",
+  "transaction_date",
   "column_break_smff",
   "received_amount",
   "academic_year",
   "mode_of_payment",
   "account_paid_to",
+  "transaction_id",
   "section_break_jkdr",
   "date",
   "student",
@@ -246,6 +251,39 @@
    "fieldtype": "Data",
    "label": "Balance",
    "read_only": 1
+  },
+  {
+   "fieldname": "hostel_facility",
+   "fieldtype": "Select",
+   "label": "Hostel Facility",
+   "options": "\nYes\nNo",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hostel_type",
+   "fieldtype": "Select",
+   "label": "Hostel Type",
+   "options": "\nAC\nNon AC",
+   "read_only": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "label": "Location",
+   "options": "Location",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "label": "Transaction Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transaction_id",
+   "fieldtype": "Data",
+   "label": "Transaction Id",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -268,7 +306,7 @@
    "link_fieldname": "custom_payment_approval_log"
   }
  ],
- "modified": "2026-07-22 01:45:39.900175",
+ "modified": "2026-07-23 21:21:56.913369",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",
