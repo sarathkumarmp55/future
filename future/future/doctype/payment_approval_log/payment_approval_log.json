@@ -174,9 +174,8 @@
   },
   {
    "fieldname": "student",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Student",
-   "options": "Student",
    "read_only": 1
   },
   {
@@ -306,7 +305,7 @@
    "link_fieldname": "custom_payment_approval_log"
   }
  ],
- "modified": "2026-07-23 21:21:56.913369",
+ "modified": "2026-08-04 21:46:11.710358",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",
