@@ -31,6 +31,7 @@
   "total_amount",
   "balance",
   "transaction_date",
+  "due_date",
   "column_break_smff",
   "received_amount",
   "academic_year",
@@ -283,6 +284,12 @@
    "fieldtype": "Data",
    "label": "Transaction Id",
    "read_only": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "mandatory_depends_on": "eval:doc.payment_status===\"Approved\""
   }
  ],
  "index_web_pages_for_search": 1,
@@ -295,17 +302,9 @@
   {
    "link_doctype": "Program Enrollment",
    "link_fieldname": "custom_payment_approvallog"
-  },
-  {
-   "link_doctype": "Fees",
-   "link_fieldname": "custom_payment_approval_log"
-  },
-  {
-   "link_doctype": "Payment Entry",
-   "link_fieldname": "custom_payment_approval_log"
   }
  ],
- "modified": "2026-08-04 21:46:11.710358",
+ "modified": "2026-08-07 23:30:48.910003",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",
