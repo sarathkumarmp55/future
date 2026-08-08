@@ -67,4 +67,26 @@ frappe.ui.form.on("Opportunity", {
             );
         }
     },
+    custom_fee_structure: function(frm) {
+        if (!frm.doc.custom_fee_structure) {
+            frm.set_value("custom_fee_schedule", "");
+            return;
+        }
+    
+        frappe.db.get_list("Fee Schedule", {
+            filters: {
+                fee_structure: frm.doc.custom_fee_structure
+            },
+            fields: ["name"],
+            order_by: "modified desc",
+            limit: 1
+        }).then((r) => {
+            if (r.length) {
+                frm.set_value("custom_fee_schedule", r[0].name);
+            } else {
+                frm.set_value("custom_fee_schedule", "");
+                frappe.msgprint(__("No Fee Schedule found for the selected Fee Structure."));
+            }
+        });
+    }
 });

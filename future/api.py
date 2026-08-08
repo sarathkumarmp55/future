@@ -37,6 +37,8 @@ def create_payment_approval_log(opportunity_name, party_name):
         "total_amount": opportunity.custom_total_amount,
         "mode_of_payment": opportunity.custom_mode_of_payment,
         "account_paid_to": opportunity.custom_account_paid_to,
+        "due_date":opportunity.custom_due_date,
+        "fee_schedule":opportunity.custom_fee_schedule,
         "balance": opportunity.custom_balance,
 
         "class": lead_class,

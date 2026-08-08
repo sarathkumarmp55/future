@@ -31,13 +31,14 @@
   "total_amount",
   "balance",
   "transaction_date",
-  "due_date",
+  "fee_schedule",
   "column_break_smff",
   "received_amount",
   "academic_year",
   "mode_of_payment",
   "account_paid_to",
   "transaction_id",
+  "due_date",
   "section_break_jkdr",
   "date",
   "student",
@@ -290,6 +291,13 @@
    "fieldtype": "Date",
    "label": "Due Date",
    "mandatory_depends_on": "eval:doc.payment_status===\"Approved\""
+  },
+  {
+   "fieldname": "fee_schedule",
+   "fieldtype": "Link",
+   "label": "Fee Schedule",
+   "options": "Fee Schedule",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -304,7 +312,7 @@
    "link_fieldname": "custom_payment_approvallog"
   }
  ],
- "modified": "2026-08-07 23:30:48.910003",
+ "modified": "2026-08-08 00:18:54.981135",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",

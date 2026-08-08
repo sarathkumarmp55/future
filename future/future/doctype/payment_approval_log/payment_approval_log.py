@@ -40,7 +40,7 @@ class PaymentApprovalLog(Document):
 					"academic_year": self.academic_year
 				})
 				enrollment.append("fees", {
-						"fee_structure": self.fee_structure,
+						"fee_schedule": self.fee_schedule,
 						"amount": self.total_amount,
 						"due_date":self.due_date
 					})
