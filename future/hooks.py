@@ -166,6 +166,7 @@ doctype_js = {
     
     "Lead" : "public/js/lead.js",
     "Opportunity" : "public/js/opportunity.js",
+    "Payment Entry" : "public/js/payment_entry.js",
     
 }
 

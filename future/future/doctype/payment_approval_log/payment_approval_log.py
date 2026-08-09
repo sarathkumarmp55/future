@@ -19,7 +19,9 @@ class PaymentApprovalLog(Document):
 					"custom_age": self.age,
 					"custom_payment_approval_log":self.name,
 					"student_name": self.student_name,
-					"student_email_id": self.email_id
+					"student_email_id": self.email_id,
+					"custom_fee_structure": self.fee_structure,
+					"custom_fee_scedule": self.fee_schedule
 				})
 				# Skip Student's validate_user() hook — it tries to create a Frappe User
 				# which fails when no valid system email is present
