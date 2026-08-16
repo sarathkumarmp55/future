@@ -12,6 +12,7 @@
   "from_opportunity",
   "from_student_service",
   "student_service_id",
+  "created_customer_id",
   "column_break_ymxw",
   "naming_series",
   "total_bill_amount",
@@ -429,6 +430,14 @@
    "fieldtype": "Currency",
    "label": "<b>Total Bill Amount</b>",
    "read_only": 1
+  },
+  {
+   "fetch_from": "student_id.custom_student_customer",
+   "fieldname": "created_customer_id",
+   "fieldtype": "Link",
+   "label": "Created Customer Id",
+   "options": "Customer",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -439,11 +448,15 @@
    "link_fieldname": "custom_payment_approval_log"
   },
   {
-   "link_doctype": "Program Enrollment",
-   "link_fieldname": "custom_payment_approvallog"
+   "link_doctype": "Sales Invoice",
+   "link_fieldname": "custom_payment_approval_log"
+  },
+  {
+   "link_doctype": "Payment Entry",
+   "link_fieldname": "custom_payment_approval_log"
   }
  ],
- "modified": "2026-08-16 15:45:37.757355",
+ "modified": "2026-08-17 00:00:44.462765",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",
