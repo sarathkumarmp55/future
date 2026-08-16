@@ -9,36 +9,54 @@
   "section_break_deym",
   "lead_reference",
   "opportunity_reference",
+  "from_opportunity",
+  "from_student_service",
+  "student_service_id",
   "column_break_ymxw",
   "naming_series",
+  "total_bill_amount",
   "payment_status",
   "student_details_section",
+  "student_id",
   "student_name",
   "age",
   "gender",
   "email_id",
-  "hostel_facility",
-  "hostel_type",
   "column_break_jrwg",
   "mobile_number",
   "course_category",
   "class",
   "board",
   "location",
+  "section_break_heob",
+  "fees",
+  "column_break_yywd",
+  "hostel_required",
+  "column_break_fmoi",
+  "vehicle_required",
   "fee_details_section",
-  "fee_structure",
-  "program",
-  "total_amount",
-  "balance",
+  "column_break_hxdu",
+  "transaction_id",
   "transaction_date",
-  "fee_schedule",
   "column_break_smff",
-  "received_amount",
   "academic_year",
   "mode_of_payment",
   "account_paid_to",
-  "transaction_id",
-  "due_date",
+  "section_break_kvtg",
+  "program",
+  "fee_details",
+  "fees_received_amount",
+  "total_amount",
+  "hostel_details_section",
+  "hostel",
+  "hostel_components",
+  "hostel_received_amount",
+  "hostel_total_amount",
+  "vehicle_details_section",
+  "vehicle",
+  "vehicle_components",
+  "vehicle_received_amount",
+  "vehicle_total_amount",
   "section_break_jkdr",
   "date",
   "student",
@@ -123,6 +141,7 @@
    "label": "Student Details"
   },
   {
+   "fetch_from": "student_id.first_name",
    "fieldname": "student_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -130,6 +149,7 @@
    "label": "Student Name"
   },
   {
+   "fetch_from": "student_id.custom_age",
    "fieldname": "age",
    "fieldtype": "Data",
    "label": "Age"
@@ -139,6 +159,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "student_id.student_mobile_number",
    "fieldname": "mobile_number",
    "fieldtype": "Data",
    "label": "Mobile Number"
@@ -151,11 +172,13 @@
    "read_only": 1
   },
   {
+   "fetch_from": "student_id.gender",
    "fieldname": "gender",
    "fieldtype": "Data",
    "label": "Gender"
   },
   {
+   "fetch_from": "student_id.student_email_id",
    "fieldname": "email_id",
    "fieldtype": "Data",
    "label": "Email Id"
@@ -183,14 +206,7 @@
   {
    "fieldname": "fee_details_section",
    "fieldtype": "Section Break",
-   "label": "Fee Details"
-  },
-  {
-   "fieldname": "fee_structure",
-   "fieldtype": "Link",
-   "label": "Fee Structure",
-   "mandatory_depends_on": "eval:doc.payment_status ===\"Approved\"",
-   "options": "Fee Structure"
+   "label": "Transaction Details"
   },
   {
    "fieldname": "column_break_smff",
@@ -205,12 +221,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "received_amount",
-   "fieldtype": "Data",
-   "label": "Received Amount",
-   "mandatory_depends_on": "eval:doc.payment_status ===\"Approved\""
-  },
-  {
    "fetch_from": "fee_structure.total_amount",
    "fieldname": "total_amount",
    "fieldtype": "Currency",
@@ -218,7 +228,6 @@
    "read_only": 1
   },
   {
-   "fetch_from": "fee_structure.program",
    "fieldname": "program",
    "fieldtype": "Link",
    "label": "Program",
@@ -233,7 +242,6 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval:doc.payment_status ===\"Approved\"",
    "fieldname": "mode_of_payment",
    "fieldtype": "Link",
    "label": "Mode of Payment",
@@ -245,26 +253,6 @@
    "fieldtype": "Link",
    "label": "Account Paid To",
    "options": "Account",
-   "read_only": 1
-  },
-  {
-   "fieldname": "balance",
-   "fieldtype": "Data",
-   "label": "Balance",
-   "read_only": 1
-  },
-  {
-   "fieldname": "hostel_facility",
-   "fieldtype": "Select",
-   "label": "Hostel Facility",
-   "options": "\nYes\nNo",
-   "read_only": 1
-  },
-  {
-   "fieldname": "hostel_type",
-   "fieldtype": "Select",
-   "label": "Hostel Type",
-   "options": "\nAC\nNon AC",
    "read_only": 1
   },
   {
@@ -287,16 +275,159 @@
    "read_only": 1
   },
   {
-   "fieldname": "due_date",
-   "fieldtype": "Date",
-   "label": "Due Date",
-   "mandatory_depends_on": "eval:doc.payment_status===\"Approved\""
+   "depends_on": "eval:doc.hostel_required===1",
+   "fieldname": "hostel_details_section",
+   "fieldtype": "Section Break",
+   "label": "Hostel Details"
   },
   {
-   "fieldname": "fee_schedule",
+   "fieldname": "hostel",
    "fieldtype": "Link",
-   "label": "Fee Schedule",
-   "options": "Fee Schedule",
+   "label": "Hostel",
+   "options": "Hostel",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hostel_components",
+   "fieldtype": "Table",
+   "label": "Hostel Components",
+   "options": "Hostel Fee Details",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hostel_received_amount",
+   "fieldtype": "Currency",
+   "label": "Received Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hostel_total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.vehicle_required===1",
+   "fieldname": "vehicle_details_section",
+   "fieldtype": "Section Break",
+   "label": "Vehicle Details"
+  },
+  {
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "label": "Vehicle",
+   "options": "Vehicle Fee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vehicle_components",
+   "fieldtype": "Table",
+   "label": "Vehicle Components",
+   "options": "Hostel Fee Details",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vehicle_received_amount",
+   "fieldtype": "Currency",
+   "label": "Received Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vehicle_total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.fees===1",
+   "fieldname": "section_break_kvtg",
+   "fieldtype": "Section Break",
+   "label": "Program Details"
+  },
+  {
+   "fieldname": "fee_details",
+   "fieldtype": "Table",
+   "label": "Fee Details",
+   "options": "Hostel Fee Details",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hxdu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fees_received_amount",
+   "fieldtype": "Currency",
+   "label": "Received Amount",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "from_opportunity",
+   "fieldtype": "Check",
+   "label": "From Opportunity",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "from_student_service",
+   "fieldtype": "Check",
+   "label": "From Student Service",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.from_student_service===1",
+   "fieldname": "student_id",
+   "fieldtype": "Link",
+   "label": "Student Id",
+   "options": "Student",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_heob",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "fees",
+   "fieldtype": "Check",
+   "label": "Fees",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_yywd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "hostel_required",
+   "fieldtype": "Check",
+   "label": "Hostel Required",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_fmoi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "vehicle_required",
+   "fieldtype": "Check",
+   "label": "Vehicle Required",
+   "read_only": 1
+  },
+  {
+   "fieldname": "student_service_id",
+   "fieldtype": "Link",
+   "label": "Student Service Id",
+   "options": "Student Service",
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "total_bill_amount",
+   "fieldtype": "Currency",
+   "label": "<b>Total Bill Amount</b>",
    "read_only": 1
   }
  ],
@@ -312,7 +443,7 @@
    "link_fieldname": "custom_payment_approvallog"
   }
  ],
- "modified": "2026-08-08 00:18:54.981135",
+ "modified": "2026-08-16 15:45:37.757355",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",

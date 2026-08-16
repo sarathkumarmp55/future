@@ -1,6 +1,14 @@
 
 frappe.ui.form.on("Opportunity", {
     refresh(frm) {
+        
+        calculate_total_amount(frm);
+        calculate_total_received_amount(frm);
+        calculate_total_amount_vehicle(frm);
+        calculate_total_received_amount_vehicle(frm);
+        calculate_total_received_amount_pgm(frm)
+        calculate_program_total_amount(frm)
+    
 
         // Hide "Customer" from the "Create" group button
         setTimeout(() => {
@@ -58,6 +66,58 @@ frappe.ui.form.on("Opportunity", {
                 });
         }
     },
+    custom_program: function (frm) {
+        if (!frm.doc.custom_program) {
+            frm.set_value("custom_fees_details", []);
+            return;
+        }
+
+        frappe.db.get_doc("Program", frm.doc.custom_program)
+            .then((doc) => {
+                const components = (doc.custom_fees_details || []).map((row) => ({
+                    components: row.component,
+                    amount: row.amount
+                }));
+                frm.set_value("custom_fees_details", components);
+                calculate_program_total_amount(frm);
+            });
+    },
+
+
+    custom_hostel: function (frm) {
+        if (!frm.doc.custom_hostel) {
+            frm.set_value("custom_hostel_components", []);
+            return;
+        }
+
+        frappe.db.get_doc("Hostel", frm.doc.custom_hostel)
+            .then((doc) => {
+                const components = (doc.details || []).map((row) => ({
+                    components: row.components,
+                    amount: row.amount
+                }));
+                frm.set_value("custom_hostel_components", components);
+                calculate_total_amount(frm);
+            });
+    },
+    custom_vehicle: function(frm){
+        if (!frm.doc.custom_vehicle) {
+            frm.set_value("custom_vehicle_components", []);
+            return;
+        }
+
+        frappe.db.get_doc("Vehicle Fee", frm.doc.custom_vehicle)
+            .then((doc) => {
+                const components = (doc.details || []).map((row) => ({
+                    components: row.components,
+                    amount: row.amount
+                }));
+                frm.set_value("custom_vehicle_components", components);
+                calculate_total_amount_vehicle(frm);
+            });
+
+
+    },
     custom_received_amount: function (frm) {
         if (frm.doc.custom_received_amount) {
 
@@ -90,3 +150,91 @@ frappe.ui.form.on("Opportunity", {
         });
     }
 });
+
+
+
+frappe.ui.form.on("Hostel Fee Details", {
+    amount(frm) {
+        calculate_total_amount(frm);
+        calculate_total_amount_vehicle(frm);
+    },
+    custom_hostel_components_remove(frm) {
+
+        calculate_total_amount(frm);
+        
+        calculate_total_received_amount(frm);
+       
+        
+
+    },
+    custom_fees_details_remove(frm) {
+        
+        calculate_total_received_amount_pgm(frm)
+        calculate_program_total_amount(frm)
+    },
+
+    custom_vehicle_components_remove(frm){
+            calculate_total_amount_vehicle(frm);
+             calculate_total_received_amount_vehicle(frm);
+    },
+
+
+    received_amount: function (frm) {
+        calculate_total_received_amount(frm);
+        calculate_total_received_amount_vehicle(frm);
+        calculate_total_received_amount_pgm(frm)
+    }
+});
+
+function calculate_total_amount(frm) {
+    let total = 0;
+    (frm.doc.custom_hostel_components || []).forEach((row) => {
+        total += flt(row.amount);
+    });
+    frm.set_value("custom_hostel_total_amount", total);
+}
+
+function calculate_total_received_amount(frm) {
+    let total_2 = 0;
+    (frm.doc.custom_hostel_components || []).forEach((row) => {
+        total_2 += flt(row.received_amount);
+    });
+    frm.set_value("custom_hostel_received_amount", total_2);
+}
+
+
+function calculate_total_amount_vehicle(frm) {
+    let total = 0;
+    (frm.doc.custom_vehicle_components || []).forEach((row) => {
+        total += flt(row.amount);
+    });
+    frm.set_value("custom_vehicle_total_amount", total);
+}
+
+function calculate_total_received_amount_vehicle(frm) {
+    let total_2 = 0;
+    (frm.doc.custom_vehicle_components || []).forEach((row) => {
+        total_2 += flt(row.received_amount);
+    });
+    frm.set_value("custom_vehicle_received_amount", total_2);
+}
+
+function calculate_program_total_amount(frm) {
+    let total = 0;
+    (frm.doc.custom_fees_details || []).forEach((row) => {
+        total += flt(row.amount);
+    });
+    frm.set_value("custom_program_total_amount", total);
+}
+
+
+
+function calculate_total_received_amount_pgm(frm) {
+    let total_2 = 0;
+    (frm.doc.custom_fees_details || []).forEach((row) => {
+        total_2 += flt(row.received_amount);
+    });
+    frm.set_value("custom_program_received_amount", total_2);
+}
+
+

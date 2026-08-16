@@ -13,25 +13,71 @@ class PaymentApprovalLog(Document):
 	def on_submit(self):
 		if self.payment_status == "Approved":
 			try:
-				student = frappe.get_doc({
-					"doctype": "Student",
-					"first_name": self.student_name,
-					"custom_age": self.age,
-					"custom_payment_approval_log":self.name,
-					"student_name": self.student_name,
-					"student_email_id": self.email_id,
-					"custom_fee_structure": self.fee_structure,
-					"custom_fee_scedule": self.fee_schedule
-				})
-				# Skip Student's validate_user() hook — it tries to create a Frappe User
-				# which fails when no valid system email is present
-				student.flags.ignore_validate = True
-				student.flags.ignore_mandatory = True
-				student.insert(ignore_permissions=True)
+				if self.from_opportunity ==1:
+					try:
+			
+						student = frappe.get_doc({
+							"doctype": "Student",
+							"first_name": self.student_name,
+							"custom_age": self.age,
+							"custom_payment_approval_log":self.name,
+							"student_name": self.student_name,
+							"student_email_id": self.email_id,
+							"student_mobile_number": self.mobile_number,
+							"custom_program": self.program,
+							"gender":self.gender,
+							"custom_hostel": self.hostel,
+							"custom_academic_year": self.academic_year,
+							"custom_vehicle": self.vehicle,
+							"custom_program_total_amount": self.total_amount,
+							"custom_hostel_total_amount": self.hostel_total_amount,
+							"custom_vehicle_total_amount": self.vehicle_total_amount
+						})
+						# Skip Student's validate_user() hook — it tries to create a Frappe User
+						# which fails when no valid system email is present
+						student.flags.ignore_validate = True
+						student.flags.ignore_mandatory = True
+						student.insert(ignore_permissions=True)
 
-				# Save the generated Student ID back into this log
-				frappe.db.set_value("Payment Approval Log", self.name, "student", student.name)
-				# frappe.db.commit()
+						# Save the generated Student ID back into this log
+						frappe.db.set_value("Payment Approval Log", self.name, "student", student.name)
+						# frappe.db.commit()
+      
+						invoice = frappe.get_doc({
+							"doctype": "Sales Invoice",
+							"student": student.name,
+							"customer": student.name,
+							# "program": self.program,
+							"custom_payment_approvallog":self.name,
+							# "academic_year": self.academic_year
+						})
+						for row in self.fee_details + self.hostel_components + self.vehicle_components:
+							invoice.append("items", {
+								"item_code": row.components,
+								"qty": 1,
+								"rate": row.amount,
+							})
+
+			
+			
+						invoice.flags.ignore_permissions = True
+						invoice.flags.ignore_mandatory = True
+						invoice.insert(ignore_permissions=True)
+			
+			
+      
+      
+      
+      
+
+					except Exception as e:
+					# Re-raise as frappe.throw so the entire submit transaction rolls back
+							frappe.log_error(
+							message=frappe.get_traceback(),
+							title="Payment Approval Log"
+						)
+
+
 
 				# Create and submit Program Enrollment for the new student
 				enrollment = frappe.get_doc({

@@ -23,5 +23,16 @@ frappe.ui.form.on("Payment Approval Log", {
                 frm.doc.total_amount - frm.doc.received_amount
             );
         }
+    },
+    refresh: function (frm){
+        calculate_total_amount(frm);
+       
     }
 });
+function calculate_total_amount(frm) {
+    let total = 0;
+    
+        total += flt(frm.doc.fees_received_amount || 0) + flt(frm.doc.hostel_received_amount || 0) + flt(frm.doc.vehicle_received_amount || 0);
+  
+    frm.set_value("total_bill_amount", total);
+}

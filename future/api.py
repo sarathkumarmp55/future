@@ -5,7 +5,6 @@ import frappe
 def create_payment_approval_log(opportunity_name, party_name):
 
     opportunity = frappe.get_doc("Opportunity", opportunity_name)
-
     lead_name = frappe.db.get_value("Lead", party_name, "lead_name")
     lead_age = frappe.db.get_value("Lead", party_name, "custom_age")
     lead_custom_course_categories = frappe.db.get_value("Lead", party_name, "custom_course_categories")
@@ -26,25 +25,52 @@ def create_payment_approval_log(opportunity_name, party_name):
         "gender": lead_gender,
         "email_id": lead_email_id,
         "location": opportunity.custom_location,
-        "hostel_facility": opportunity.custom_hostel_facility,
-        "hostel_type": opportunity.custom_hostel_type,
         "transaction_date": opportunity.custom_payment_date,
         "transaction_id": opportunity.custom_transaction_id,
-        "fee_structure": opportunity.custom_fee_structure,
-        "received_amount": opportunity.custom_received_amount,
-        "program": opportunity.custom_program,
         "academic_year": opportunity.custom_academic_year,
-        "total_amount": opportunity.custom_total_amount,
         "mode_of_payment": opportunity.custom_mode_of_payment,
         "account_paid_to": opportunity.custom_account_paid_to,
-        "due_date":opportunity.custom_due_date,
-        "fee_schedule":opportunity.custom_fee_schedule,
-        "balance": opportunity.custom_balance,
-
         "class": lead_class,
         "mobile_number": lead_mobile_no,
-        "date": frappe.utils.today()
+        "date": frappe.utils.today(),
+        "from_opportunity": 1,
     })
+
+    if opportunity.custom_fees == 1:
+        log.fees = 1
+        log.program = opportunity.custom_program
+        log.fees_received_amount = opportunity.custom_program_received_amount
+        log.total_amount = opportunity.custom_program_total_amount
+        for row in opportunity.custom_fees_details:
+            log.append("fee_details", {
+                "components": row.components,
+                "amount": row.amount,
+                "received_amount": row.received_amount
+            })
+
+    if opportunity.custom_hostel_required == 1:
+        log.hostel_required = 1
+        log.hostel = opportunity.custom_hostel
+        log.hostel_total_amount = opportunity.custom_hostel_total_amount
+        log.hostel_received_amount = opportunity.custom_hostel_received_amount
+        for row in opportunity.custom_hostel_components:
+            log.append("hostel_components", {
+                "components": row.components,
+                "amount": row.amount,
+                "received_amount": row.received_amount
+            })
+
+    if opportunity.custom_vehicle_required == 1:
+        log.vehicle_required = 1
+        log.vehicle = opportunity.custom_vehicle
+        log.vehicle_total_amount = opportunity.custom_vehicle_total_amount
+        log.vehicle_received_amount = opportunity.custom_vehicle_received_amount
+        for row in opportunity.custom_vehicle_components:
+            log.append("vehicle_components", {
+                "components": row.components,
+                "amount": row.amount,
+                "received_amount": row.received_amount
+            })
 
     log.insert(ignore_permissions=True)
 

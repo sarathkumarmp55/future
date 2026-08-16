@@ -1,0 +1,423 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-08-16 01:11:56.688219",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "column_break_xwhy",
+  "section_break_suek",
+  "student",
+  "email_id",
+  "column_break_hmbm",
+  "mobile_number",
+  "section_break_f3me",
+  "fees",
+  "column_break_ccqx",
+  "hostel_required",
+  "column_break_jxwv",
+  "vehicle_required",
+  "section_break_pyzb",
+  "mode_of_payement",
+  "academic_year",
+  "account_paid_to",
+  "column_break_szbm",
+  "transaction_date",
+  "transaction_id",
+  "column_break_eszk",
+  "attach",
+  "fees_details_section",
+  "program",
+  "fees_components",
+  "section_break_vdci",
+  "received_amount",
+  "column_break_aaau",
+  "total_amount",
+  "column_break_uchs",
+  "already_paid",
+  "column_break_wjny",
+  "remaining_amount",
+  "hostel_details_section",
+  "hostel",
+  "hostel_components",
+  "section_break_wcoy",
+  "hostel_received_amount",
+  "column_break_mgtj",
+  "hostel_total_amount",
+  "column_break_iohx",
+  "hostel_already_paid",
+  "column_break_tcwu",
+  "hostel_remaining_amount",
+  "vehicle_details_section",
+  "vehicle",
+  "vehicle_components",
+  "section_break_vewq",
+  "vehicle_received_amount",
+  "column_break_zbsb",
+  "vehicle_total_amount",
+  "column_break_buhx",
+  "vehicle_already_paid",
+  "column_break_zivq",
+  "vehicle_remaining_amount",
+  "section_break_luex",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_f3me",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "fees",
+   "fieldtype": "Check",
+   "label": "Fees"
+  },
+  {
+   "fieldname": "column_break_ccqx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "hostel_required",
+   "fieldtype": "Check",
+   "label": "Hostel Required"
+  },
+  {
+   "fieldname": "column_break_jxwv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "vehicle_required",
+   "fieldtype": "Check",
+   "label": "Vehicle Required"
+  },
+  {
+   "fieldname": "fees_details_section",
+   "fieldtype": "Section Break",
+   "label": "Fees Details"
+  },
+  {
+   "depends_on": "eval:doc.fees===1",
+   "fieldname": "program",
+   "fieldtype": "Link",
+   "label": "Program",
+   "mandatory_depends_on": "eval:doc.fees===1",
+   "options": "Program"
+  },
+  {
+   "fieldname": "hostel_details_section",
+   "fieldtype": "Section Break",
+   "label": "Hostel Details"
+  },
+  {
+   "depends_on": "eval:doc.hostel_required===1",
+   "fieldname": "hostel",
+   "fieldtype": "Link",
+   "label": "Hostel",
+   "mandatory_depends_on": "eval:doc.hostel_required===1",
+   "options": "Hostel"
+  },
+  {
+   "fieldname": "vehicle_details_section",
+   "fieldtype": "Section Break",
+   "label": "Vehicle Details"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_required===1",
+   "fieldname": "vehicle",
+   "fieldtype": "Link",
+   "label": "Vehicle",
+   "mandatory_depends_on": "eval:doc.vehicle_required===1",
+   "options": "Vehicle Fee"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Student Service",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "depends_on": "eval:doc.fees===1",
+   "fieldname": "fees_components",
+   "fieldtype": "Table",
+   "label": "Fees Components",
+   "mandatory_depends_on": "eval:doc.fees===1",
+   "options": "Hostel Fee Details"
+  },
+  {
+   "depends_on": "eval:doc.hostel_required===1",
+   "fieldname": "hostel_components",
+   "fieldtype": "Table",
+   "label": "Hostel Components",
+   "mandatory_depends_on": "eval:doc.hostel_required===1",
+   "options": "Hostel Fee Details"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_required===1",
+   "fieldname": "vehicle_components",
+   "fieldtype": "Table",
+   "label": "Vehicle Components",
+   "mandatory_depends_on": "eval:doc.vehicle_required===1",
+   "options": "Hostel Fee Details"
+  },
+  {
+   "default": "SS-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SS-",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_xwhy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_vdci",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.fees===1",
+   "fieldname": "received_amount",
+   "fieldtype": "Currency",
+   "label": "Received Amount",
+   "mandatory_depends_on": "eval:doc.fees===1"
+  },
+  {
+   "fieldname": "column_break_aaau",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.fees===1",
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount"
+  },
+  {
+   "fieldname": "column_break_uchs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.fees===1",
+   "fieldname": "already_paid",
+   "fieldtype": "Currency",
+   "label": "Already Paid"
+  },
+  {
+   "fieldname": "column_break_wjny",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.fees===1",
+   "fieldname": "remaining_amount",
+   "fieldtype": "Currency",
+   "label": "Remaining Amount"
+  },
+  {
+   "fieldname": "section_break_wcoy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.hostel_required===1",
+   "fieldname": "hostel_received_amount",
+   "fieldtype": "Currency",
+   "label": "Received Amount"
+  },
+  {
+   "fieldname": "column_break_mgtj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.hostel_required===1",
+   "fieldname": "hostel_total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount"
+  },
+  {
+   "fieldname": "column_break_iohx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.hostel_required===1",
+   "fieldname": "hostel_already_paid",
+   "fieldtype": "Currency",
+   "label": "Already Paid"
+  },
+  {
+   "fieldname": "column_break_tcwu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.hostel_required===1",
+   "fieldname": "hostel_remaining_amount",
+   "fieldtype": "Currency",
+   "label": "Remaining Amount"
+  },
+  {
+   "fieldname": "section_break_vewq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_required===1",
+   "fieldname": "vehicle_received_amount",
+   "fieldtype": "Currency",
+   "label": "Received Amount"
+  },
+  {
+   "fieldname": "column_break_zbsb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_required===1",
+   "fieldname": "vehicle_total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount"
+  },
+  {
+   "fieldname": "column_break_buhx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_required===1",
+   "fieldname": "vehicle_already_paid",
+   "fieldtype": "Currency",
+   "label": "Already Paid"
+  },
+  {
+   "fieldname": "column_break_zivq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.vehicle_required===1",
+   "fieldname": "vehicle_remaining_amount",
+   "fieldtype": "Currency",
+   "label": "Remaining Amount"
+  },
+  {
+   "fieldname": "section_break_luex",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "fieldname": "mode_of_payement",
+   "fieldtype": "Link",
+   "label": "Mode Of Payement",
+   "mandatory_depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "options": "Mode of Payment"
+  },
+  {
+   "depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "fieldname": "account_paid_to",
+   "fieldtype": "Link",
+   "label": "Account Paid To",
+   "options": "Account",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "label": "Transaction Date",
+   "mandatory_depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1"
+  },
+  {
+   "depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "fieldname": "transaction_id",
+   "fieldtype": "Data",
+   "label": "Transaction Id",
+   "mandatory_depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1"
+  },
+  {
+   "depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "fieldname": "attach",
+   "fieldtype": "Attach",
+   "label": "Attach"
+  },
+  {
+   "fieldname": "section_break_suek",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "label": "Student",
+   "options": "Student"
+  },
+  {
+   "fieldname": "column_break_hmbm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "fieldname": "academic_year",
+   "fieldtype": "Link",
+   "label": "Academic Year",
+   "mandatory_depends_on": "eval:doc.fees===1 || doc.hostel_required===1 || doc.vehicle_required===1",
+   "options": "Academic Year"
+  },
+  {
+   "fieldname": "section_break_pyzb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_szbm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_eszk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "student.student_email_id",
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "label": "Email Id"
+  },
+  {
+   "fetch_from": "student.student_mobile_number",
+   "fieldname": "mobile_number",
+   "fieldtype": "Data",
+   "label": "Mobile Number"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Payment Approval Log",
+   "link_fieldname": "student_service_id"
+  }
+ ],
+ "modified": "2026-08-16 14:43:56.514383",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Student Service",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
