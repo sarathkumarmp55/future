@@ -30,8 +30,15 @@ class PaymentApprovalLog(Document):
 							"custom_academic_year": self.academic_year,
 							"custom_vehicle": self.vehicle,
 							"custom_program_total_amount": self.total_amount,
+							"custom_program_total_received_amount": self.fees_received_amount,
+							"custom_program_balance_amount": self.total_amount - self.fees_received_amount,
 							"custom_hostel_total_amount": self.hostel_total_amount,
-							"custom_vehicle_total_amount": self.vehicle_total_amount
+							"custom_hostel_total_received_amount" : self.hostel_received_amount,
+							"custom_hostel_balance_amount" : self.hostel_total_amount - self.hostel_received_amount,
+							"custom_vehicle_total_amount": self.vehicle_total_amount,
+							"custom_vehicle_total_received_amount": self.vehicle_received_amount,
+							"custom_vehicle_balance_amount": self.vehicle_total_amount - self.vehicle_received_amount,
+
 						})
 						# Skip Student's validate_user() hook — it tries to create a Frappe User
 						# which fails when no valid system email is present

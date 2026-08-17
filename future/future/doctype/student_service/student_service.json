@@ -13,6 +13,25 @@
   "email_id",
   "column_break_hmbm",
   "mobile_number",
+  "section_break_zakp",
+  "column_break_qoil",
+  "selected_program",
+  "program_total_amount",
+  "program_total_received_amount",
+  "program_balance_amount",
+  "outstanding_amount",
+  "column_break_hwgv",
+  "selected_hosted",
+  "hostel_total_amount_new",
+  "hostel_total_received_amount",
+  "hostel_balance_amount",
+  "outstanding_amount_1",
+  "column_break_baow",
+  "selected_vehicle",
+  "vehicle_total_amount_new",
+  "vehicle_total_received_amount",
+  "vehicle_balance_amount",
+  "outstanding_amount_2",
   "section_break_f3me",
   "fees",
   "column_break_ccqx",
@@ -36,9 +55,6 @@
   "column_break_aaau",
   "total_amount",
   "column_break_uchs",
-  "already_paid",
-  "column_break_wjny",
-  "remaining_amount",
   "hostel_details_section",
   "hostel",
   "hostel_components",
@@ -47,9 +63,6 @@
   "column_break_mgtj",
   "hostel_total_amount",
   "column_break_iohx",
-  "hostel_already_paid",
-  "column_break_tcwu",
-  "hostel_remaining_amount",
   "vehicle_details_section",
   "vehicle",
   "vehicle_components",
@@ -58,9 +71,6 @@
   "column_break_zbsb",
   "vehicle_total_amount",
   "column_break_buhx",
-  "vehicle_already_paid",
-  "column_break_zivq",
-  "vehicle_remaining_amount",
   "section_break_luex",
   "amended_from"
  ],
@@ -206,22 +216,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.fees===1",
-   "fieldname": "already_paid",
-   "fieldtype": "Currency",
-   "label": "Already Paid"
-  },
-  {
-   "fieldname": "column_break_wjny",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:doc.fees===1",
-   "fieldname": "remaining_amount",
-   "fieldtype": "Currency",
-   "label": "Remaining Amount"
-  },
-  {
    "fieldname": "section_break_wcoy",
    "fieldtype": "Section Break"
   },
@@ -246,22 +240,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.hostel_required===1",
-   "fieldname": "hostel_already_paid",
-   "fieldtype": "Currency",
-   "label": "Already Paid"
-  },
-  {
-   "fieldname": "column_break_tcwu",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:doc.hostel_required===1",
-   "fieldname": "hostel_remaining_amount",
-   "fieldtype": "Currency",
-   "label": "Remaining Amount"
-  },
-  {
    "fieldname": "section_break_vewq",
    "fieldtype": "Section Break"
   },
@@ -284,22 +262,6 @@
   {
    "fieldname": "column_break_buhx",
    "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:doc.vehicle_required===1",
-   "fieldname": "vehicle_already_paid",
-   "fieldtype": "Currency",
-   "label": "Already Paid"
-  },
-  {
-   "fieldname": "column_break_zivq",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:doc.vehicle_required===1",
-   "fieldname": "vehicle_remaining_amount",
-   "fieldtype": "Currency",
-   "label": "Remaining Amount"
   },
   {
    "fieldname": "section_break_luex",
@@ -343,7 +305,8 @@
   },
   {
    "fieldname": "section_break_suek",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Student Details"
   },
   {
    "fieldname": "student",
@@ -386,6 +349,128 @@
    "fieldname": "mobile_number",
    "fieldtype": "Data",
    "label": "Mobile Number"
+  },
+  {
+   "fieldname": "section_break_zakp",
+   "fieldtype": "Section Break",
+   "label": "Student Previous Payment History"
+  },
+  {
+   "fetch_from": "student.custom_program_total_amount",
+   "fieldname": "program_total_amount",
+   "fieldtype": "Currency",
+   "label": "Program Total Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_program_total_received_amount",
+   "fieldname": "program_total_received_amount",
+   "fieldtype": "Currency",
+   "label": "Program Total Received Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_program_balance_amount",
+   "fieldname": "program_balance_amount",
+   "fieldtype": "Currency",
+   "label": "Program Balance Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hwgv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "student.custom_hostel_total_amount",
+   "fieldname": "hostel_total_amount_new",
+   "fieldtype": "Currency",
+   "label": "Hostel Total Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_hostel_total_received_amount",
+   "fieldname": "hostel_total_received_amount",
+   "fieldtype": "Currency",
+   "label": "Hostel Total Received Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_hostel_balance_amount",
+   "fieldname": "hostel_balance_amount",
+   "fieldtype": "Currency",
+   "label": "Hostel Balance Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_baow",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "student.custom_vehicle_total_amount",
+   "fieldname": "vehicle_total_amount_new",
+   "fieldtype": "Currency",
+   "label": "Vehicle Total Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_vehicle_total_received_amount",
+   "fieldname": "vehicle_total_received_amount",
+   "fieldtype": "Currency",
+   "label": "Vehicle Total Received Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_vehicle_balance_amount",
+   "fieldname": "vehicle_balance_amount",
+   "fieldtype": "Currency",
+   "label": "Vehicle Balance Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_qoil",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "outstanding_amount_1",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "outstanding_amount_2",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_program",
+   "fieldname": "selected_program",
+   "fieldtype": "Link",
+   "label": "Selected Program",
+   "options": "Program",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_hostel",
+   "fieldname": "selected_hosted",
+   "fieldtype": "Link",
+   "label": "Selected Hostel",
+   "options": "Hostel",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_vehicle",
+   "fieldname": "selected_vehicle",
+   "fieldtype": "Link",
+   "label": "Selected Vehicle",
+   "options": "Vehicle Fee",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -396,7 +481,7 @@
    "link_fieldname": "student_service_id"
   }
  ],
- "modified": "2026-08-16 14:43:56.514383",
+ "modified": "2026-08-18 00:27:59.594764",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Student Service",

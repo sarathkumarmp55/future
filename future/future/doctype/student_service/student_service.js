@@ -11,6 +11,33 @@ frappe.ui.form.on("Student Service", {
         calculate_total_received_amount_pgm(frm)
         calculate_program_total_amount(frm)
 
+        frm.set_query("program", function () {
+            return { filters: { name: frm.doc.selected_program } };
+        });
+
+        frm.set_query("hostel", function () {
+            if (frm.doc.selected_hosted) {
+                return {
+                    filters: {
+                        name: frm.doc.selected_hosted
+                    }
+                };
+            }
+
+            return {};
+        });
+        frm.set_query("vehicle", function () {
+            if (frm.doc.selected_vehicle) {
+                return {
+                    filters: {
+                        name: frm.doc.selected_vehicle
+                    }
+                };
+            }
+
+            return {};
+        });
+
 	},
 
        program: function (frm) {
@@ -80,6 +107,23 @@ frappe.ui.form.on("Student Service", {
                 });
         }
     },
+
+    hostel_received_amount: function (frm){
+        if (frm.doc.selected_hosted) {
+            frm.set_value("outstanding_amount_1", frm.doc.hostel_balance_amount - frm.doc.hostel_received_amount);
+        }
+       
+    },
+    vehicle_received_amount: function (frm){
+        if (frm.doc.selected_vehicle) {
+            frm.set_value("outstanding_amount_2", frm.doc.vehicle_balance_amount - frm.doc.vehicle_received_amount);
+        }
+    },
+    received_amount: function (frm) {
+        if (frm.doc.selected_program) {
+            frm.set_value("outstanding_amount", frm.doc.program_balance_amount - frm.doc.received_amount);
+        }
+    }
 
 
 

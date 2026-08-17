@@ -6,6 +6,57 @@ from frappe.model.document import Document
 
 
 class StudentService(Document):
+	def before_submit(self):
+		if self.student:
+			student_values = {
+				"custom_program_total_amount": self.program_total_amount,
+				"custom_hostel_total_amount": self.hostel_total_amount_new,
+				"custom_vehicle_total_amount": self.vehicle_total_amount_new,
+				"custom_hostel": self.hostel,
+				"custom_vehicle": self.vehicle
+			}
+
+			# If selected_hosted has no value
+			if not self.selected_hosted:
+				student_values.update({
+					"custom_hostel_total_amount": self.hostel_total_amount,
+					"custom_hostel_total_received_amount": self.hostel_received_amount,
+					"custom_hostel_balance_amount": self.hostel_total_amount - self.hostel_received_amount
+				})
+
+			if self.selected_hosted:
+				student_values.update({
+					
+					"custom_hostel_total_received_amount": self.hostel_total_amount_new - self.outstanding_amount_1,
+					"custom_hostel_balance_amount": self.self.outstanding_amount_1
+				})
+
+			if not self.selected_vehicle:
+				student_values.update({
+					"custom_vehicle_total_amount": self.vehicle_total_amount,
+					"custom_vehicle_total_received_amount": self.vehicle_received_amount,
+					"custom_vehicle_balance_amount": self.vehicle_total_amount - self.vehicle_received_amount
+				})
+
+			if self.selected_vehicle:
+				student_values.update({
+					
+					"custom_vehicle_total_received_amount": self.vehicle_total_amount_new - self.outstanding_amount_2,
+					"custom_vehicle_balance_amount": self.vehicle_total_amount_new - self.outstanding_amount_2
+				})
+			if self.selected_program:
+				student_values.update({
+					"custom_program_total_received_amount": self.program_total_amount - self.outstanding_amount,
+					"custom_program_balance_amount": self.outstanding_amount
+				})
+
+
+			frappe.db.set_value(
+				"Student",
+				self.student,
+				student_values
+			)
+
 	def on_submit(self):
 		log = frappe.new_doc("Payment Approval Log")
 		log.from_student_service = 1
