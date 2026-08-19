@@ -28,7 +28,7 @@ class StudentService(Document):
 				student_values.update({
 					
 					"custom_hostel_total_received_amount": self.hostel_total_amount_new - self.outstanding_amount_1,
-					"custom_hostel_balance_amount": self.self.outstanding_amount_1
+					"custom_hostel_balance_amount": self.outstanding_amount_1
 				})
 
 			if not self.selected_vehicle:
