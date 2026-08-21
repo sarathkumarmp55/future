@@ -103,7 +103,7 @@
    "default": "0",
    "fieldname": "vehicle_required",
    "fieldtype": "Check",
-   "label": "Vehicle Required"
+   "label": "Transportation Required"
   },
   {
    "fieldname": "fees_details_section",
@@ -134,13 +134,13 @@
   {
    "fieldname": "vehicle_details_section",
    "fieldtype": "Section Break",
-   "label": "Vehicle Details"
+   "label": "Transportation Details"
   },
   {
    "depends_on": "eval:doc.vehicle_required===1",
    "fieldname": "vehicle",
    "fieldtype": "Link",
-   "label": "Vehicle",
+   "label": "Transportation",
    "mandatory_depends_on": "eval:doc.vehicle_required===1",
    "options": "Vehicle Fee"
   },
@@ -409,21 +409,21 @@
    "fetch_from": "student.custom_vehicle_total_amount",
    "fieldname": "vehicle_total_amount_new",
    "fieldtype": "Currency",
-   "label": "Vehicle Total Amount",
+   "label": "Transportation Total Amount",
    "read_only": 1
   },
   {
    "fetch_from": "student.custom_vehicle_total_received_amount",
    "fieldname": "vehicle_total_received_amount",
    "fieldtype": "Currency",
-   "label": "Vehicle Total Received Amount",
+   "label": "Transportation Total Received Amount",
    "read_only": 1
   },
   {
    "fetch_from": "student.custom_vehicle_balance_amount",
    "fieldname": "vehicle_balance_amount",
    "fieldtype": "Currency",
-   "label": "Vehicle Balance Amount",
+   "label": "Transportation Balance Amount",
    "read_only": 1
   },
   {
@@ -481,7 +481,7 @@
    "link_fieldname": "student_service_id"
   }
  ],
- "modified": "2026-08-18 00:27:59.594764",
+ "modified": "2026-08-21 21:07:25.495776",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Student Service",

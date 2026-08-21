@@ -76,7 +76,7 @@ frappe.ui.form.on("Opportunity", {
             .then((doc) => {
                 const components = (doc.custom_fees_details || []).map((row) => ({
                     components: row.component,
-                    amount: row.amount
+                    amount: row.amount,
                 }));
                 frm.set_value("custom_fees_details", components);
                 calculate_program_total_amount(frm);

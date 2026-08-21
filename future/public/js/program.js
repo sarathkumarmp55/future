@@ -5,11 +5,20 @@ frappe.ui.form.on("Program", {
     }
 });
 
-frappe.ui.form.on("Fees Details", {
+frappe.ui.form.on("Program Components", {
     amount(frm) {
         calculate_total_amount(frm);
     },
     custom_fees_details_remove(frm) {
+        calculate_total_amount(frm);
+    },
+    amount_with_gst(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+
+        let amount = flt(row.amount_with_gst) / 1.18;
+
+        frappe.model.set_value(cdt, cdn, "amount", amount);
+
         calculate_total_amount(frm);
     }
 });
