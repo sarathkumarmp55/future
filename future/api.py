@@ -34,6 +34,7 @@ def create_payment_approval_log(opportunity_name, party_name):
         "mobile_number": lead_mobile_no,
         "date": frappe.utils.today(),
         "from_opportunity": 1,
+        "attach": opportunity.custom_attach_screenshot
     })
 
     if opportunity.custom_fees == 1:
@@ -41,6 +42,7 @@ def create_payment_approval_log(opportunity_name, party_name):
         log.program = opportunity.custom_program
         log.fees_received_amount = opportunity.custom_program_received_amount
         log.total_amount = opportunity.custom_program_total_amount
+        log.total_gst_amount = opportunity.custom_total_amount_gst
         for row in opportunity.custom_fees_details:
             log.append("fee_details", {
                 "components": row.components,

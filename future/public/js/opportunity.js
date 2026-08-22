@@ -225,6 +225,9 @@ function calculate_program_total_amount(frm) {
         total += flt(row.amount);
     });
     frm.set_value("custom_program_total_amount", total);
+    let total_with_gst = total * 1.18;
+
+    frm.set_value("custom_total_amount_gst", total_with_gst);
 }
 
 

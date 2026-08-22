@@ -27,6 +27,13 @@ frappe.ui.form.on("Payment Approval Log", {
     refresh: function (frm){
         calculate_total_amount(frm);
        
+    },
+    before_submit(frm) {
+        if (frm.doc.payment_status === "Pending") {
+            frappe.throw(
+                __("Cannot submit because Payment Status is Pending.")
+            );
+        }
     }
 });
 function calculate_total_amount(frm) {
