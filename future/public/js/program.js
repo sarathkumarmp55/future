@@ -26,7 +26,7 @@ frappe.ui.form.on("Program Components", {
 function calculate_total_amount(frm) {
     let total = 0;
     (frm.doc.custom_fees_details || []).forEach((row) => {
-        total += flt(row.amount);
+        total += flt(row.amount_with_gst);
     });
     frm.set_value("custom_total_amount", total);
 }

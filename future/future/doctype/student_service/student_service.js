@@ -50,7 +50,7 @@ frappe.ui.form.on("Student Service", {
             .then((doc) => {
                 const components = (doc.custom_fees_details || []).map((row) => ({
                     components: row.component,
-                    amount: row.amount
+                    amount: row.amount_with_gst
                 }));
                 console.log(components)
                 frm.set_value("fees_components", components);

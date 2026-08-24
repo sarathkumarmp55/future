@@ -76,7 +76,7 @@ frappe.ui.form.on("Opportunity", {
             .then((doc) => {
                 const components = (doc.custom_fees_details || []).map((row) => ({
                     components: row.component,
-                    amount: row.amount,
+                    amount: row.amount_with_gst,
                 }));
                 frm.set_value("custom_fees_details", components);
                 calculate_program_total_amount(frm);
@@ -225,9 +225,9 @@ function calculate_program_total_amount(frm) {
         total += flt(row.amount);
     });
     frm.set_value("custom_program_total_amount", total);
-    let total_with_gst = total * 1.18;
+    // let total_with_gst = total * 1.18;
 
-    frm.set_value("custom_total_amount_gst", total_with_gst);
+    // frm.set_value("custom_total_amount_gst", total_with_gst);
 }
 
 

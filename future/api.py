@@ -42,7 +42,7 @@ def create_payment_approval_log(opportunity_name, party_name):
         log.program = opportunity.custom_program
         log.fees_received_amount = opportunity.custom_program_received_amount
         log.total_amount = opportunity.custom_program_total_amount
-        log.total_gst_amount = opportunity.custom_total_amount_gst
+        # log.total_gst_amount = opportunity.custom_total_amount_gst
         for row in opportunity.custom_fees_details:
             log.append("fee_details", {
                 "components": row.components,
@@ -75,6 +75,13 @@ def create_payment_approval_log(opportunity_name, party_name):
             })
 
     log.insert(ignore_permissions=True)
+    if party_name:
+        frappe.db.set_value(
+            "Lead",
+            party_name,
+            "status",
+            "Payment Approval Pending"
+        )
 
     frappe.db.set_value(
         "Opportunity",

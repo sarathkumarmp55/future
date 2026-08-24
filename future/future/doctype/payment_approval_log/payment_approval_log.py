@@ -29,9 +29,9 @@ class PaymentApprovalLog(Document):
 							"custom_hostel": self.hostel,
 							"custom_academic_year": self.academic_year,
 							"custom_vehicle": self.vehicle,
-							"custom_program_total_amount": self.total_gst_amount,
+							"custom_program_total_amount": self.total_amount,
 							"custom_program_total_received_amount": self.fees_received_amount,
-							"custom_program_balance_amount": self.total_gst_amount - self.fees_received_amount,
+							"custom_program_balance_amount": self.total_amount - self.fees_received_amount,
 							"custom_hostel_total_amount": self.hostel_total_amount,
 							"custom_hostel_total_received_amount" : self.hostel_received_amount,
 							"custom_hostel_balance_amount" : self.hostel_total_amount - self.hostel_received_amount,
@@ -70,6 +70,12 @@ class PaymentApprovalLog(Document):
 								"rate": row.received_amount,
 							})
 
+						invoice.company = self.company or frappe.defaults.get_global_default("company")
+						invoice.set_missing_values()
+						invoice.append_taxes_from_item_tax_template()
+						for tax in invoice.get("taxes"):
+							tax.included_in_print_rate = 1
+
 			
 			
 						invoice.flags.ignore_permissions = True
@@ -79,11 +85,11 @@ class PaymentApprovalLog(Document):
 
 						invoice.reload()
 
-						received_total = (
-							flt(self.fees_received_amount)
-							+ flt(self.hostel_received_amount)
-							+ flt(self.vehicle_received_amount)
-						)
+						# received_total = (
+						# 	flt(self.fees_received_amount)
+						# 	+ flt(self.hostel_received_amount)
+						# 	+ flt(self.vehicle_received_amount)
+						# )
 
 						payment_entry = frappe.get_doc({
 							"doctype": "Payment Entry",
@@ -92,8 +98,8 @@ class PaymentApprovalLog(Document):
 							"party": invoice.customer,
 							"posting_date": self.date,
 							"mode_of_payment": self.mode_of_payment,
-							"paid_amount": received_total,
-							"received_amount": received_total,
+							"paid_amount": invoice.grand_total,
+							"received_amount": invoice.grand_total,
 							"paid_from": invoice.debit_to,
 							"paid_to": self.account_paid_to,
 							"company": invoice.company,
@@ -108,13 +114,30 @@ class PaymentApprovalLog(Document):
 							"reference_name": invoice.name,
 							"total_amount": invoice.grand_total,
 							"outstanding_amount": invoice.outstanding_amount,
-							"allocated_amount": received_total,
+							"allocated_amount": invoice.outstanding_amount,
 						})
 
 						payment_entry.flags.ignore_permissions = True
 						payment_entry.flags.ignore_mandatory = True
 						payment_entry.insert(ignore_permissions=True)
 						payment_entry.submit()
+
+						# Update Student Service status
+						if self.lead_reference:
+							frappe.db.set_value(
+								"Lead",
+								self.lead_reference,
+								"status",
+								"Converted Student"
+							)
+
+						if self.opportunity_reference:
+							frappe.db.set_value(
+								"Opportunity",
+								self.opportunity_reference,
+								"status",
+								"Converted Student"
+							)
 			
 			
       
@@ -164,6 +187,12 @@ class PaymentApprovalLog(Document):
 								"rate": row.received_amount,
 							})
 
+						# invoice.company = self.company or frappe.defaults.get_global_default("company")
+						# invoice.set_missing_values()
+						# invoice.append_taxes_from_item_tax_template()
+						# for tax in invoice.get("taxes"):
+						# 	tax.included_in_print_rate = 1
+
 			
 			
 						invoice.flags.ignore_permissions = True
@@ -173,11 +202,11 @@ class PaymentApprovalLog(Document):
 
 						invoice.reload()
 
-						received_total = (
-							flt(self.fees_received_amount)
-							+ flt(self.hostel_received_amount)
-							+ flt(self.vehicle_received_amount)
-						)
+						# received_total = (
+						# 	flt(self.fees_received_amount)
+						# 	+ flt(self.hostel_received_amount)
+						# 	+ flt(self.vehicle_received_amount)
+						# )
 
 						payment_entry = frappe.get_doc({
 							"doctype": "Payment Entry",
@@ -186,8 +215,8 @@ class PaymentApprovalLog(Document):
 							"party": invoice.customer,
 							"posting_date": self.date,
 							"mode_of_payment": self.mode_of_payment,
-							"paid_amount": received_total,
-							"received_amount": received_total,
+							"paid_amount": invoice.grand_total,
+							"received_amount": invoice.grand_total,
 							"paid_from": invoice.debit_to,
 							"paid_to": self.account_paid_to,
 							"company": invoice.company,
@@ -202,13 +231,22 @@ class PaymentApprovalLog(Document):
 							"reference_name": invoice.name,
 							"total_amount": invoice.grand_total,
 							"outstanding_amount": invoice.outstanding_amount,
-							"allocated_amount": received_total,
+							"allocated_amount": invoice.outstanding_amount,
 						})
 
 						payment_entry.flags.ignore_permissions = True
 						payment_entry.flags.ignore_mandatory = True
 						payment_entry.insert(ignore_permissions=True)
 						payment_entry.submit()
+
+						# Update Student Service status
+						if self.student_service_id:
+							frappe.db.set_value(
+								"Student Service",
+								self.student_service_id,
+								"service_status",
+								"Invoice Created"
+							)
 			
 			
       

@@ -18,6 +18,14 @@
   "total_bill_amount",
   "payment_status",
   "reason_for_reject",
+  "fee_details_section",
+  "column_break_hxdu",
+  "transaction_id",
+  "transaction_date",
+  "column_break_smff",
+  "academic_year",
+  "mode_of_payment",
+  "account_paid_to",
   "student_details_section",
   "student_id",
   "student_name",
@@ -36,14 +44,6 @@
   "hostel_required",
   "column_break_fmoi",
   "vehicle_required",
-  "fee_details_section",
-  "column_break_hxdu",
-  "transaction_id",
-  "transaction_date",
-  "column_break_smff",
-  "academic_year",
-  "mode_of_payment",
-  "account_paid_to",
   "section_break_kvtg",
   "program",
   "fee_details",
@@ -228,7 +228,7 @@
    "fetch_from": "fee_structure.total_amount",
    "fieldname": "total_amount",
    "fieldtype": "Currency",
-   "label": "Amount",
+   "label": "Total Amount",
    "read_only": 1
   },
   {
@@ -447,12 +447,14 @@
    "depends_on": "eval:doc.fees ===1",
    "fieldname": "gst",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "GST",
    "read_only": 1
   },
   {
    "fieldname": "total_gst_amount",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Total Amount",
    "read_only": 1
   },
@@ -479,7 +481,7 @@
    "link_fieldname": "custom_payment_approval_log"
   }
  ],
- "modified": "2026-08-22 22:45:19.051929",
+ "modified": "2026-08-25 00:58:13.959127",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",
