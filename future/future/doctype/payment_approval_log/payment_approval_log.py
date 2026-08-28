@@ -187,11 +187,11 @@ class PaymentApprovalLog(Document):
 								"rate": row.received_amount,
 							})
 
-						# invoice.company = self.company or frappe.defaults.get_global_default("company")
-						# invoice.set_missing_values()
-						# invoice.append_taxes_from_item_tax_template()
-						# for tax in invoice.get("taxes"):
-						# 	tax.included_in_print_rate = 1
+						invoice.company = self.company or frappe.defaults.get_global_default("company")
+						invoice.set_missing_values()
+						invoice.append_taxes_from_item_tax_template()
+						for tax in invoice.get("taxes"):
+							tax.included_in_print_rate = 1
 
 			
 			
