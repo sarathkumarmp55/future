@@ -33,7 +33,7 @@ function render_student_dashboard(frm) {
 			color: "#ed3a3a"
 		},
 		{
-			label: "Vehicle",
+			label: "Transportation",
 			value: d.custom_vehicle,
 			total: flt(d.custom_vehicle_total_amount),
 			received: flt(d.custom_vehicle_total_received_amount),
@@ -87,7 +87,7 @@ function render_student_dashboard(frm) {
 		<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
 			<div>
 				<div style="font-size:18px;font-weight:800;letter-spacing:-.2px;">Student Fee Dashboard</div>
-				<div style="font-size:12px;color:#6b7280;">Fee, hostel and vehicle summary at a glance</div>
+				<div style="font-size:12px;color:#6b7280;">Fee, hostel and Transportation summary at a glance</div>
 			</div>
 			<div style="background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;white-space:nowrap;">Academic Year: ${d.custom_academic_year ? esc(d.custom_academic_year) : "—"}</div>
 		</div>

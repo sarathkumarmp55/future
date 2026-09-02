@@ -7,6 +7,16 @@ frappe.ui.form.on("Lead", {
             frm.remove_custom_button(__("Prospect"), __("Create"));
             frm.remove_custom_button(__("Quotation"), __("Create"));
             frm.remove_custom_button(__("Add to Prospect"), __("Action"));
+            frm.remove_custom_button(__("Opportunity"), __("Create"));
+
+            if (!frm.is_new()) {
+                frm.add_custom_button(__("Opportunity"), function () {
+                    frappe.model.open_mapped_doc({
+                        method: "erpnext.crm.doctype.lead.lead.make_opportunity",
+                        frm: frm,
+                    });
+                }, __("Create"));
+            }
         }, 200);
 
     },
