@@ -1,0 +1,145 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-09-06 16:03:34.416978",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_rgjf",
+  "opportunity_reference",
+  "lead_reference",
+  "column_break_vfbb",
+  "lead_name",
+  "discount_status",
+  "reject_reason",
+  "section_break_jsnk",
+  "discount_id",
+  "amended_from",
+  "naming_series",
+  "column_break_zyio",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_rgjf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Discount Approval Log",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "opportunity_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Opportunity Reference",
+   "options": "Opportunity",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "lead_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lead Reference",
+   "options": "Lead",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_vfbb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "lead_reference.lead_name",
+   "fieldname": "lead_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Lead Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_jsnk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "discount_id",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Discount Id",
+   "options": "Discount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_zyio",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "discount_id.discount_amount",
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.discount_status===\"Rejected\"",
+   "fieldname": "reject_reason",
+   "fieldtype": "Small Text",
+   "label": "Reject Reason"
+  },
+  {
+   "default": "DAL-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "naming series",
+   "options": "DAL-",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Discount Approval Status",
+   "options": "Pending\nApproved\nRejected"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-07 23:25:44.833895",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Discount Approval Log",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

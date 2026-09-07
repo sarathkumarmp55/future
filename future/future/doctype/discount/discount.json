@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:discount_name",
+ "creation": "2026-09-05 17:45:41.762493",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_fbxv",
+  "discount_name",
+  "program",
+  "discount_amount",
+  "column_break_aube",
+  "percentage",
+  "base_of_discount"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_fbxv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "discount_name",
+   "fieldtype": "Data",
+   "label": "Discount Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "program",
+   "fieldtype": "Link",
+   "label": "Program",
+   "options": "Program",
+   "reqd": 1
+  },
+  {
+   "fieldname": "discount_amount",
+   "fieldtype": "Currency",
+   "label": "Discount Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_aube",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "percentage",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Percentage",
+   "options": "Percentage",
+   "reqd": 1
+  },
+  {
+   "fieldname": "base_of_discount",
+   "fieldtype": "Link",
+   "label": "Base of Discount",
+   "options": "Base of Discount",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-06 14:47:46.826350",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Discount",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

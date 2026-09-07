@@ -22,9 +22,17 @@ frappe.ui.form.on("Opportunity", {
 
 
 
-        // Only show the button if a Payment Approval Log hasn't been created yet
         if (!frm.is_new()) {
-            if (frm.doc.status !== "Payment Approval Pending") {
+            const discount_added = frm.doc.custom_add_discount === 1;
+            const discount_approved = frm.doc.custom_discount_approved === 1;
+
+            const show_payment = (discount_approved || !discount_added)
+                && frm.doc.status !== "Payment Approval Pending";
+
+            const show_discount = (discount_added && !discount_approved)
+                && frm.doc.status !== "Discount Approval Pending";
+
+            if (show_payment) {
                 frm.add_custom_button(__("Payment Approval"), function () {
                     frappe.call({
                         method: "future.api.create_payment_approval_log",
@@ -51,8 +59,56 @@ frappe.ui.form.on("Opportunity", {
                     });
                 });
             }
+
+            if (show_discount) {
+                frm.add_custom_button(__("Discount Approval"), function () {
+                    frappe.call({
+                        method: "future.api_2.create_discount_approval_log",
+                        args: {
+                            opportunity_name: frm.doc.name,
+                            party_name: frm.doc.party_name
+                        },
+                        callback: function (r) {
+                            if (!r.exc) {
+                                // Remove the button immediately so it can't be clicked again
+                                frm.remove_custom_button(__("Discount Approval"));
+
+                                // Reflect DB status on the form without making it dirty
+                                frm.doc.status = "Discount Approval Pending";
+                                frm.refresh_field("status");
+
+                                frappe.msgprint({
+                                    title: __("Success"),
+                                    message: __("Discount Approval Log created successfully"),
+                                    indicator: "green"
+                                });
+                            }
+                        }
+                    });
+                });
+            }
         }
     },
+
+    setup(frm) { 
+        frm.set_query('custom_discount_id', function () { 
+            return { filters: { percentage: frm.doc.custom_percentage, 
+                base_of_discount: frm.doc.custom_base_of_discount,
+                 program: frm.doc.custom_program } }; 
+                }); 
+            },
+
+    // custom_add_discount: function(frm){
+    //     if(doc.custom_add_discount===1){
+    //         frm.set_value("status", components);
+
+    //     }
+
+    // },
+
+
+
+
     custom_mode_of_payment: function (frm) {
         if (frm.doc.custom_mode_of_payment) {
             frappe.db.get_doc("Mode of Payment", frm.doc.custom_mode_of_payment)

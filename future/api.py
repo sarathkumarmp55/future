@@ -34,7 +34,9 @@ def create_payment_approval_log(opportunity_name, party_name):
         "mobile_number": lead_mobile_no,
         "date": frappe.utils.today(),
         "from_opportunity": 1,
-        "attach": opportunity.custom_attach_screenshot
+        "attach": opportunity.custom_attach_screenshot,
+        "discount_applied": opportunity.custom_discount_approved,
+        "discount_id": opportunity.custom_discount_id,
     })
 
     if opportunity.custom_fees == 1:

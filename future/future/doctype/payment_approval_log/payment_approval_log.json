@@ -13,6 +13,8 @@
   "from_student_service",
   "student_service_id",
   "created_customer_id",
+  "discount_applied",
+  "discount_id",
   "column_break_ymxw",
   "naming_series",
   "total_bill_amount",
@@ -463,6 +465,20 @@
    "fieldname": "reason_for_reject",
    "fieldtype": "Small Text",
    "label": "Reason For Reject"
+  },
+  {
+   "default": "0",
+   "fieldname": "discount_applied",
+   "fieldtype": "Check",
+   "label": "Discount Applied",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_id",
+   "fieldtype": "Link",
+   "label": "Discount Id",
+   "options": "Discount",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -481,7 +497,7 @@
    "link_fieldname": "custom_payment_approval_log"
   }
  ],
- "modified": "2026-08-25 00:58:13.959127",
+ "modified": "2026-09-07 23:37:01.238305",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",

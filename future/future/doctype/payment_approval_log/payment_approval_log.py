@@ -25,6 +25,8 @@ class PaymentApprovalLog(Document):
 							"student_email_id": self.email_id,
 							"student_mobile_number": self.mobile_number,
 							"custom_program": self.program,
+							"custom_discount_id": self.discount_id,
+							"custom_discount_applied": self.discount_applied,
 							"gender":self.gender,
 							"custom_hostel": self.hostel,
 							"custom_academic_year": self.academic_year,
