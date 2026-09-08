@@ -38,7 +38,49 @@ frappe.ui.form.on("Student Service", {
             return {};
         });
 
+
+        if (!frm.is_new() && frm.doc.add_discount===1) {
+                frm.add_custom_button(__("Discount Approval"), function () {
+                    frappe.call({
+                        method: "future.api_2.create_discount_approval_log_2",
+                        args: {
+                            dal: frm.doc.name,
+                            student: frm.doc.student
+                        },
+                        callback: function (r) {
+                            if (!r.exc) {
+                                // Remove the button immediately so it can't be clicked again
+                                frm.remove_custom_button(__("Discount Approval"));
+
+                                // Reflect DB status on the form without making it dirty
+                                frm.doc.status = "Discount Approval Pending";
+                                frm.refresh_field("status");
+
+                                frappe.msgprint({
+                                    title: __("Success"),
+                                    message: __("Discount Approval Log created successfully"),
+                                    indicator: "green"
+                                });
+                                frm.reload_doc();
+                            }
+                        }
+                    });
+                });
+            }
+
+
+
+
+
+
 	},
+     setup(frm) { 
+        frm.set_query('new_discount_id', function () { 
+            return { filters: { percentage: frm.doc.percentage, 
+                base_of_discount: frm.doc.base_of_discount,
+                 program: frm.doc.program } }; 
+                }); 
+            },
 
        program: function (frm) {
         if (!frm.doc.program) {

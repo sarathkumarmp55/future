@@ -37,3 +37,33 @@ def create_discount_approval_log(opportunity_name, party_name):
     frappe.db.commit()
 
     return log.name
+
+
+
+@frappe.whitelist()
+def create_discount_approval_log_2(dal, student):
+
+    # dal_id = frappe.get_doc("Student Service", dal)
+    dal_doc = frappe.get_doc("Student Service", dal)
+    # lead_name = frappe.db.get_value("Lead", party_name, "lead_name")
+    # lead_student = frappe.db.get_value("Lead", party_name, "lead_name")
+    
+
+    log = frappe.get_doc({
+        "doctype": "Discount Approval Log",
+        "from_student_service": 1,
+        "student": student,
+        "discount_id": dal_doc.new_discount_id,
+        "student_service":dal_doc.name
+    })
+
+    frappe.db.set_value(
+        "Student Service",
+        dal_doc.name,
+        "service_status",
+        "Discount Approval Pending"
+    )
+    log.insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    return log.name

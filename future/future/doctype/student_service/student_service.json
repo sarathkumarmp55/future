@@ -33,6 +33,10 @@
   "vehicle_total_received_amount",
   "vehicle_balance_amount",
   "outstanding_amount_2",
+  "section_break_okif",
+  "discount_applied",
+  "discount_id",
+  "approved",
   "section_break_f3me",
   "fees",
   "column_break_ccqx",
@@ -53,9 +57,18 @@
   "fees_components",
   "section_break_vdci",
   "received_amount",
+  "add_discount",
   "column_break_aaau",
   "total_amount",
   "column_break_uchs",
+  "discount_section",
+  "base_of_discount",
+  "column_break_ipdz",
+  "percentage",
+  "column_break_ikqt",
+  "new_discount_id",
+  "column_break_owzs",
+  "discount_amount",
   "hostel_details_section",
   "hostel",
   "hostel_components",
@@ -483,7 +496,90 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Service Status",
-   "options": "Approval Pending\nInvoice Created",
+   "options": "Approval Pending\nInvoice Created\nDiscount Approval Pending",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_okif",
+   "fieldtype": "Section Break",
+   "label": "Discount Details"
+  },
+  {
+   "default": "0",
+   "fetch_from": "student.custom_discount_applied",
+   "fieldname": "discount_applied",
+   "fieldtype": "Check",
+   "label": "Discount Applied",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "student.custom_discount_id",
+   "fieldname": "discount_id",
+   "fieldtype": "Link",
+   "label": "Discount Id",
+   "options": "Discount",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.discount_applied===0 && doc.fees===1",
+   "fieldname": "add_discount",
+   "fieldtype": "Check",
+   "label": "Add Discount"
+  },
+  {
+   "fieldname": "discount_section",
+   "fieldtype": "Section Break",
+   "label": "Discount"
+  },
+  {
+   "depends_on": "eval:doc.add_discount===1",
+   "fieldname": "base_of_discount",
+   "fieldtype": "Link",
+   "label": "Base of Discount",
+   "mandatory_depends_on": "eval:doc.add_discount===1",
+   "options": "Base of Discount"
+  },
+  {
+   "fieldname": "column_break_ipdz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.add_discount===1",
+   "fieldname": "percentage",
+   "fieldtype": "Link",
+   "label": "Percentage",
+   "mandatory_depends_on": "eval:doc.add_discount===1",
+   "options": "Percentage"
+  },
+  {
+   "fieldname": "column_break_ikqt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.base_of_discount && doc.percentage",
+   "fieldname": "new_discount_id",
+   "fieldtype": "Link",
+   "label": "Discount Id",
+   "mandatory_depends_on": "eval:doc.base_of_discount && doc.percentage",
+   "options": "Discount"
+  },
+  {
+   "fieldname": "column_break_owzs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "new_discount_id.discount_amount",
+   "fieldname": "discount_amount",
+   "fieldtype": "Currency",
+   "label": "Discount Amount",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "approved",
+   "fieldtype": "Check",
+   "label": "Approved",
    "read_only": 1
   }
  ],
@@ -493,9 +589,13 @@
   {
    "link_doctype": "Payment Approval Log",
    "link_fieldname": "student_service_id"
+  },
+  {
+   "link_doctype": "Discount Approval Log",
+   "link_fieldname": "student_service"
   }
  ],
- "modified": "2026-08-25 02:33:36.371938",
+ "modified": "2026-09-08 22:45:48.264103",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Student Service",

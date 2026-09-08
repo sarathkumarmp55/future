@@ -9,6 +9,10 @@
   "section_break_rgjf",
   "opportunity_reference",
   "lead_reference",
+  "student_service",
+  "student",
+  "from_student_service",
+  "from_opportunity",
   "column_break_vfbb",
   "lead_name",
   "discount_status",
@@ -42,8 +46,7 @@
    "in_standard_filter": 1,
    "label": "Opportunity Reference",
    "options": "Opportunity",
-   "read_only": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
    "fieldname": "lead_reference",
@@ -52,8 +55,7 @@
    "in_standard_filter": 1,
    "label": "Lead Reference",
    "options": "Lead",
-   "read_only": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
    "fieldname": "column_break_vfbb",
@@ -113,12 +115,40 @@
    "in_standard_filter": 1,
    "label": "Discount Approval Status",
    "options": "Pending\nApproved\nRejected"
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "label": "Student",
+   "options": "Student",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "from_student_service",
+   "fieldtype": "Check",
+   "label": "From Student Service",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "from_opportunity",
+   "fieldtype": "Check",
+   "label": "From Opportunity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "student_service",
+   "fieldtype": "Link",
+   "label": "Student Service",
+   "options": "Student Service",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-07 23:25:44.833895",
+ "modified": "2026-09-08 22:42:29.655294",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Discount Approval Log",
