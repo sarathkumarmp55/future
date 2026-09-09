@@ -47,6 +47,13 @@ def create_discount_approval_log_2(dal, student):
     dal_doc = frappe.get_doc("Student Service", dal)
     # lead_name = frappe.db.get_value("Lead", party_name, "lead_name")
     # lead_student = frappe.db.get_value("Lead", party_name, "lead_name")
+
+    existing = frappe.db.exists(
+        "Discount Approval Log",
+        {"student_service": dal_doc.name, "docstatus": ["<", 2]},
+    )
+    if existing:
+        frappe.throw("Discount Approval Log already created for this Student Service")
     
 
     log = frappe.get_doc({

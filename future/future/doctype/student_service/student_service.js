@@ -10,6 +10,7 @@ frappe.ui.form.on("Student Service", {
         calculate_total_received_amount_vehicle(frm);
         calculate_total_received_amount_pgm(frm)
         calculate_program_total_amount(frm)
+        refresh_calculation(frm)
 
         frm.set_query("program", function () {
             return { filters: { name: frm.doc.selected_program } };
@@ -39,7 +40,7 @@ frappe.ui.form.on("Student Service", {
         });
 
 
-        if (!frm.is_new() && frm.doc.add_discount===1) {
+        if (!frm.is_new() && frm.doc.add_discount === 1 && frm.doc.service_status === "Approval Pending") {
                 frm.add_custom_button(__("Discount Approval"), function () {
                     frappe.call({
                         method: "future.api_2.create_discount_approval_log_2",
@@ -53,8 +54,8 @@ frappe.ui.form.on("Student Service", {
                                 frm.remove_custom_button(__("Discount Approval"));
 
                                 // Reflect DB status on the form without making it dirty
-                                frm.doc.status = "Discount Approval Pending";
-                                frm.refresh_field("status");
+                                frm.doc.service_status = "Discount Approval Pending";
+                                frm.refresh_field("service_status");
 
                                 frappe.msgprint({
                                     title: __("Success"),
@@ -68,8 +69,9 @@ frappe.ui.form.on("Student Service", {
                 });
             }
 
-
-
+        if (frm.doc.docstatus === 0 && frm.doc.add_discount === 1 && !frm.doc.approved && !frm.doc.__unsaved) {
+            frm.page.clear_primary_action();
+        }
 
 
 
@@ -97,6 +99,7 @@ frappe.ui.form.on("Student Service", {
                 console.log(components)
                 frm.set_value("fees_components", components);
                 calculate_program_total_amount(frm);
+                refresh_calculation(frm);
             });
     },
 
@@ -162,9 +165,7 @@ frappe.ui.form.on("Student Service", {
         }
     },
     received_amount: function (frm) {
-        if (frm.doc.selected_program) {
-            frm.set_value("outstanding_amount", frm.doc.program_balance_amount - frm.doc.received_amount);
-        }
+        refresh_calculation(frm);
     }
 
 
@@ -195,6 +196,7 @@ frappe.ui.form.on("Hostel Fee Details", {
         
         calculate_total_received_amount_pgm(frm)
         calculate_program_total_amount(frm)
+        refresh_calculation(frm)
     },
 
     vehicle_components_remove(frm){
@@ -206,16 +208,35 @@ frappe.ui.form.on("Hostel Fee Details", {
     received_amount: function (frm) {
         calculate_total_received_amount(frm);
         calculate_total_received_amount_vehicle(frm);
-        calculate_total_received_amount_pgm(frm)
+        calculate_total_received_amount_pgm(frm);
+        refresh_calculation(frm);
     }
 });
+
+function refresh_calculation(frm) {
+    if (frm.__refreshing_calculation) return;
+    frm.__refreshing_calculation = true;
+
+    if (frm.doc.selected_program) {
+        frm.doc.program_total_amount = frm.doc.total_amount;
+        frm.refresh_field("program_total_amount");
+        let program_balance = flt(frm.doc.program_total_amount) - flt(frm.doc.program_total_received_amount);
+        frm.doc.program_balance_amount = program_balance;
+        frm.refresh_field("program_balance_amount");
+        frm.doc.outstanding_amount = program_balance - flt(frm.doc.received_amount);
+        frm.refresh_field("outstanding_amount");
+    }
+
+    frm.__refreshing_calculation = false;
+}
 
 function calculate_total_amount(frm) {
     let total = 0;
     (frm.doc.hostel_components || []).forEach((row) => {
         total += flt(row.amount);
     });
-    frm.set_value("hostel_total_amount", total);
+    frm.doc.hostel_total_amount = total;
+    frm.refresh_field("hostel_total_amount");
 }
 
 function calculate_total_received_amount(frm) {
@@ -223,7 +244,8 @@ function calculate_total_received_amount(frm) {
     (frm.doc.hostel_components || []).forEach((row) => {
         total_2 += flt(row.received_amount);
     });
-    frm.set_value("hostel_received_amount", total_2);
+    frm.doc.hostel_received_amount = total_2;
+    frm.refresh_field("hostel_received_amount");
 }
 
 
@@ -232,7 +254,8 @@ function calculate_total_amount_vehicle(frm) {
     (frm.doc.vehicle_components || []).forEach((row) => {
         total += flt(row.amount);
     });
-    frm.set_value("vehicle_total_amount", total);
+    frm.doc.vehicle_total_amount = total;
+    frm.refresh_field("vehicle_total_amount");
 }
 
 function calculate_total_received_amount_vehicle(frm) {
@@ -240,7 +263,8 @@ function calculate_total_received_amount_vehicle(frm) {
     (frm.doc.vehicle_components || []).forEach((row) => {
         total_2 += flt(row.received_amount);
     });
-    frm.set_value("vehicle_received_amount", total_2);
+    frm.doc.vehicle_received_amount = total_2;
+    frm.refresh_field("vehicle_received_amount");
 }
 
 function calculate_program_total_amount(frm) {
@@ -248,7 +272,8 @@ function calculate_program_total_amount(frm) {
     (frm.doc.fees_components || []).forEach((row) => {
         total += flt(row.amount);
     });
-    frm.set_value("total_amount", total);
+    frm.doc.total_amount = total;
+    frm.refresh_field("total_amount");
 }
 
 function calculate_total_received_amount_pgm(frm) {
@@ -256,7 +281,8 @@ function calculate_total_received_amount_pgm(frm) {
     (frm.doc.fees_components || []).forEach((row) => {
         total_2 += flt(row.received_amount);
     });
-    frm.set_value("received_amount", total_2);
+    frm.doc.received_amount = total_2;
+    frm.refresh_field("received_amount");
 }
 
 

@@ -496,7 +496,7 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Service Status",
-   "options": "Approval Pending\nInvoice Created\nDiscount Approval Pending",
+   "options": "Approval Pending\nInvoice Created\nDiscount Approval Pending\nDiscount Approved",
    "read_only": 1
   },
   {
@@ -595,7 +595,7 @@
    "link_fieldname": "student_service"
   }
  ],
- "modified": "2026-09-08 22:45:48.264103",
+ "modified": "2026-09-09 16:53:22.637603",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Student Service",

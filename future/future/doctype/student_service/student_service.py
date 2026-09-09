@@ -59,6 +59,11 @@ class StudentService(Document):
 	# 		)
  
 	def before_submit(self):
+		if self.add_discount and not self.approved:
+			frappe.throw(
+				"Cannot submit Student Service. Discount approval is pending."
+			)
+
 		if not self.student:
 			return
 
@@ -202,5 +207,12 @@ class StudentService(Document):
 					"amount": row.amount,
 					"received_amount": row.received_amount
 				})	
+
+		frappe.db.set_value(
+				"Student Service",
+				self.name,
+				"service_status",
+				"Approval Pending"
+			)
 
 		log.insert(ignore_permissions=True)
