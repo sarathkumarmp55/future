@@ -172,6 +172,11 @@ doctype_js = {
     
 }
 
+doctype_list_js = {
+    "Lead" : "public/js/lead_list.js",
+    "Payment Approval Log" : "public/js/payment_approval_log_list.js"
+}
+
 
 
 

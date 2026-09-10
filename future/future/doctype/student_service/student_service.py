@@ -208,6 +208,12 @@ class StudentService(Document):
 					"received_amount": row.received_amount
 				})	
 
+		log.total_bill_amount = (
+			frappe.utils.flt(log.fees_received_amount)
+			+ frappe.utils.flt(log.hostel_received_amount)
+			+ frappe.utils.flt(log.vehicle_received_amount)
+		)
+
 		frappe.db.set_value(
 				"Student Service",
 				self.name,

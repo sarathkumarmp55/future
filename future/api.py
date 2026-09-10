@@ -1,5 +1,7 @@
 # pyrefly: ignore [missing-import]
 import frappe
+# pyrefly: ignore [missing-import]
+from frappe.utils import flt
 
 @frappe.whitelist()
 def create_payment_approval_log(opportunity_name, party_name):
@@ -76,6 +78,12 @@ def create_payment_approval_log(opportunity_name, party_name):
                 "received_amount": row.received_amount
             })
 
+    log.total_bill_amount = (
+        flt(log.fees_received_amount)
+        + flt(log.hostel_received_amount)
+        + flt(log.vehicle_received_amount)
+    )
+
     log.insert(ignore_permissions=True)
     if party_name:
         frappe.db.set_value(
@@ -95,3 +103,634 @@ def create_payment_approval_log(opportunity_name, party_name):
     frappe.db.commit()
 
     return log.name
+
+
+
+import frappe
+
+
+@frappe.whitelist()
+def get_dashboard_data(filters=None):
+    """
+    Get Lead dashboard data.
+
+    Default:
+        From Date = Today
+        To Date   = Today
+
+    Date filtering is based on Lead.creation.
+    """
+
+    filters = frappe.parse_json(filters) if filters else {}
+
+    date_filters = _get_date_filters(filters)
+    conditions = _build_conditions(filters, date_filters)
+
+    kpis = _get_kpis(conditions)
+    gender = _get_gender_counts(conditions)
+    sources = _get_sources(conditions)
+    statuses = _get_status_counts(conditions)
+
+    return {
+        "date_filters": date_filters,
+        "kpis": kpis,
+        "gender": gender,
+        "sources": sources,
+        "statuses": statuses
+    }
+
+
+# =========================================================
+# DATE FILTER
+# =========================================================
+
+def _get_date_filters(filters):
+    """
+    Default date:
+        From Date = Today
+        To Date   = Today
+
+    Date is applied against Lead.creation.
+    """
+
+    today = frappe.utils.today()
+
+    from_date = filters.get("from_date") or today
+    to_date = filters.get("to_date") or today
+
+    return {
+        "from_date": from_date,
+        "to_date": to_date
+    }
+
+
+# =========================================================
+# BUILD CONDITIONS
+# =========================================================
+
+def _build_conditions(filters, date_filters):
+    """
+    Build common Lead conditions.
+
+    Date filter is applied using Lead.creation.
+    """
+
+    conditions = ["1 = 1"]
+
+    # -----------------------------------------------------
+    # Creation Date
+    # -----------------------------------------------------
+
+    if date_filters.get("from_date"):
+        from_date = frappe.utils.getdate(
+            date_filters["from_date"]
+        )
+
+        conditions.append(
+            f"l.creation >= '{from_date} 00:00:00'"
+        )
+
+    if date_filters.get("to_date"):
+        to_date = frappe.utils.getdate(
+            date_filters["to_date"]
+        )
+
+        conditions.append(
+            f"l.creation <= '{to_date} 23:59:59'"
+        )
+
+    # -----------------------------------------------------
+    # Course Category
+    # -----------------------------------------------------
+
+    if filters.get("course_category"):
+        conditions.append(
+            "l.custom_course_categories = "
+            + frappe.db.escape(
+                filters["course_category"]
+            )
+        )
+
+    # -----------------------------------------------------
+    # Source
+    # -----------------------------------------------------
+
+    if filters.get("source"):
+        conditions.append(
+            "l.source = "
+            + frappe.db.escape(
+                filters["source"]
+            )
+        )
+
+    # -----------------------------------------------------
+    # Location
+    # -----------------------------------------------------
+
+    if filters.get("location"):
+        location = filters["location"]
+
+        location_value = frappe.db.escape(
+            f"%{location}%"
+        )
+
+        conditions.append(
+            f"""
+            (
+                l.custom_location LIKE {location_value}
+                OR l.city LIKE {location_value}
+                OR l.territory LIKE {location_value}
+            )
+            """
+        )
+
+    # -----------------------------------------------------
+    # Status
+    # -----------------------------------------------------
+
+    if filters.get("status_filter"):
+        conditions.append(
+            "l.status = "
+            + frappe.db.escape(
+                filters["status_filter"]
+            )
+        )
+
+    # -----------------------------------------------------
+    # Search
+    # -----------------------------------------------------
+
+    if filters.get("search"):
+        search = filters["search"]
+
+        search_value = frappe.db.escape(
+            f"%{search}%"
+        )
+
+        conditions.append(
+            f"""
+            (
+                l.lead_name LIKE {search_value}
+                OR l.mobile_no LIKE {search_value}
+                OR l.phone LIKE {search_value}
+                OR l.email_id LIKE {search_value}
+            )
+            """
+        )
+
+    return " AND ".join(conditions)
+
+
+# =========================================================
+# KPI
+# =========================================================
+
+def _get_kpis(conditions):
+
+    # Total Leads
+    total = _count(conditions)
+
+    # New Leads
+    new_leads = _count(
+        f"""
+        {conditions}
+        AND l.status = 'Lead'
+        """
+    )
+
+    # Contacted
+    contacted = _count(
+        f"""
+        {conditions}
+        AND l.status = 'Contacted'
+        """
+    )
+
+    # Interested
+    interested = _count(
+        f"""
+        {conditions}
+        AND l.status IN ('Opportunity', 'Qualified')
+        """
+    )
+
+    # Counselled
+    counselled = _count(
+        f"""
+        {conditions}
+        AND l.status IN ('Opportunity', 'Qualified')
+        """
+    )
+
+    # Admissions
+    admissions = _count(
+        f"""
+        {conditions}
+        AND l.status = 'Converted Student'
+        """
+    )
+
+    # Conversion Rate
+    conversion_rate = (
+        round(
+            (admissions / total) * 100,
+            2
+        )
+        if total
+        else 0
+    )
+
+    return {
+        "total": total,
+        "new_leads": new_leads,
+        "contacted": contacted,
+        "interested": interested,
+        "counselled": counselled,
+        "admissions": admissions,
+        "conversion_rate": conversion_rate
+    }
+
+
+# =========================================================
+# GENDER
+# =========================================================
+
+def _get_gender_counts(conditions):
+
+    return frappe.db.sql(
+        f"""
+        SELECT
+            COALESCE(
+                NULLIF(l.gender, ''),
+                'Unknown'
+            ) AS gender,
+
+            COUNT(*) AS total_count
+
+        FROM `tabLead` l
+
+        WHERE {conditions}
+
+        GROUP BY
+            COALESCE(
+                NULLIF(l.gender, ''),
+                'Unknown'
+            )
+
+        ORDER BY total_count DESC
+        """,
+        as_dict=True
+    )
+
+
+# =========================================================
+# SOURCE
+# =========================================================
+
+def _get_sources(conditions):
+
+    return frappe.db.sql(
+        f"""
+        SELECT
+            COALESCE(
+                NULLIF(l.source, ''),
+                'Unknown'
+            ) AS source,
+
+            COUNT(*) AS total_count
+
+        FROM `tabLead` l
+
+        WHERE {conditions}
+
+        GROUP BY
+            COALESCE(
+                NULLIF(l.source, ''),
+                'Unknown'
+            )
+
+        ORDER BY total_count DESC
+        """,
+        as_dict=True
+    )
+
+
+# =========================================================
+# STATUS
+# =========================================================
+
+def _get_status_counts(conditions):
+
+    return frappe.db.sql(
+        f"""
+        SELECT
+            COALESCE(
+                NULLIF(l.status, ''),
+                'Unknown'
+            ) AS status,
+
+            COUNT(*) AS total_count
+
+        FROM `tabLead` l
+
+        WHERE {conditions}
+
+        GROUP BY
+            COALESCE(
+                NULLIF(l.status, ''),
+                'Unknown'
+            )
+
+        ORDER BY total_count DESC
+        """,
+        as_dict=True
+    )
+
+
+# =========================================================
+# COUNT
+# =========================================================
+
+def _count(conditions):
+
+    result = frappe.db.sql(
+        f"""
+        SELECT COUNT(*)
+        FROM `tabLead` l
+        WHERE {conditions}
+        """
+    )
+
+    return result[0][0] if result else 0
+
+
+# =========================================================
+# PAYMENT APPROVAL LOG DASHBOARD
+# =========================================================
+
+@frappe.whitelist()
+def get_payment_approval_dashboard_data(filters=None):
+    """
+    Get Payment Approval Log dashboard data.
+
+    Date filtering is based on Payment Approval Log.date.
+    """
+
+    filters = frappe.parse_json(filters) if filters else {}
+
+    date_filters = _get_pal_date_filters(filters)
+    conditions = _build_pal_conditions(filters, date_filters)
+
+    kpis = _get_pal_kpis(conditions)
+    sources = _get_pal_sources(conditions)
+    statuses = _get_pal_status_counts(conditions)
+
+    return {
+        "date_filters": date_filters,
+        "kpis": kpis,
+        "sources": sources,
+        "statuses": statuses
+    }
+
+
+# =========================================================
+# DATE FILTER
+# =========================================================
+
+def _get_pal_date_filters(filters):
+
+    today = frappe.utils.today()
+
+    from_date = filters.get("from_date") or today
+    to_date = filters.get("to_date") or today
+
+    return {
+        "from_date": from_date,
+        "to_date": to_date
+    }
+
+
+# =========================================================
+# BUILD CONDITIONS
+# =========================================================
+
+def _build_pal_conditions(filters, date_filters):
+
+    conditions = ["1 = 1"]
+
+    # -----------------------------------------------------
+    # Date
+    # -----------------------------------------------------
+
+    if date_filters.get("from_date"):
+        from_date = frappe.utils.getdate(
+            date_filters["from_date"]
+        )
+
+        conditions.append(
+            f"p.date >= '{from_date} 00:00:00'"
+        )
+
+    if date_filters.get("to_date"):
+        to_date = frappe.utils.getdate(
+            date_filters["to_date"]
+        )
+
+        conditions.append(
+            f"p.date <= '{to_date} 23:59:59'"
+        )
+
+    # -----------------------------------------------------
+    # Payment Status
+    # -----------------------------------------------------
+
+    if filters.get("payment_status"):
+        conditions.append(
+            "p.payment_status = "
+            + frappe.db.escape(
+                filters["payment_status"]
+            )
+        )
+
+    return " AND ".join(conditions)
+
+
+# =========================================================
+# KPI
+# =========================================================
+
+def _get_pal_kpis(conditions):
+
+    total = _pal_count(conditions)
+
+    pending = _pal_count(
+        f"""
+        {conditions}
+        AND p.payment_status = 'Pending'
+        """
+    )
+
+    approved = _pal_count(
+        f"""
+        {conditions}
+        AND p.payment_status = 'Approved'
+        """
+    )
+
+    rejected = _pal_count(
+        f"""
+        {conditions}
+        AND p.payment_status = 'Rejected'
+        """
+    )
+
+    from_opportunity = _pal_count(
+        f"""
+        {conditions}
+        AND p.from_opportunity = 1
+        """
+    )
+
+    from_student_service = _pal_count(
+        f"""
+        {conditions}
+        AND p.from_student_service = 1
+        """
+    )
+
+    total_bill_amount = _pal_sum(
+        "COALESCE(p.total_bill_amount, 0)",
+        conditions
+    )
+
+    fees_amount = _pal_sum(
+        "COALESCE(p.fees_received_amount, 0)",
+        conditions
+    )
+
+    hostel_amount = _pal_sum(
+        "COALESCE(p.hostel_received_amount, 0)",
+        conditions
+    )
+
+    vehicle_amount = _pal_sum(
+        "COALESCE(p.vehicle_received_amount, 0)",
+        conditions
+    )
+
+    return {
+        "total": total,
+        "pending": pending,
+        "approved": approved,
+        "rejected": rejected,
+        "from_opportunity": from_opportunity,
+        "from_student_service": from_student_service,
+        "total_bill_amount": total_bill_amount,
+        "fees_amount": fees_amount,
+        "hostel_amount": hostel_amount,
+        "vehicle_amount": vehicle_amount
+    }
+
+
+# =========================================================
+# GENDER
+# =========================================================
+
+# =========================================================
+# SOURCE (Opportunity vs Student Service)
+# =========================================================
+
+def _get_pal_sources(conditions):
+
+    return frappe.db.sql(
+        f"""
+        SELECT
+            CASE
+                WHEN p.from_opportunity = 1
+                    THEN 'Opportunity'
+                WHEN p.from_student_service = 1
+                    THEN 'Student Service'
+                ELSE 'Unknown'
+            END AS source,
+
+            COUNT(*) AS total_count
+
+        FROM `tabPayment Approval Log` p
+
+        WHERE {conditions}
+
+        GROUP BY
+            CASE
+                WHEN p.from_opportunity = 1
+                    THEN 'Opportunity'
+                WHEN p.from_student_service = 1
+                    THEN 'Student Service'
+                ELSE 'Unknown'
+            END
+
+        ORDER BY total_count DESC
+        """,
+        as_dict=True
+    )
+
+
+# =========================================================
+# STATUS
+# =========================================================
+
+def _get_pal_status_counts(conditions):
+
+    return frappe.db.sql(
+        f"""
+        SELECT
+            COALESCE(
+                NULLIF(p.payment_status, ''),
+                'Unknown'
+            ) AS status,
+
+            COUNT(*) AS total_count
+
+        FROM `tabPayment Approval Log` p
+
+        WHERE {conditions}
+
+        GROUP BY
+            COALESCE(
+                NULLIF(p.payment_status, ''),
+                'Unknown'
+            )
+
+        ORDER BY total_count DESC
+        """,
+        as_dict=True
+    )
+
+
+# =========================================================
+# COUNT / SUM HELPERS
+# =========================================================
+
+def _pal_count(conditions):
+
+    result = frappe.db.sql(
+        f"""
+        SELECT COUNT(*)
+        FROM `tabPayment Approval Log` p
+        WHERE {conditions}
+        """
+    )
+
+    return result[0][0] if result else 0
+
+
+def _pal_sum(column, conditions):
+
+    result = frappe.db.sql(
+        f"""
+        SELECT SUM({column})
+        FROM `tabPayment Approval Log` p
+        WHERE {conditions}
+        """
+    )
+
+    return flt(result[0][0]) if result and result[0][0] else 0
