@@ -22,7 +22,9 @@
   "amended_from",
   "naming_series",
   "column_break_zyio",
-  "amount"
+  "amount",
+  "mark",
+  "score_card"
  ],
  "fields": [
   {
@@ -143,12 +145,23 @@
    "label": "Student Service",
    "options": "Student Service",
    "read_only": 1
+  },
+  {
+   "fieldname": "mark",
+   "fieldtype": "Data",
+   "label": "Mark",
+   "read_only": 1
+  },
+  {
+   "fieldname": "score_card",
+   "fieldtype": "Attach",
+   "label": "Score Card"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-08 22:42:29.655294",
+ "modified": "2026-09-10 21:46:33.951585",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Discount Approval Log",

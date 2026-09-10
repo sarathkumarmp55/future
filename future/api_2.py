@@ -15,6 +15,9 @@ def create_discount_approval_log(opportunity_name, party_name):
         "opportunity_reference": opportunity.name,
         "discount_id": opportunity.custom_discount_id,
         "lead_name": lead_name,
+        "from_opportunity": 1,
+        "mark": opportunity.custom_mark,
+        "score_card": opportunity.custom_score_card,
     })
 
     
@@ -61,7 +64,9 @@ def create_discount_approval_log_2(dal, student):
         "from_student_service": 1,
         "student": student,
         "discount_id": dal_doc.new_discount_id,
-        "student_service":dal_doc.name
+        "student_service":dal_doc.name,
+        "mark":dal_doc.mark,
+        "score_card": dal_doc.score_card
     })
 
     frappe.db.set_value(

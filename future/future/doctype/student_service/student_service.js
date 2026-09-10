@@ -40,7 +40,7 @@ frappe.ui.form.on("Student Service", {
         });
 
 
-        if (!frm.is_new() && frm.doc.add_discount === 1 && frm.doc.service_status === "Approval Pending") {
+        if (!frm.is_new() && frm.doc.add_discount === 1 && frm.doc.service_status === "New") {
                 frm.add_custom_button(__("Discount Approval"), function () {
                     frappe.call({
                         method: "future.api_2.create_discount_approval_log_2",
