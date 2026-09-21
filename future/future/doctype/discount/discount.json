@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:discount_name",
  "creation": "2026-09-05 17:45:41.762493",
@@ -61,7 +62,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-06 14:47:46.826350",
+ "modified": "2026-09-21 09:49:37.014455",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Discount",
