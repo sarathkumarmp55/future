@@ -78,7 +78,8 @@ frappe.ui.form.on("Student Service", {
 	},
      setup(frm) { 
         frm.set_query('new_discount_id', function () { 
-            return { filters: { percentage: frm.doc.percentage, 
+            return { query: "future.api_2.get_discounts_for_program",
+                filters: { percentage: frm.doc.percentage, 
                 base_of_discount: frm.doc.base_of_discount,
                  program: frm.doc.program } }; 
                 }); 

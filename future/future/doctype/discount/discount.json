@@ -29,9 +29,9 @@
   },
   {
    "fieldname": "program",
-   "fieldtype": "Link",
+   "fieldtype": "Table",
    "label": "Program",
-   "options": "Program",
+   "options": "Multiselect Program",
    "reqd": 1
   },
   {
@@ -62,7 +62,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-21 09:49:37.014455",
+ "modified": "2026-09-22 22:57:52.281174",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Discount",

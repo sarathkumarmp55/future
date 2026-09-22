@@ -19,6 +19,7 @@
   "reject_reason",
   "section_break_jsnk",
   "discount_id",
+  "base_of_discount",
   "amended_from",
   "naming_series",
   "column_break_zyio",
@@ -90,7 +91,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fetch_from": "discount_id.discount_amount",
    "fieldname": "amount",
    "fieldtype": "Currency",
    "label": "Amount",
@@ -156,12 +156,19 @@
    "fieldname": "score_card",
    "fieldtype": "Attach",
    "label": "Score Card"
+  },
+  {
+   "fieldname": "base_of_discount",
+   "fieldtype": "Link",
+   "label": "Base Of Discount",
+   "options": "Base of Discount",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-10 21:46:33.951585",
+ "modified": "2026-09-22 22:12:06.193781",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Discount Approval Log",

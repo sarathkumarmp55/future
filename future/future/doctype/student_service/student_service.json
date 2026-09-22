@@ -58,12 +58,15 @@
   "section_break_vdci",
   "received_amount",
   "add_discount",
+  "merit_based",
+  "customer_based",
   "column_break_aaau",
   "total_amount",
   "column_break_uchs",
   "discount_section",
   "base_of_discount",
   "mark",
+  "special_discount_amount",
   "column_break_ipdz",
   "percentage",
   "score_card",
@@ -536,11 +539,11 @@
    "label": "Discount"
   },
   {
-   "depends_on": "eval:doc.add_discount===1",
+   "depends_on": "eval:doc.merit_based===1 || doc.customer_based ===1",
    "fieldname": "base_of_discount",
    "fieldtype": "Link",
    "label": "Base of Discount",
-   "mandatory_depends_on": "eval:doc.add_discount===1",
+   "mandatory_depends_on": "eval:doc.merit_based===1 || doc.customer_based ===1",
    "options": "Base of Discount"
   },
   {
@@ -548,11 +551,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.add_discount===1",
+   "depends_on": "eval:doc.merit_based===1",
    "fieldname": "percentage",
    "fieldtype": "Link",
    "label": "Percentage",
-   "mandatory_depends_on": "eval:doc.add_discount===1",
+   "mandatory_depends_on": "eval:doc.merit_based===1",
    "options": "Percentage"
   },
   {
@@ -572,6 +575,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "depends_on": "eval:doc.base_of_discount && doc.percentage",
    "fetch_from": "new_discount_id.discount_amount",
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
@@ -598,6 +602,26 @@
    "fieldtype": "Attach",
    "label": "Score Card",
    "mandatory_depends_on": "eval:doc.base_of_discount && doc.percentage"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.add_discount===1 && doc.customer_based===0",
+   "fieldname": "merit_based",
+   "fieldtype": "Check",
+   "label": "Merit Based"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.add_discount===1 && doc.merit_based===0",
+   "fieldname": "customer_based",
+   "fieldtype": "Check",
+   "label": "Customer Based"
+  },
+  {
+   "depends_on": "eval:doc.customer_based===1",
+   "fieldname": "special_discount_amount",
+   "fieldtype": "Currency",
+   "label": "Special Discount Amount"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -612,7 +636,7 @@
    "link_fieldname": "student_service"
   }
  ],
- "modified": "2026-09-10 23:25:29.184077",
+ "modified": "2026-09-22 22:33:22.795045",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Student Service",

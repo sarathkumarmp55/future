@@ -92,7 +92,8 @@ frappe.ui.form.on("Opportunity", {
 
     setup(frm) { 
         frm.set_query('custom_discount_id', function () { 
-            return { filters: { percentage: frm.doc.custom_percentage, 
+            return { query: "future.api_2.get_discounts_for_program",
+                filters: { percentage: frm.doc.custom_percentage, 
                 base_of_discount: frm.doc.custom_base_of_discount,
                  program: frm.doc.custom_program } }; 
                 }); 
