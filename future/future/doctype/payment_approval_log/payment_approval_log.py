@@ -28,6 +28,7 @@ class PaymentApprovalLog(Document):
 							"custom_discount_id": self.discount_id,
 							"custom_discount_applied": self.discount_applied,
 							"gender":self.gender,
+							"custom_preffered_centre":self.location,
 							"custom_hostel": self.hostel,
 							"custom_academic_year": self.academic_year,
 							"custom_vehicle": self.vehicle,

@@ -734,3 +734,48 @@ def _pal_sum(column, conditions):
     )
 
     return flt(result[0][0]) if result and result[0][0] else 0
+
+
+@frappe.whitelist()
+def get_students_without_app_access():
+    return frappe.get_all(
+        "Student",
+        filters={"custom_app_access_provided": 0},
+        fields=["name", "student_name", "first_name"],
+        order_by="name",
+    )
+
+
+@frappe.whitelist()
+def provide_app_access(student, transaction_id=None):
+    if not student:
+        frappe.throw("Student is required")
+
+    update = {"custom_app_access_provided": 1}
+    if transaction_id:
+        update["custom_app_access_transaction_id"] = transaction_id
+
+    frappe.db.set_value("Student", student, update)
+    frappe.db.commit()
+
+    return {"success": True}
+
+
+@frappe.whitelist()
+def provide_app_access_bulk(students, transaction_id=None):
+    if isinstance(students, str):
+        students = frappe.parse_json(students)
+
+    if not students:
+        frappe.throw("No students selected")
+
+    update = {"custom_app_access_provided": 1}
+    if transaction_id:
+        update["custom_app_access_transaction_id"] = transaction_id
+
+    for student in students:
+        frappe.db.set_value("Student", student, update)
+
+    frappe.db.commit()
+
+    return {"success": True, "count": len(students)}

@@ -264,7 +264,7 @@
   {
    "fieldname": "location",
    "fieldtype": "Link",
-   "label": "Location",
+   "label": "Preffered Centre",
    "options": "Location",
    "read_only": 1
   },
@@ -497,7 +497,7 @@
    "link_fieldname": "custom_payment_approval_log"
   }
  ],
- "modified": "2026-09-07 23:37:01.238305",
+ "modified": "2026-09-23 12:44:27.739166",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Payment Approval Log",
