@@ -1,5 +1,9 @@
 frappe.listview_settings["Lead"] = {
 
+    onload(listview) {
+        restrict_lead_list_to_assignments(listview);
+    },
+
     refresh(listview) {
 
         if (!listview.page.main.find(".lead-list-dashboard").length) {
@@ -12,6 +16,28 @@ frappe.listview_settings["Lead"] = {
         }
     }
 };
+
+function restrict_lead_list_to_assignments(listview) {
+    if (frappe.session.user === "Administrator") {
+        return;
+    }
+
+    if (frappe.user.has_role("Sales Manager")) {
+        return;
+    }
+
+    const user = frappe.session.user;
+    const existing = listview.filter_area.filter_list.get_filters().find(
+        (f) => f[1] === "_assign" && f[2] === "like" && f[3].includes(user)
+    );
+
+    if (!existing) {
+        listview.filter_area.add(
+            [["Lead", "_assign", "like", `%${user}%`]],
+            () => listview.refresh()
+        );
+    }
+}
 
 
 class LeadListDashboard {
