@@ -20,6 +20,17 @@ frappe.ui.form.on("Lead", {
         }, 200);
 
     },
+
+    custom_student_class(frm){
+        if(frm.doc.custom_student_class){
+            frm.set_value("custom_class",frm.doc.custom_student_class);
+        }
+        else
+        frm.set_value("custom_class",frm.doc.custom_student_class);
+    },
+
+
+
     custom_connected_status(frm) {
         if (frm.doc.custom_connected_status === "Interested") {
             frm.set_value("status", "Qualified");

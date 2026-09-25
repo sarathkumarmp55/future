@@ -21,4 +21,7 @@ def get_permission_query_conditions(user=None):
         .replace("_", "\\_")
     )
 
-    return f"`tabLead`.`_assign` LIKE '%{escaped_user}%'"
+    return (
+        f"(`tabLead`.`owner` = '{escaped_user}' "
+        f"OR `tabLead`.`_assign` LIKE '%{escaped_user}%')"
+    )

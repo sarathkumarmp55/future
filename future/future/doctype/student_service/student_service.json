@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
  "creation": "2026-08-16 01:11:56.688219",
@@ -636,7 +637,7 @@
    "link_fieldname": "student_service"
   }
  ],
- "modified": "2026-09-22 22:33:22.795045",
+ "modified": "2026-09-25 21:23:47.246578",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Student Service",

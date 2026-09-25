@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "naming_series:",
  "creation": "2026-08-15 17:06:43.600716",
@@ -40,7 +41,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-08-15 17:20:45.366965",
+ "modified": "2026-09-25 21:24:56.248841",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Hostel",

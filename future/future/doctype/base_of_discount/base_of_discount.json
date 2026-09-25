@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:base_of_discount",
  "creation": "2026-09-06 14:44:25.261440",
@@ -18,7 +19,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-06 14:46:10.102782",
+ "modified": "2026-09-25 21:22:19.214371",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Base of Discount",

@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:percentage",
  "creation": "2026-09-06 14:40:04.000625",
@@ -18,7 +19,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-06 14:40:29.931824",
+ "modified": "2026-09-25 21:21:59.537770",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Percentage",
