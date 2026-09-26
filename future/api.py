@@ -165,6 +165,39 @@ def _get_date_filters(filters):
 
 
 # =========================================================
+# USER VISIBILITY
+# =========================================================
+
+def _escape_like(value):
+    return (
+        value.replace("\\", "\\\\")
+        .replace("'", "\\'")
+        .replace("%", "\\%")
+        .replace("_", "\\_")
+    )
+
+
+def _get_lead_visibility_condition():
+    user = frappe.session.user
+
+    if user == "Administrator":
+        return None
+
+    if frappe.db.exists(
+        "Has Role",
+        {"parent": user, "role": "Sales Manager"},
+    ):
+        return None
+
+    escaped_user = _escape_like(user)
+
+    return (
+        f"(l.owner = '{escaped_user}' "
+        f"OR l._assign LIKE '%{escaped_user}%')"
+    )
+
+
+# =========================================================
 # BUILD CONDITIONS
 # =========================================================
 
@@ -176,6 +209,15 @@ def _build_conditions(filters, date_filters):
     """
 
     conditions = ["1 = 1"]
+
+    # -----------------------------------------------------
+    # User Visibility
+    # -----------------------------------------------------
+
+    visibility = _get_lead_visibility_condition()
+
+    if visibility:
+        conditions.append(visibility)
 
     # -----------------------------------------------------
     # Creation Date
@@ -340,6 +382,20 @@ def _get_kpis(conditions):
         else 0
     )
 
+    # Assigned Leads (not limited by dashboard date filters)
+    visibility = _get_lead_visibility_condition()
+
+    assigned_conditions = ["1 = 1"]
+
+    if visibility:
+        assigned_conditions.append(visibility)
+
+    assigned_conditions.append(
+        f"l._assign LIKE '%{_escape_like(frappe.session.user)}%'"
+    )
+
+    assigned_leads = _count(" AND ".join(assigned_conditions))
+
     return {
         "total": total,
         "new_leads": new_leads,
@@ -347,7 +403,8 @@ def _get_kpis(conditions):
         "interested": interested,
         "counselled": counselled,
         "admissions": admissions,
-        "conversion_rate": conversion_rate
+        "conversion_rate": conversion_rate,
+        "assigned_leads": assigned_leads
     }
 
 

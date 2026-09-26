@@ -274,6 +274,30 @@ class LeadListDashboard {
 
                     </div>
 
+
+                    <div class="lld-kpi-card lld-kpi-assigned">
+
+                        <div class="lld-kpi-icon">
+                            <i class="fa fa-handshake-o"></i>
+                        </div>
+
+                        <div class="lld-kpi-content">
+
+                            <div class="lld-kpi-title">
+                                Assigned Leads
+                            </div>
+
+                            <div
+                                class="lld-kpi-value"
+                                data-kpi="assigned_leads"
+                            >
+                                0
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 </div>
 
 
@@ -476,6 +500,11 @@ class LeadListDashboard {
         this.set_kpi(
             "conversion_rate",
             `${kpis.conversion_rate || 0}%`
+        );
+
+        this.set_kpi(
+            "assigned_leads",
+            kpis.assigned_leads || 0
         );
 
     }
@@ -985,6 +1014,13 @@ class LeadListDashboard {
                 .lld-kpi-conversion .lld-kpi-icon {
                     color: #a18cd1;
                     background: rgba(161, 140, 209, 0.12);
+                }
+
+
+                .lld-kpi-assigned::before { background: #ff9a9e; }
+                .lld-kpi-assigned .lld-kpi-icon {
+                    color: #ff9a9e;
+                    background: rgba(255, 154, 158, 0.12);
                 }
 
 
