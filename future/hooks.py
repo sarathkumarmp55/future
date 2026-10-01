@@ -76,6 +76,7 @@ doc_events = {
 # ---------------------------
 permission_query_conditions = {
     "Lead": "future.permissions.lead.get_permission_query_conditions",
+    "Opportunity": "future.permissions.opportunity.get_permission_query_conditions",
 }
 
 # Svg Icons
