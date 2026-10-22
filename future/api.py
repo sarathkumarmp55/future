@@ -794,6 +794,62 @@ def _pal_sum(column, conditions):
 
 
 @frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_team_heirarchy_users(doctype, txt, searchfield, start, page_len, filters):
+    role = (filters or {}).get("role")
+    return frappe.db.sql(
+        """
+        select u.name, u.full_name
+        from `tabTeam Heirarchy` th
+        inner join `tabUser` u on u.name = th.user
+        where (ifnull(%(role)s, '') = '' or th.role = %(role)s)
+          and ifnull(u.enabled, 1) = 1
+          and (u.name like %(txt)s or u.full_name like %(txt)s)
+        order by u.full_name
+        limit %(start)s, %(page_len)s
+        """,
+        {
+            "role": role,
+            "txt": "%" + (txt or "") + "%",
+            "start": start,
+            "page_len": page_len,
+        },
+    )
+
+
+@frappe.whitelist()
+def is_team_lead(user=None):
+    user = user or frappe.session.user
+    return bool(frappe.db.exists("Team Heirarchy", {"user": user, "role": "Team Lead"}))
+
+
+@frappe.whitelist()
+def is_lead_manager(user=None):
+    user = user or frappe.session.user
+    return bool(frappe.db.exists("Team Heirarchy", {"user": user, "role": "Lead Manager"}))
+
+
+@frappe.whitelist()
+def get_team_lead_users(team_lead=None, role="Team Lead"):
+    team_lead = team_lead or frappe.session.user
+    rows = frappe.db.sql(
+        """
+        select tht.user, ifnull(u.full_name, tht.user) as full_name
+        from `tabTeam Heirarchy` th
+        inner join `tabTeam Heirarchy Table` tht on tht.parent = th.name
+        left join `tabUser` u on u.name = tht.user
+        where th.user = %(team_lead)s
+          and th.role = %(role)s
+          and ifnull(tht.active, 0) = 1
+        order by full_name
+        """,
+        {"team_lead": team_lead, "role": role or "Team Lead"},
+        as_dict=1,
+    )
+    return [{"value": r.user, "label": r.full_name} for r in rows if r.user]
+
+
+@frappe.whitelist()
 def get_students_without_app_access():
     return frappe.get_all(
         "Student",

@@ -1,6 +1,142 @@
 
+function patch_interaction_composer_role_field() {
+    const Composer = frappe.views && frappe.views.InteractionComposer;
+    if (!Composer || Composer.prototype.__future_role_field) return;
+    Composer.prototype.__future_role_field = true;
+
+    const _get_fields = Composer.prototype.get_fields;
+    Composer.prototype.get_fields = function () {
+        const fields = _get_fields.call(this);
+        const idx = fields.findIndex((f) => f.fieldname === "assigned_to");
+        if (idx === -1) {
+            return fields;
+        }
+        fields.splice(idx, 0, {
+            label: __("Role"),
+            fieldtype: "Select",
+            fieldname: "custom_role",
+            options: "\nTeam Lead\nLead Manager\nLead User",
+            reqd: 1,
+            onchange: () => {
+                if (this.dialog) {
+                    this.dialog.set_value("assigned_to", "");
+                }
+            },
+        });
+        return fields;
+    };
+
+    const _create_action = Composer.prototype.create_action;
+    Composer.prototype.create_action = function () {
+        if (!this.dialog.get_value("custom_role")) {
+            frappe.msgprint(__("Please select a Role"));
+            return;
+        }
+        return _create_action.call(this);
+    };
+
+    const _create_interaction = Composer.prototype.create_interaction;
+    Composer.prototype.create_interaction = function (btn, form_values, selected_attachments) {
+        const role = this.dialog.get_value("custom_role");
+        if (!role) {
+            return _create_interaction.call(this, btn, form_values, selected_attachments);
+        }
+        const assignee = this.dialog.get_value("assigned_to");
+        const lead_field = {
+            "Lead Manager": "custom_lead_manager_name",
+            "Team Lead": "custom_team_leader",
+            "Lead User": "custom_lead_user",
+        }[role];
+        const composer = this;
+        const _call = frappe.call;
+        frappe.call = function (opts) {
+            if (
+                opts &&
+                opts.method === "frappe.client.insert" &&
+                opts.args &&
+                opts.args.doc &&
+                opts.args.doc.doctype === "ToDo"
+            ) {
+                opts.args.doc.custom_lead_role = role;
+                const _callback = opts.callback;
+                opts.callback = async function (r) {
+                    if (
+                        r &&
+                        !r.exc &&
+                        assignee &&
+                        lead_field &&
+                        composer.frm &&
+                        composer.frm.docname
+                    ) {
+                        await frappe.db.set_value(
+                            composer.frm.doctype,
+                            composer.frm.docname,
+                            lead_field,
+                            assignee
+                        );
+                    }
+                    return _callback && _callback.apply(this, arguments);
+                };
+            }
+            return _call.apply(this, arguments);
+        };
+        try {
+            return _create_interaction.call(this, btn, form_values, selected_attachments);
+        } finally {
+            frappe.call = _call;
+        }
+    };
+
+    const _get_values = Composer.prototype.get_values;
+    Composer.prototype.get_values = function () {
+        const values = _get_values.call(this);
+        if (values) {
+            delete values.custom_role;
+        }
+        return values;
+    };
+
+    const _make = Composer.prototype.make;
+    Composer.prototype.make = function () {
+        _make.call(this);
+        const assigned_to = this.dialog.fields_dict.assigned_to;
+        if (assigned_to) {
+            assigned_to.get_query = () => {
+                const role = this.dialog.get_value("custom_role");
+                if (role !== "Team Lead" && role !== "Lead Manager") {
+                    return;
+                }
+                return {
+                    query: "future.api.get_team_heirarchy_users",
+                    filters: { role: role },
+                };
+            };
+        }
+    };
+}
+
+patch_interaction_composer_role_field();
+
 frappe.ui.form.on("Lead", {
+    setup(frm) {
+        frm.set_query("custom_lead_manager_name", function () {
+            return {
+                query: "future.api.get_team_heirarchy_users",
+                filters: { role: "Lead Manager" },
+            };
+        });
+
+        frm.set_query("custom_team_leader", function () {
+            return {
+                query: "future.api.get_team_heirarchy_users",
+                filters: { role: "Team Lead" },
+            };
+        });
+    },
+
     refresh(frm) {
+        patch_interaction_composer_role_field();
+
         // Hide "Customer" from the "Create" group button
         setTimeout(() => {
             frm.remove_custom_button(__("Customer"), __("Create"));
