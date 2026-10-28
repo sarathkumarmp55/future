@@ -68,6 +68,7 @@ doctype_list_js = {"Lead": "public/js/lead_list.js"}
 # ---------------
 doc_events = {
     "Lead": {
+        "validate": "future.events.lead.validate_mobile_no_unique",
         "on_update": "future.events.lead.on_update",
     }
 }

@@ -850,6 +850,40 @@ def get_team_lead_users(team_lead=None, role="Team Lead"):
 
 
 @frappe.whitelist()
+def set_lead_assignment_role(doctype, names, allocated_to, role):
+    field_map = {
+        "Lead Manager": "custom_lead_manager_name",
+        "Team Lead": "custom_team_leader",
+        "Lead User": "custom_lead_user",
+    }
+    field = field_map.get(role)
+    if not field:
+        frappe.throw("Invalid Role")
+
+    if isinstance(names, str):
+        names = frappe.parse_json(names)
+
+    for name in names or []:
+        frappe.db.set_value(
+            "ToDo",
+            {
+                "reference_type": doctype,
+                "reference_name": name,
+                "allocated_to": allocated_to,
+            },
+            "custom_lead_role",
+            role,
+        )
+
+        if doctype == "Lead":
+            frappe.db.set_value("Lead", name, field, allocated_to)
+
+    frappe.db.commit()
+
+    return True
+
+
+@frappe.whitelist()
 def get_students_without_app_access():
     return frappe.get_all(
         "Student",

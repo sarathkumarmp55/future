@@ -1,6 +1,27 @@
 import json
 
 import frappe
+from frappe import _
+
+
+def validate_mobile_no_unique(doc, method=None):
+    mobile_no = doc.get("mobile_no")
+    if not mobile_no:
+        return
+
+    duplicate = frappe.db.get_value(
+        "Lead",
+        {"mobile_no": mobile_no, "name": ["!=", doc.get("name")]},
+        "name",
+    )
+    if duplicate:
+        frappe.throw(
+            _("Mobile No {0} is already used in another Lead: {1}").format(
+                frappe.bold(mobile_no),
+                frappe.get_desk_link("Lead", duplicate),
+            ),
+            frappe.DuplicateEntryError,
+        )
 
 
 def on_update(doc, method=None):
