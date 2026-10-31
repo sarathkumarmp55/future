@@ -14,6 +14,19 @@ frappe.listview_settings["Lead"] = {
 };
 
 
+// Muted slate palette that sits with the neutral Frappe desk theme.
+const LLD_CHART_COLORS = [
+    "#334155",
+    "#64748b",
+    "#94a3b8",
+    "#475569",
+    "#cbd5e1",
+    "#1e293b",
+    "#7c8798",
+    "#e2e8f0",
+];
+
+
 class LeadListDashboard {
 
     constructor(listview) {
@@ -390,6 +403,9 @@ class LeadListDashboard {
                     <i class="fa fa-${icon}"></i>
                 </span>
                 <span class="lld-card-title">${title}</span>
+                <span class="lld-card-pin" role="button" tabindex="0" title="${__("Pin open")}">
+                    <i class="fa fa-thumb-tack"></i>
+                </span>
                 <span class="lld-card-toggle">
                     <i class="fa fa-chevron-down"></i>
                 </span>
@@ -399,14 +415,15 @@ class LeadListDashboard {
 
 
     // =====================================================
-    // COLLAPSE
+    // COLLAPSE / PIN
     // =====================================================
 
-    get_collapsed_sections() {
+    // Cards start collapsed; only pinned cards open on load.
+    get_pinned_sections() {
 
         try {
             return JSON.parse(
-                localStorage.getItem("lld_collapsed_sections") || "[]"
+                localStorage.getItem("lld_pinned_sections") || "[]"
             );
         } catch (e) {
             return [];
@@ -416,44 +433,67 @@ class LeadListDashboard {
 
     restore_collapsed_state() {
 
-        const collapsed = this.get_collapsed_sections();
+        const pinned = this.get_pinned_sections();
 
-        collapsed.forEach(section => {
-            this.$dashboard
-                .find(`.lld-card[data-section="${section}"]`)
-                .addClass("lld-collapsed")
-                .find(".lld-card-body")
-                .hide();
+        this.$dashboard.find(".lld-card[data-section]").each((i, card) => {
+
+            const $card = $(card);
+            const is_pinned = pinned.includes($card.data("section"));
+
+            $card.toggleClass("lld-pinned", is_pinned);
+            $card.toggleClass("lld-collapsed", !is_pinned);
+            $card.find(".lld-card-body").toggle(is_pinned);
         });
+    }
+
+
+    set_expanded($card, expand) {
+
+        const $body = $card.find(".lld-card-body");
+
+        if (expand === !$card.hasClass("lld-collapsed")) {
+            return;
+        }
+
+        $card.toggleClass("lld-collapsed", !expand);
+
+        if (expand) {
+            // charts drawn while hidden have zero width, so redraw on expand
+            $body.slideDown(200, () => this.redraw_section($card.data("section")));
+        } else {
+            $body.slideUp(200);
+        }
     }
 
 
     toggle_section($card) {
 
+        this.set_expanded($card, $card.hasClass("lld-collapsed"));
+    }
+
+
+    toggle_pin($card) {
+
         const section = $card.data("section");
-        const $body = $card.find(".lld-card-body");
-        const collapsing = !$card.hasClass("lld-collapsed");
+        const pinning = !$card.hasClass("lld-pinned");
 
-        $card.toggleClass("lld-collapsed", collapsing);
+        $card.toggleClass("lld-pinned", pinning);
 
-        if (collapsing) {
-            $body.slideUp(200);
-        } else {
-            // charts drawn while hidden have zero width, so redraw on expand
-            $body.slideDown(200, () => this.redraw_section(section));
+        if (pinning) {
+            this.set_expanded($card, true);
         }
 
-        let collapsed = this.get_collapsed_sections()
+        let pinned = this.get_pinned_sections()
             .filter(s => s !== section);
 
-        if (collapsing) {
-            collapsed.push(section);
+        if (pinning) {
+            pinned.push(section);
         }
 
         try {
             localStorage.setItem(
-                "lld_collapsed_sections",
-                JSON.stringify(collapsed)
+                "lld_pinned_sections",
+                JSON.stringify(pinned)
             );
         } catch (e) {
             // ignore storage failures
@@ -480,6 +520,20 @@ class LeadListDashboard {
     // =====================================================
 
     bind_events() {
+
+        this.$dashboard
+            .find(".lld-card-pin")
+            .on("click", (e) => {
+                e.stopPropagation();
+                this.toggle_pin($(e.currentTarget).closest(".lld-card"));
+            })
+            .on("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.toggle_pin($(e.currentTarget).closest(".lld-card"));
+                }
+            });
 
         this.$dashboard
             .find(".lld-card-header")
@@ -753,7 +807,9 @@ class LeadListDashboard {
 
                 type: "donut",
 
-                height: 280
+                height: 280,
+
+                colors: LLD_CHART_COLORS
 
             }
         );
@@ -816,6 +872,8 @@ class LeadListDashboard {
 
                 height: 420,
 
+                colors: [LLD_CHART_COLORS[0]],
+
                 barOptions: {
 
                     spaceRatio: 0.25
@@ -852,26 +910,22 @@ class LeadListDashboard {
 
     add_styles() {
 
-        if ($("#lead-list-dashboard-style-v2").length) {
+        if ($("#lead-list-dashboard-style-v3").length) {
             return;
         }
 
 
         $("head").append(`
 
-            <style id="lead-list-dashboard-style-v2">
+            <style id="lead-list-dashboard-style-v3">
 
                 .lead-list-dashboard {
-                    --lld-accent: #5b5bd6;
-                    --lld-accent-2: #8e4ec6;
-                    --lld-radius: 16px;
-                    --lld-shadow:
-                        0 1px 2px rgba(16, 24, 40, 0.04),
-                        0 4px 12px rgba(16, 24, 40, 0.05);
-                    --lld-shadow-hover:
-                        0 2px 4px rgba(16, 24, 40, 0.05),
-                        0 12px 28px rgba(16, 24, 40, 0.10);
-                    margin-bottom: 28px;
+                    --lld-radius: 12px;
+                    --lld-ink: var(--gray-900, #171717);
+                    --lld-tile: var(--subtle-fg, #f3f3f3);
+                    --lld-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+                    --lld-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.06);
+                    margin-bottom: 24px;
                 }
 
 
@@ -885,103 +939,57 @@ class LeadListDashboard {
                 ========================================= */
 
                 .lld-filter-card {
-                    position: relative;
-                    overflow: hidden;
-                    background:
-                        radial-gradient(circle at 85% -20%, rgba(255, 255, 255, 0.28), transparent 45%),
-                        radial-gradient(circle at 0% 120%, rgba(255, 255, 255, 0.12), transparent 40%),
-                        linear-gradient(120deg, #4f46e5 0%, #6d4fd8 50%, #8e4ec6 100%);
+                    background: var(--card-bg);
+                    border: 1px solid var(--border-color);
                     border-radius: var(--lld-radius);
-                    padding: 22px 26px;
-                    margin-bottom: 22px;
-                    box-shadow:
-                        0 10px 30px -8px rgba(79, 70, 229, 0.45),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.18);
-                    color: #fff;
+                    padding: 16px 20px;
+                    margin-bottom: 16px;
+                    box-shadow: var(--lld-shadow);
                 }
 
 
                 .lld-filter-row {
                     display: flex;
                     align-items: flex-end;
-                    gap: 16px;
+                    gap: 14px;
                     flex-wrap: wrap;
                 }
 
 
                 .lld-filter-field {
-                    width: 200px;
+                    width: 190px;
                 }
 
 
                 .lld-filter-field label {
                     display: block;
-                    font-weight: 600;
-                    margin-bottom: 8px;
-                    color: rgba(255, 255, 255, 0.85);
+                    margin-bottom: 6px;
                     font-size: 11px;
+                    font-weight: 600;
+                    color: var(--text-muted);
                     text-transform: uppercase;
-                    letter-spacing: 0.08em;
+                    letter-spacing: 0.06em;
                 }
 
 
                 .lld-filter-field input.form-control {
-                    border: 1px solid rgba(255, 255, 255, 0.35);
-                    border-radius: 10px;
-                    height: 42px;
-                    background: rgba(255, 255, 255, 0.96);
-                    color: #1f2937;
-                    font-weight: 500;
-                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-                    transition: box-shadow 0.2s ease;
-                }
-
-
-                .lld-filter-field input.form-control:focus {
-                    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+                    height: 36px;
+                    border-radius: 8px;
                 }
 
 
                 .lld-filter-actions {
                     display: flex;
-                    gap: 10px;
+                    gap: 8px;
                     margin-left: auto;
                 }
 
 
                 .lld-filter-actions .btn {
-                    border-radius: 10px;
-                    height: 42px;
-                    padding: 0 22px;
-                    font-weight: 600;
-                    border: none;
-                    transition: all 0.2s ease;
-                }
-
-
-                .lld-filter-actions .btn-primary {
-                    background: #fff;
-                    color: #4f46e5;
-                    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-                }
-
-
-                .lld-filter-actions .btn-primary:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
-                }
-
-
-                .lld-filter-actions .btn-default {
-                    background: rgba(255, 255, 255, 0.14);
-                    color: #fff;
-                    border: 1px solid rgba(255, 255, 255, 0.35);
-                    backdrop-filter: blur(6px);
-                }
-
-
-                .lld-filter-actions .btn-default:hover {
-                    background: rgba(255, 255, 255, 0.24);
+                    height: 36px;
+                    padding: 0 16px;
+                    border-radius: 8px;
+                    font-weight: 500;
                 }
 
 
@@ -992,107 +1000,72 @@ class LeadListDashboard {
                 .lld-kpi-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-                    gap: 16px;
-                    margin-bottom: 22px;
+                    gap: 12px;
+                    margin-bottom: 16px;
                 }
 
 
                 .lld-kpi-card {
-                    --kpi: #5b5bd6;
-                    --kpi-2: #8e4ec6;
-                    position: relative;
-                    overflow: hidden;
                     background: var(--card-bg);
                     border: 1px solid var(--border-color);
                     border-radius: var(--lld-radius);
-                    padding: 18px 18px 18px 20px;
-                    min-height: 104px;
+                    padding: 16px 18px;
+                    min-height: 92px;
                     display: flex;
                     align-items: center;
                     gap: 14px;
                     box-shadow: var(--lld-shadow);
-                    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-                }
-
-
-                .lld-kpi-card::before {
-                    content: "";
-                    position: absolute;
-                    left: 0;
-                    right: 0;
-                    top: 0;
-                    height: 3px;
-                    background: linear-gradient(90deg, var(--kpi), var(--kpi-2));
-                    opacity: 0.9;
-                }
-
-
-                .lld-kpi-card::after {
-                    content: "";
-                    position: absolute;
-                    right: -40px;
-                    bottom: -40px;
-                    width: 120px;
-                    height: 120px;
-                    border-radius: 50%;
-                    background: radial-gradient(circle, color-mix(in srgb, var(--kpi) 14%, transparent), transparent 70%);
-                    pointer-events: none;
+                    transition: box-shadow 0.2s ease, border-color 0.2s ease;
                 }
 
 
                 .lld-kpi-card:hover {
-                    transform: translateY(-2px);
                     box-shadow: var(--lld-shadow-hover);
-                    border-color: color-mix(in srgb, var(--kpi) 35%, var(--border-color));
+                    border-color: var(--gray-300, #d4d4d4);
                 }
 
 
                 .lld-kpi-icon {
-                    width: 46px;
-                    height: 46px;
-                    border-radius: 12px;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 19px;
+                    font-size: 16px;
                     flex-shrink: 0;
-                    color: #fff;
-                    background: linear-gradient(135deg, var(--kpi), var(--kpi-2));
-                    box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--kpi) 60%, transparent);
+                    color: var(--text-color);
+                    background: var(--lld-tile);
                 }
 
 
-                .lld-kpi-total      { --kpi: #4f46e5; --kpi-2: #7c6ff0; }
-                .lld-kpi-new        { --kpi: #d946ef; --kpi-2: #f472b6; }
-                .lld-kpi-contacted  { --kpi: #0ea5e9; --kpi-2: #38bdf8; }
-                .lld-kpi-interested { --kpi: #f59e0b; --kpi-2: #fbbf24; }
-                .lld-kpi-counselled { --kpi: #10b981; --kpi-2: #34d399; }
-                .lld-kpi-admissions { --kpi: #e11d48; --kpi-2: #fb7185; }
-                .lld-kpi-conversion { --kpi: #7c3aed; --kpi-2: #a78bfa; }
-                .lld-kpi-assigned   { --kpi: #f97316; --kpi-2: #fb923c; }
+                /* the headline metrics get the solid ink tile */
+                .lld-kpi-total .lld-kpi-icon,
+                .lld-kpi-admissions .lld-kpi-icon {
+                    color: var(--card-bg);
+                    background: var(--lld-ink);
+                }
 
 
                 .lld-kpi-content {
-                    position: relative;
-                    z-index: 1;
                     min-width: 0;
                 }
 
 
                 .lld-kpi-title {
                     font-size: 11px;
-                    color: var(--text-muted);
-                    margin-bottom: 4px;
                     font-weight: 600;
+                    color: var(--text-muted);
                     text-transform: uppercase;
-                    letter-spacing: 0.07em;
+                    letter-spacing: 0.06em;
                     line-height: 1.35;
+                    margin-bottom: 4px;
                 }
 
 
                 .lld-kpi-value {
-                    font-size: 28px;
-                    font-weight: 700;
+                    font-size: 24px;
+                    font-weight: 600;
                     color: var(--text-color);
                     line-height: 1.1;
                     letter-spacing: -0.02em;
@@ -1107,8 +1080,8 @@ class LeadListDashboard {
                 .lld-two-column {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
-                    gap: 20px;
-                    margin-bottom: 20px;
+                    gap: 12px;
+                    margin-bottom: 12px;
                     align-items: start;
                 }
 
@@ -1121,12 +1094,6 @@ class LeadListDashboard {
                     display: flex;
                     flex-direction: column;
                     overflow: hidden;
-                    transition: box-shadow 0.2s ease;
-                }
-
-
-                .lld-card:hover {
-                    box-shadow: var(--lld-shadow-hover);
                 }
 
 
@@ -1134,7 +1101,7 @@ class LeadListDashboard {
                     display: flex;
                     align-items: center;
                     gap: 12px;
-                    padding: 16px 20px;
+                    padding: 12px 16px;
                     cursor: pointer;
                     user-select: none;
                     border-bottom: 1px solid var(--border-color);
@@ -1143,55 +1110,77 @@ class LeadListDashboard {
 
 
                 .lld-card-header:hover {
-                    background: var(--subtle-fg, rgba(0, 0, 0, 0.02));
+                    background: var(--subtle-accent, #f8f8f8);
                 }
 
 
-                .lld-card-header:focus-visible {
-                    outline: 2px solid var(--lld-accent);
+                .lld-card-header:focus-visible,
+                .lld-card-pin:focus-visible {
+                    outline: 2px solid var(--lld-ink);
                     outline-offset: -2px;
                 }
 
 
                 .lld-card-icon {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 9px;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 8px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 14px;
-                    color: var(--lld-accent);
-                    background: color-mix(in srgb, var(--lld-accent) 12%, transparent);
+                    font-size: 13px;
+                    color: var(--text-color);
+                    background: var(--lld-tile);
                     flex-shrink: 0;
                 }
 
 
                 .lld-card-title {
                     flex: 1;
-                    font-size: 15px;
+                    font-size: 14px;
                     font-weight: 600;
                     color: var(--text-color);
-                    letter-spacing: -0.01em;
                 }
 
 
+                .lld-card-pin,
                 .lld-card-toggle {
                     width: 28px;
                     height: 28px;
-                    border-radius: 8px;
+                    border-radius: 6px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: var(--text-muted);
-                    font-size: 11px;
-                    transition: transform 0.25s ease, background 0.15s ease, color 0.15s ease;
+                    font-size: 12px;
+                    transition: transform 0.2s ease, background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
                 }
 
 
-                .lld-card-header:hover .lld-card-toggle {
-                    background: color-mix(in srgb, var(--lld-accent) 10%, transparent);
-                    color: var(--lld-accent);
+                .lld-card-pin {
+                    opacity: 0;
+                    transform: rotate(45deg);
+                }
+
+
+                .lld-card-header:hover .lld-card-pin,
+                .lld-card-pin:focus-visible,
+                .lld-card.lld-pinned .lld-card-pin {
+                    opacity: 1;
+                }
+
+
+                .lld-card-pin:hover,
+                .lld-card-toggle:hover {
+                    background: var(--lld-tile);
+                    color: var(--text-color);
+                }
+
+
+                .lld-card.lld-pinned .lld-card-pin {
+                    color: var(--card-bg);
+                    background: var(--lld-ink);
+                    transform: rotate(0deg);
                 }
 
 
@@ -1206,7 +1195,7 @@ class LeadListDashboard {
 
 
                 .lld-card-body {
-                    padding: 20px;
+                    padding: 16px;
                 }
 
 
@@ -1219,28 +1208,28 @@ class LeadListDashboard {
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    gap: 6px;
-                    padding: 36px 16px;
+                    gap: 4px;
+                    padding: 32px 16px;
                     text-align: center;
                 }
 
 
                 .lld-empty-icon {
-                    width: 52px;
-                    height: 52px;
+                    width: 44px;
+                    height: 44px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 20px;
+                    font-size: 17px;
                     margin-bottom: 6px;
-                    color: var(--lld-accent);
-                    background: color-mix(in srgb, var(--lld-accent) 10%, transparent);
+                    color: var(--text-muted);
+                    background: var(--lld-tile);
                 }
 
 
                 .lld-empty-text {
-                    font-size: 14px;
+                    font-size: 13px;
                     font-weight: 600;
                     color: var(--text-color);
                 }
@@ -1260,8 +1249,8 @@ class LeadListDashboard {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 20px;
-                    min-height: 200px;
+                    gap: 12px;
+                    min-height: 180px;
                     flex-wrap: wrap;
                 }
 
@@ -1269,54 +1258,30 @@ class LeadListDashboard {
                 .lld-gender-item {
                     text-align: center;
                     min-width: 120px;
-                    padding: 20px 18px;
-                    border-radius: 14px;
+                    padding: 18px 16px;
+                    border-radius: 10px;
                     background: var(--card-bg);
                     border: 1px solid var(--border-color);
-                    transition: transform 0.2s ease, box-shadow 0.2s ease;
-                }
-
-
-                .lld-gender-item:hover {
-                    transform: translateY(-3px);
-                    box-shadow: var(--lld-shadow-hover);
                 }
 
 
                 .lld-gender-avatar {
-                    width: 56px;
-                    height: 56px;
+                    width: 44px;
+                    height: 44px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 22px;
-                    margin: 0 auto 12px;
-                    color: #fff;
-                }
-
-
-                .lld-gender-male .lld-gender-avatar {
-                    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-                    box-shadow: 0 6px 14px -4px rgba(14, 165, 233, 0.6);
-                }
-
-
-                .lld-gender-female .lld-gender-avatar {
-                    background: linear-gradient(135deg, #f43f5e, #d946ef);
-                    box-shadow: 0 6px 14px -4px rgba(244, 63, 94, 0.6);
-                }
-
-
-                .lld-gender-unknown .lld-gender-avatar {
-                    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-                    box-shadow: 0 6px 14px -4px rgba(139, 92, 246, 0.6);
+                    font-size: 18px;
+                    margin: 0 auto 10px;
+                    color: var(--text-color);
+                    background: var(--lld-tile);
                 }
 
 
                 .lld-gender-count {
-                    font-size: 34px;
-                    font-weight: 700;
+                    font-size: 28px;
+                    font-weight: 600;
                     color: var(--text-color);
                     letter-spacing: -0.02em;
                     font-variant-numeric: tabular-nums;
@@ -1324,17 +1289,17 @@ class LeadListDashboard {
 
 
                 .lld-gender-label {
-                    font-size: 12px;
+                    font-size: 11px;
                     color: var(--text-muted);
-                    margin-top: 4px;
+                    margin-top: 2px;
                     font-weight: 600;
                     text-transform: uppercase;
-                    letter-spacing: 0.07em;
+                    letter-spacing: 0.06em;
                 }
 
 
                 /* =========================================
-                   SOURCE
+                   SOURCE / STATUS
                 ========================================= */
 
                 .lld-source-chart {
@@ -1345,13 +1310,9 @@ class LeadListDashboard {
                 }
 
 
-                /* =========================================
-                   STATUS
-                ========================================= */
-
                 .lld-status-card {
                     width: 100%;
-                    margin-bottom: 20px;
+                    margin-bottom: 16px;
                 }
 
 
@@ -1360,11 +1321,7 @@ class LeadListDashboard {
                 }
 
 
-                .lld-status-chart {
-                    width: 100%;
-                }
-
-
+                .lld-status-chart,
                 .lld-status-chart .frappe-chart {
                     width: 100%;
                 }
@@ -1385,10 +1342,6 @@ class LeadListDashboard {
 
                 @media (max-width: 600px) {
 
-                    .lld-filter-card {
-                        padding: 18px;
-                    }
-
                     .lld-filter-field {
                         width: 100%;
                     }
@@ -1404,26 +1357,26 @@ class LeadListDashboard {
 
                     .lld-kpi-grid {
                         grid-template-columns: repeat(2, 1fr);
-                        gap: 12px;
+                        gap: 10px;
                     }
 
                     .lld-kpi-card {
-                        padding: 14px;
+                        padding: 12px;
                         gap: 10px;
                     }
 
                     .lld-kpi-icon {
-                        width: 38px;
-                        height: 38px;
-                        font-size: 15px;
+                        width: 34px;
+                        height: 34px;
+                        font-size: 14px;
                     }
 
                     .lld-kpi-value {
-                        font-size: 22px;
+                        font-size: 20px;
                     }
 
-                    .lld-gender-stats {
-                        gap: 12px;
+                    .lld-card-pin {
+                        opacity: 1;
                     }
 
                 }

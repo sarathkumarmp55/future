@@ -117,6 +117,8 @@ permission_query_conditions = {
 # before_install = "future.install.before_install"
 # after_install = "future.install.after_install"
 
+after_migrate = ["future.setup.workspace.hide_unused_workspaces"]
+
 # Uninstallation
 # ------------
 
