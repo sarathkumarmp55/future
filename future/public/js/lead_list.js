@@ -309,15 +309,15 @@ class LeadListDashboard {
 
                     <!-- Gender -->
 
-                    <div class="lld-card">
+                    <div class="lld-card" data-section="gender">
 
-                        <div class="lld-card-header">
-                            Gender Distribution
-                        </div>
+                        ${this.card_header("Gender Distribution", "venus-mars")}
 
-                        <div class="lld-gender-stats">
-                            <div class="text-muted text-center">
-                                Loading...
+                        <div class="lld-card-body">
+                            <div class="lld-gender-stats">
+                                <div class="text-muted text-center">
+                                    Loading...
+                                </div>
                             </div>
                         </div>
 
@@ -326,15 +326,15 @@ class LeadListDashboard {
 
                     <!-- Source -->
 
-                    <div class="lld-card">
+                    <div class="lld-card" data-section="source">
 
-                        <div class="lld-card-header">
-                            Lead Source
+                        ${this.card_header("Lead Source", "pie-chart")}
+
+                        <div class="lld-card-body">
+                            <div
+                                class="lld-source-chart"
+                            ></div>
                         </div>
-
-                        <div
-                            class="lld-source-chart"
-                        ></div>
 
                     </div>
 
@@ -345,15 +345,15 @@ class LeadListDashboard {
                      STATUS
                 ======================================= -->
 
-                <div class="lld-card lld-status-card">
+                <div class="lld-card lld-status-card" data-section="status">
 
-                    <div class="lld-card-header">
-                        Leads by Status
+                    ${this.card_header("Leads by Status", "bar-chart")}
+
+                    <div class="lld-card-body">
+                        <div
+                            class="lld-status-chart"
+                        ></div>
                     </div>
-
-                    <div
-                        class="lld-status-chart"
-                    ></div>
 
                 </div>
 
@@ -364,6 +364,114 @@ class LeadListDashboard {
 
         this.bind_events();
         this.add_styles();
+        this.restore_collapsed_state();
+    }
+
+
+    empty_state(icon, text) {
+
+        return `
+            <div class="lld-empty">
+                <div class="lld-empty-icon">
+                    <i class="fa fa-${icon}"></i>
+                </div>
+                <div class="lld-empty-text">${text}</div>
+                <div class="lld-empty-hint">Try a wider date range</div>
+            </div>
+        `;
+    }
+
+
+    card_header(title, icon) {
+
+        return `
+            <div class="lld-card-header" role="button" tabindex="0">
+                <span class="lld-card-icon">
+                    <i class="fa fa-${icon}"></i>
+                </span>
+                <span class="lld-card-title">${title}</span>
+                <span class="lld-card-toggle">
+                    <i class="fa fa-chevron-down"></i>
+                </span>
+            </div>
+        `;
+    }
+
+
+    // =====================================================
+    // COLLAPSE
+    // =====================================================
+
+    get_collapsed_sections() {
+
+        try {
+            return JSON.parse(
+                localStorage.getItem("lld_collapsed_sections") || "[]"
+            );
+        } catch (e) {
+            return [];
+        }
+    }
+
+
+    restore_collapsed_state() {
+
+        const collapsed = this.get_collapsed_sections();
+
+        collapsed.forEach(section => {
+            this.$dashboard
+                .find(`.lld-card[data-section="${section}"]`)
+                .addClass("lld-collapsed")
+                .find(".lld-card-body")
+                .hide();
+        });
+    }
+
+
+    toggle_section($card) {
+
+        const section = $card.data("section");
+        const $body = $card.find(".lld-card-body");
+        const collapsing = !$card.hasClass("lld-collapsed");
+
+        $card.toggleClass("lld-collapsed", collapsing);
+
+        if (collapsing) {
+            $body.slideUp(200);
+        } else {
+            // charts drawn while hidden have zero width, so redraw on expand
+            $body.slideDown(200, () => this.redraw_section(section));
+        }
+
+        let collapsed = this.get_collapsed_sections()
+            .filter(s => s !== section);
+
+        if (collapsing) {
+            collapsed.push(section);
+        }
+
+        try {
+            localStorage.setItem(
+                "lld_collapsed_sections",
+                JSON.stringify(collapsed)
+            );
+        } catch (e) {
+            // ignore storage failures
+        }
+    }
+
+
+    redraw_section(section) {
+
+        if (!this.data) {
+            return;
+        }
+
+        if (section === "source") {
+            this.render_source_chart();
+        } else if (section === "status") {
+            this.render_status_chart();
+        }
     }
 
 
@@ -372,6 +480,19 @@ class LeadListDashboard {
     // =====================================================
 
     bind_events() {
+
+        this.$dashboard
+            .find(".lld-card-header")
+            .on("click", (e) => {
+                this.toggle_section($(e.currentTarget).closest(".lld-card"));
+            })
+            .on("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    this.toggle_section($(e.currentTarget).closest(".lld-card"));
+                }
+            });
+
 
         this.$dashboard
             .find(".lld-apply-btn")
@@ -534,11 +655,7 @@ class LeadListDashboard {
 
         if (!genders.length) {
 
-            container.html(`
-                <div class="text-muted text-center">
-                    No gender data available
-                </div>
-            `);
+            container.html(this.empty_state("venus-mars", "No gender data available"));
 
             return;
         }
@@ -600,11 +717,7 @@ class LeadListDashboard {
 
         if (!sources.length) {
 
-            container.html(`
-                <div class="text-muted text-center">
-                    No source data available
-                </div>
-            `);
+            container.html(this.empty_state("pie-chart", "No source data available"));
 
             return;
         }
@@ -663,11 +776,7 @@ class LeadListDashboard {
 
         if (!statuses.length) {
 
-            container.html(`
-                <div class="text-muted text-center">
-                    No status data available
-                </div>
-            `);
+            container.html(this.empty_state("bar-chart", "No status data available"));
 
             return;
         }
@@ -743,17 +852,26 @@ class LeadListDashboard {
 
     add_styles() {
 
-        if ($("#lead-list-dashboard-style").length) {
+        if ($("#lead-list-dashboard-style-v2").length) {
             return;
         }
 
 
         $("head").append(`
 
-            <style id="lead-list-dashboard-style">
+            <style id="lead-list-dashboard-style-v2">
 
                 .lead-list-dashboard {
-                    margin-bottom: 25px;
+                    --lld-accent: #5b5bd6;
+                    --lld-accent-2: #8e4ec6;
+                    --lld-radius: 16px;
+                    --lld-shadow:
+                        0 1px 2px rgba(16, 24, 40, 0.04),
+                        0 4px 12px rgba(16, 24, 40, 0.05);
+                    --lld-shadow-hover:
+                        0 2px 4px rgba(16, 24, 40, 0.05),
+                        0 12px 28px rgba(16, 24, 40, 0.10);
+                    margin-bottom: 28px;
                 }
 
 
@@ -767,119 +885,103 @@ class LeadListDashboard {
                 ========================================= */
 
                 .lld-filter-card {
-
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    border-radius: 14px;
-
-                    padding: 20px 24px;
-
-                    margin-bottom: 20px;
-
-                    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+                    position: relative;
+                    overflow: hidden;
+                    background:
+                        radial-gradient(circle at 85% -20%, rgba(255, 255, 255, 0.28), transparent 45%),
+                        radial-gradient(circle at 0% 120%, rgba(255, 255, 255, 0.12), transparent 40%),
+                        linear-gradient(120deg, #4f46e5 0%, #6d4fd8 50%, #8e4ec6 100%);
+                    border-radius: var(--lld-radius);
+                    padding: 22px 26px;
+                    margin-bottom: 22px;
+                    box-shadow:
+                        0 10px 30px -8px rgba(79, 70, 229, 0.45),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.18);
                     color: #fff;
-
                 }
 
 
                 .lld-filter-row {
-
                     display: flex;
-
                     align-items: flex-end;
-
                     gap: 16px;
-
                     flex-wrap: wrap;
-
                 }
 
 
                 .lld-filter-field {
-
                     width: 200px;
-
                 }
 
 
                 .lld-filter-field label {
-
                     display: block;
-
                     font-weight: 600;
-
                     margin-bottom: 8px;
-
-                    color: rgba(255, 255, 255, 0.9);
-                    font-size: 13px;
+                    color: rgba(255, 255, 255, 0.85);
+                    font-size: 11px;
                     text-transform: uppercase;
-                    letter-spacing: 0.4px;
-
+                    letter-spacing: 0.08em;
                 }
 
 
                 .lld-filter-field input.form-control {
-
-                    border: none;
+                    border: 1px solid rgba(255, 255, 255, 0.35);
                     border-radius: 10px;
                     height: 42px;
-                    background: rgba(255, 255, 255, 0.95);
-                    color: #333;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    background: rgba(255, 255, 255, 0.96);
+                    color: #1f2937;
+                    font-weight: 500;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+                    transition: box-shadow 0.2s ease;
+                }
 
+
+                .lld-filter-field input.form-control:focus {
+                    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
                 }
 
 
                 .lld-filter-actions {
-
                     display: flex;
-
                     gap: 10px;
-
                     margin-left: auto;
-
                 }
 
 
                 .lld-filter-actions .btn {
-
                     border-radius: 10px;
-                    padding: 9px 20px;
+                    height: 42px;
+                    padding: 0 22px;
                     font-weight: 600;
                     border: none;
                     transition: all 0.2s ease;
-
                 }
 
 
                 .lld-filter-actions .btn-primary {
-
                     background: #fff;
-                    color: #667eea;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
+                    color: #4f46e5;
+                    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
                 }
 
 
                 .lld-filter-actions .btn-primary:hover {
-
-                    transform: translateY(-2px);
-                    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-
+                    transform: translateY(-1px);
+                    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
                 }
 
 
                 .lld-filter-actions .btn-default {
-
-                    background: rgba(255, 255, 255, 0.2);
+                    background: rgba(255, 255, 255, 0.14);
                     color: #fff;
-
+                    border: 1px solid rgba(255, 255, 255, 0.35);
+                    backdrop-filter: blur(6px);
                 }
 
 
                 .lld-filter-actions .btn-default:hover {
-
-                    background: rgba(255, 255, 255, 0.3);
-
+                    background: rgba(255, 255, 255, 0.24);
                 }
 
 
@@ -888,234 +990,265 @@ class LeadListDashboard {
                 ========================================= */
 
                 .lld-kpi-grid {
-
                     display: grid;
-
-                    grid-template-columns:
-                        repeat(
-                            auto-fit,
-                            minmax(180px, 1fr)
-                        );
-
+                    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
                     gap: 16px;
-
-                    margin-bottom: 20px;
-
+                    margin-bottom: 22px;
                 }
 
 
                 .lld-kpi-card {
-
-                    background: var(--card-bg);
-
-                    border-radius: 14px;
-
-                    padding: 20px;
-
-                    min-height: 110px;
-
-                    display: flex;
-                    align-items: center;
-                    gap: 16px;
-
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-
-                    border: 1px solid
-                        var(--border-color);
-
-                    transition:
-                        transform 0.2s ease,
-                        box-shadow 0.2s ease;
-
+                    --kpi: #5b5bd6;
+                    --kpi-2: #8e4ec6;
                     position: relative;
                     overflow: hidden;
-
+                    background: var(--card-bg);
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--lld-radius);
+                    padding: 18px 18px 18px 20px;
+                    min-height: 104px;
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    box-shadow: var(--lld-shadow);
+                    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
                 }
 
 
                 .lld-kpi-card::before {
-
                     content: "";
                     position: absolute;
                     left: 0;
+                    right: 0;
                     top: 0;
-                    bottom: 0;
-                    width: 5px;
+                    height: 3px;
+                    background: linear-gradient(90deg, var(--kpi), var(--kpi-2));
+                    opacity: 0.9;
+                }
 
+
+                .lld-kpi-card::after {
+                    content: "";
+                    position: absolute;
+                    right: -40px;
+                    bottom: -40px;
+                    width: 120px;
+                    height: 120px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, color-mix(in srgb, var(--kpi) 14%, transparent), transparent 70%);
+                    pointer-events: none;
                 }
 
 
                 .lld-kpi-card:hover {
-
-                    transform: translateY(-3px);
-                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-
+                    transform: translateY(-2px);
+                    box-shadow: var(--lld-shadow-hover);
+                    border-color: color-mix(in srgb, var(--kpi) 35%, var(--border-color));
                 }
 
 
                 .lld-kpi-icon {
-
-                    width: 52px;
-                    height: 52px;
+                    width: 46px;
+                    height: 46px;
                     border-radius: 12px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 22px;
+                    font-size: 19px;
                     flex-shrink: 0;
-                    background: rgba(0, 0, 0, 0.04);
-
+                    color: #fff;
+                    background: linear-gradient(135deg, var(--kpi), var(--kpi-2));
+                    box-shadow: 0 6px 14px -4px color-mix(in srgb, var(--kpi) 60%, transparent);
                 }
 
 
-                .lld-kpi-total::before { background: #667eea; }
-                .lld-kpi-total .lld-kpi-icon {
-                    color: #667eea;
-                    background: rgba(102, 126, 234, 0.12);
-                }
+                .lld-kpi-total      { --kpi: #4f46e5; --kpi-2: #7c6ff0; }
+                .lld-kpi-new        { --kpi: #d946ef; --kpi-2: #f472b6; }
+                .lld-kpi-contacted  { --kpi: #0ea5e9; --kpi-2: #38bdf8; }
+                .lld-kpi-interested { --kpi: #f59e0b; --kpi-2: #fbbf24; }
+                .lld-kpi-counselled { --kpi: #10b981; --kpi-2: #34d399; }
+                .lld-kpi-admissions { --kpi: #e11d48; --kpi-2: #fb7185; }
+                .lld-kpi-conversion { --kpi: #7c3aed; --kpi-2: #a78bfa; }
+                .lld-kpi-assigned   { --kpi: #f97316; --kpi-2: #fb923c; }
 
 
-                .lld-kpi-new::before { background: #f093fb; }
-                .lld-kpi-new .lld-kpi-icon {
-                    color: #f093fb;
-                    background: rgba(240, 147, 251, 0.12);
-                }
-
-
-                .lld-kpi-contacted::before { background: #4facfe; }
-                .lld-kpi-contacted .lld-kpi-icon {
-                    color: #4facfe;
-                    background: rgba(79, 172, 254, 0.12);
-                }
-
-
-                .lld-kpi-interested::before { background: #f6d365; }
-                .lld-kpi-interested .lld-kpi-icon {
-                    color: #f6a827;
-                    background: rgba(246, 211, 101, 0.18);
-                }
-
-
-                .lld-kpi-counselled::before { background: #43e97b; }
-                .lld-kpi-counselled .lld-kpi-icon {
-                    color: #2ecc71;
-                    background: rgba(67, 233, 123, 0.12);
-                }
-
-
-                .lld-kpi-admissions::before { background: #fa709a; }
-                .lld-kpi-admissions .lld-kpi-icon {
-                    color: #fa709a;
-                    background: rgba(250, 112, 154, 0.12);
-                }
-
-
-                .lld-kpi-conversion::before { background: #a18cd1; }
-                .lld-kpi-conversion .lld-kpi-icon {
-                    color: #a18cd1;
-                    background: rgba(161, 140, 209, 0.12);
-                }
-
-
-                .lld-kpi-assigned::before { background: #ff9a9e; }
-                .lld-kpi-assigned .lld-kpi-icon {
-                    color: #ff9a9e;
-                    background: rgba(255, 154, 158, 0.12);
+                .lld-kpi-content {
+                    position: relative;
+                    z-index: 1;
+                    min-width: 0;
                 }
 
 
                 .lld-kpi-title {
-
-                    font-size: 12px;
-
+                    font-size: 11px;
                     color: var(--text-muted);
-
-                    margin-bottom: 6px;
-
+                    margin-bottom: 4px;
                     font-weight: 600;
                     text-transform: uppercase;
-                    letter-spacing: 0.5px;
-
+                    letter-spacing: 0.07em;
+                    line-height: 1.35;
                 }
 
 
                 .lld-kpi-value {
-
                     font-size: 28px;
-
                     font-weight: 700;
-
                     color: var(--text-color);
-
                     line-height: 1.1;
-
+                    letter-spacing: -0.02em;
+                    font-variant-numeric: tabular-nums;
                 }
 
 
                 /* =========================================
-                   TWO COLUMN
+                   CARDS
                 ========================================= */
 
                 .lld-two-column {
-
                     display: grid;
-
-                    grid-template-columns:
-                        1fr 1fr;
-
+                    grid-template-columns: 1fr 1fr;
                     gap: 20px;
-
                     margin-bottom: 20px;
-
-                    align-items: stretch;
-
+                    align-items: start;
                 }
 
 
                 .lld-card {
-
                     background: var(--card-bg);
-
-                    border: 1px solid
-                        var(--border-color);
-
-                    border-radius: 14px;
-
-                    padding: 22px;
-
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-
+                    border: 1px solid var(--border-color);
+                    border-radius: var(--lld-radius);
+                    box-shadow: var(--lld-shadow);
                     display: flex;
                     flex-direction: column;
+                    overflow: hidden;
+                    transition: box-shadow 0.2s ease;
+                }
 
+
+                .lld-card:hover {
+                    box-shadow: var(--lld-shadow-hover);
                 }
 
 
                 .lld-card-header {
-
-                    font-size: 16px;
-
-                    font-weight: 700;
-
-                    margin-bottom: 18px;
-
-                    color: var(--text-color);
-
                     display: flex;
                     align-items: center;
-                    gap: 10px;
-
+                    gap: 12px;
+                    padding: 16px 20px;
+                    cursor: pointer;
+                    user-select: none;
+                    border-bottom: 1px solid var(--border-color);
+                    transition: background 0.15s ease;
                 }
 
 
-                .lld-card-header::before {
+                .lld-card-header:hover {
+                    background: var(--subtle-fg, rgba(0, 0, 0, 0.02));
+                }
 
-                    content: "";
-                    width: 4px;
-                    height: 20px;
-                    border-radius: 2px;
-                    background: linear-gradient(180deg, #667eea, #764ba2);
 
+                .lld-card-header:focus-visible {
+                    outline: 2px solid var(--lld-accent);
+                    outline-offset: -2px;
+                }
+
+
+                .lld-card-icon {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 9px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                    color: var(--lld-accent);
+                    background: color-mix(in srgb, var(--lld-accent) 12%, transparent);
+                    flex-shrink: 0;
+                }
+
+
+                .lld-card-title {
+                    flex: 1;
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: var(--text-color);
+                    letter-spacing: -0.01em;
+                }
+
+
+                .lld-card-toggle {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: var(--text-muted);
+                    font-size: 11px;
+                    transition: transform 0.25s ease, background 0.15s ease, color 0.15s ease;
+                }
+
+
+                .lld-card-header:hover .lld-card-toggle {
+                    background: color-mix(in srgb, var(--lld-accent) 10%, transparent);
+                    color: var(--lld-accent);
+                }
+
+
+                .lld-card.lld-collapsed .lld-card-toggle {
+                    transform: rotate(-90deg);
+                }
+
+
+                .lld-card.lld-collapsed .lld-card-header {
+                    border-bottom-color: transparent;
+                }
+
+
+                .lld-card-body {
+                    padding: 20px;
+                }
+
+
+                /* =========================================
+                   EMPTY STATE
+                ========================================= */
+
+                .lld-empty {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    padding: 36px 16px;
+                    text-align: center;
+                }
+
+
+                .lld-empty-icon {
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 20px;
+                    margin-bottom: 6px;
+                    color: var(--lld-accent);
+                    background: color-mix(in srgb, var(--lld-accent) 10%, transparent);
+                }
+
+
+                .lld-empty-text {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: var(--text-color);
+                }
+
+
+                .lld-empty-hint {
+                    font-size: 12px;
+                    color: var(--text-muted);
                 }
 
 
@@ -1124,103 +1257,79 @@ class LeadListDashboard {
                 ========================================= */
 
                 .lld-gender-stats {
-
                     display: flex;
-
                     align-items: center;
-
                     justify-content: center;
-
-                    gap: 40px;
-
-                    min-height: 230px;
-
+                    gap: 20px;
+                    min-height: 200px;
                     flex-wrap: wrap;
-
                 }
 
 
                 .lld-gender-item {
-
                     text-align: center;
-
-                    min-width: 110px;
-
-                    padding: 18px;
-
-                    border-radius: 16px;
-
+                    min-width: 120px;
+                    padding: 20px 18px;
+                    border-radius: 14px;
                     background: var(--card-bg);
-
-                    border: 1px solid
-                        var(--border-color);
-
-                    transition: transform 0.2s ease;
-
+                    border: 1px solid var(--border-color);
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
                 }
 
 
                 .lld-gender-item:hover {
-
-                    transform: translateY(-4px);
-
+                    transform: translateY(-3px);
+                    box-shadow: var(--lld-shadow-hover);
                 }
 
 
                 .lld-gender-avatar {
-
-                    width: 64px;
-                    height: 64px;
+                    width: 56px;
+                    height: 56px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 26px;
+                    font-size: 22px;
                     margin: 0 auto 12px;
-                    background: rgba(0, 0, 0, 0.04);
-
+                    color: #fff;
                 }
 
 
                 .lld-gender-male .lld-gender-avatar {
-                    color: #4facfe;
-                    background: rgba(79, 172, 254, 0.15);
+                    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+                    box-shadow: 0 6px 14px -4px rgba(14, 165, 233, 0.6);
                 }
 
 
                 .lld-gender-female .lld-gender-avatar {
-                    color: #fa709a;
-                    background: rgba(250, 112, 154, 0.15);
+                    background: linear-gradient(135deg, #f43f5e, #d946ef);
+                    box-shadow: 0 6px 14px -4px rgba(244, 63, 94, 0.6);
                 }
 
 
                 .lld-gender-unknown .lld-gender-avatar {
-                    color: #a18cd1;
-                    background: rgba(161, 140, 209, 0.15);
+                    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+                    box-shadow: 0 6px 14px -4px rgba(139, 92, 246, 0.6);
                 }
 
 
                 .lld-gender-count {
-
-                    font-size: 38px;
-
+                    font-size: 34px;
                     font-weight: 700;
-
                     color: var(--text-color);
-
+                    letter-spacing: -0.02em;
+                    font-variant-numeric: tabular-nums;
                 }
 
 
                 .lld-gender-label {
-
-                    font-size: 14px;
-
+                    font-size: 12px;
                     color: var(--text-muted);
-
-                    margin-top: 6px;
-
+                    margin-top: 4px;
                     font-weight: 600;
-
+                    text-transform: uppercase;
+                    letter-spacing: 0.07em;
                 }
 
 
@@ -1229,15 +1338,10 @@ class LeadListDashboard {
                 ========================================= */
 
                 .lld-source-chart {
-
                     width: 100%;
-
-                    min-height: 280px;
-
                     display: flex;
                     align-items: center;
                     justify-content: center;
-
                 }
 
 
@@ -1246,31 +1350,23 @@ class LeadListDashboard {
                 ========================================= */
 
                 .lld-status-card {
-
                     width: 100%;
-
-                    overflow-x: auto;
-
                     margin-bottom: 20px;
+                }
 
+
+                .lld-status-card .lld-card-body {
+                    overflow-x: auto;
                 }
 
 
                 .lld-status-chart {
-
                     width: 100%;
-
-                    min-height: 420px;
-
-                    padding: 10px 5px 20px;
-
                 }
 
 
                 .lld-status-chart .frappe-chart {
-
                     width: 100%;
-
                 }
 
 
@@ -1278,27 +1374,10 @@ class LeadListDashboard {
                    RESPONSIVE
                 ========================================= */
 
-                @media (max-width: 1100px) {
-
-                    .lld-kpi-grid {
-
-                        grid-template-columns:
-                            repeat(
-                                auto-fit,
-                                minmax(160px, 1fr)
-                            );
-
-                    }
-
-                }
-
-
                 @media (max-width: 900px) {
 
                     .lld-two-column {
-
                         grid-template-columns: 1fr;
-
                     }
 
                 }
@@ -1306,56 +1385,45 @@ class LeadListDashboard {
 
                 @media (max-width: 600px) {
 
-                    .lld-filter-field {
-
-                        width: 100%;
-
+                    .lld-filter-card {
+                        padding: 18px;
                     }
 
+                    .lld-filter-field {
+                        width: 100%;
+                    }
 
                     .lld-filter-actions {
-
                         width: 100%;
-
                         margin-left: 0;
-
                     }
-
 
                     .lld-filter-actions button {
-
                         flex: 1;
-
                     }
 
-
-                    .lld-gender-stats {
-
-                        gap: 16px;
-
+                    .lld-kpi-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 12px;
                     }
-
 
                     .lld-kpi-card {
-
-                        padding: 16px;
-
+                        padding: 14px;
+                        gap: 10px;
                     }
-
 
                     .lld-kpi-icon {
-
-                        width: 44px;
-                        height: 44px;
-                        font-size: 18px;
-
+                        width: 38px;
+                        height: 38px;
+                        font-size: 15px;
                     }
 
-
                     .lld-kpi-value {
+                        font-size: 22px;
+                    }
 
-                        font-size: 24px;
-
+                    .lld-gender-stats {
+                        gap: 12px;
                     }
 
                 }
