@@ -193,36 +193,37 @@ class LeadDashboard {
 	}
 
 	kpis_html(d) {
-		const k = d.kpis;
+		const k = d.kpis, st = d.stages;
 		const pct = (n) => (k.total ? Math.round((n * 100) / k.total) : 0);
-		let delta = "";
+		let delta = "&nbsp;";
 		if (k.previous_total || k.total) {
 			const diff = k.total - k.previous_total;
 			const cls = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
-			const sign = diff > 0 ? "+" : "";
-			delta = `<span class="ld-delta ${cls}">${sign}${diff} ${__("vs previous period")}</span>`;
+			delta = `<span class="ld-delta ${cls}">${diff > 0 ? "+" : ""}${diff} ${__("vs previous period")}</span>`;
 		}
-		const tile = (label, value, foot, accent = "") => `
-			<div class="ld-kpi ${accent}">
+		const tile = (key, label, value, foot, accent = "") => `
+			<button type="button" class="ld-kpi ${accent}" data-tile="${key}" title="${__("Show these leads")}">
 				<div class="ld-kpi-label">${label}</div>
 				<div class="ld-kpi-value">${value}</div>
 				<div class="ld-kpi-foot">${foot}</div>
-			</div>`;
+			</button>`;
+		const late = k.late
+			? `<span class="ld-late">${frappe.utils.icon("triangle-alert", "xs")} ${__("{0} past the {1}h limit", [fmt_int(k.late), k.sla_hours])}</span>`
+			: __("All within the {0}h first-call limit", [k.sla_hours]);
 		return [
-			tile(__("Leads"), fmt_int(k.total), delta || "&nbsp;", "ld-kpi-hero"),
-			tile(__("Contacted"), fmt_int(k.contacted), __("{0}% of leads", [pct(k.contacted)])),
-			tile(__("Interested"), fmt_int(k.interested), __("{0}% of leads", [pct(k.interested)])),
-			tile(__("Admissions"), fmt_int(k.won), __("{0}% conversion", [k.conversion])),
-			tile(
-				__("Not yet called"),
-				fmt_int(k.untouched),
-				k.late
-					? `<span class="ld-late">${frappe.utils.icon("alert-triangle", "xs")} ${__("{0} past the {1}h first-call limit", [fmt_int(k.late), k.sla_hours])}</span>`
-					: __("All within the {0}h first-call limit", [k.sla_hours]),
-				k.late ? "ld-kpi-alert" : ""
-			),
-			tile(__("Lost"), fmt_int(k.lost), __("Disqualified, invalid or lost")),
+			tile("all", __("Leads"), fmt_int(k.total), delta, "ld-kpi-hero"),
+			tile("new", __("Not Called Yet"), fmt_int(st.New), late, k.late ? "ld-kpi-alert" : ""),
+			tile("contacted", __("Contacted"), fmt_int(st.Contacted), __("{0}% · trying to reach", [pct(st.Contacted)])),
+			tile("interested", __("Interested"), fmt_int(st.Interested), __("{0}% · in discussion", [pct(st.Interested)])),
+			tile("won", __("Admissions"), fmt_int(st.Won), __("{0}% conversion", [k.conversion])),
+			tile("lost", __("Lost"), fmt_int(st.Lost), __("Disqualified, invalid or lost")),
 		].join("");
+	}
+
+	open_tile(key) {
+		const opts = this.data.tile_filters[key === "new" && this.data.kpis.late && this._late_click ? "late" : key];
+		frappe.route_options = Object.assign({}, opts);
+		frappe.set_route("List", "Lead");
 	}
 
 	funnel_html(d) {
@@ -276,7 +277,7 @@ class LeadDashboard {
 						(t) => `<a class="ld-task" href="/desk/lead/${encodeURIComponent(t.lead)}">
 					<span class="ld-pill ${t.when}">${
 						t.when === "overdue"
-							? `${frappe.utils.icon("alert-triangle", "xs")} ${__("Overdue")}`
+							? `${frappe.utils.icon("triangle-alert", "xs")} ${__("Overdue")}`
 							: __("Today")
 					}</span>
 					<span class="ld-task-main">
@@ -361,7 +362,7 @@ class LeadDashboard {
 					}%"></div></div><span>${r.conversion}%</span></div></td>
 					<td class="num">${
 						r.overdue
-							? `<span class="ld-pill overdue">${frappe.utils.icon("alert-triangle", "xs")} ${r.overdue}</span>`
+							? `<span class="ld-pill overdue">${frappe.utils.icon("triangle-alert", "xs")} ${r.overdue}</span>`
 							: `<span class="ld-muted">0</span>`
 					}</td>
 				</tr>`
@@ -478,6 +479,10 @@ class LeadDashboard {
 				me.show_tip(frappe.utils.escape_html($(this).attr("data-tip")), e.clientX, e.clientY - 6);
 			})
 			.on("mouseleave", () => this.hide_tip());
+		this.$root.find(".ld-kpi[data-tile]").on("click", (e) => {
+			this._late_click = !!$(e.target).closest(".ld-late").length;
+			this.open_tile($(e.currentTarget).attr("data-tile"));
+		});
 		this.$root.find(".ld-click").on("click", function () {
 			frappe.set_route("Form", "Lead", $(this).attr("data-name"));
 		});
@@ -532,7 +537,10 @@ function inject_styles() {
 	padding: 3px 10px; border-radius: 999px; }
 .ld-period { color: var(--text-muted); font-size: var(--text-sm); margin-top:6px; }
 .ld-kpis { display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:12px; margin-bottom:12px; }
-.ld-kpi { background: var(--card-bg); border:1px solid var(--border-color); border-radius: 12px; padding: 14px 16px; }
+.ld-kpi { background: var(--card-bg); border:1px solid var(--border-color); border-radius: 12px; padding: 14px 16px;
+	text-align:left; cursor:pointer; transition: border-color .12s; width:100%; }
+.ld-kpi:hover { border-color: var(--ld-series); }
+.ld-kpi:focus-visible { outline: 2px solid var(--ld-series); outline-offset: 2px; }
 .ld-kpi-hero { background: linear-gradient(135deg, var(--ld-series-soft), transparent 70%), var(--card-bg); }
 .ld-kpi-label { color: var(--text-muted); font-size: var(--text-sm); }
 .ld-kpi-value { font-size: 28px; font-weight: 650; letter-spacing: -.02em; color: var(--heading-color, var(--text-color)); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }

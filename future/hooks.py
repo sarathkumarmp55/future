@@ -65,6 +65,14 @@ app_license = "mit"
 # Document Events
 # ---------------
 doc_events = {
+    "Program Enrollment": {
+        "validate": "future.admissions.enrollment_validate",
+        "on_update_after_submit": "future.admissions.enrollment_after_submit_update",
+    },
+    "Payment Approval Log": {
+        "on_submit": "future.admissions.on_pal_submit",
+        "on_cancel": "future.admissions.on_pal_cancel",
+    },
     "ToDo": {
         "validate": "future.lead_management.validate_todo_assignment",
         "after_insert": "future.lead_management.on_todo_insert",
@@ -214,16 +222,17 @@ after_migrate = ["future.setup.workspace.hide_unused_workspaces"]
 
 doctype_js = {
     
-    "Lead" : ["public/js/lead.js", "public/js/lead_handover_form.js"],
+    "Lead" : ["public/js/lead.js", "public/js/lead_handover_form.js", "public/js/assign_role_patch.js"],
     "Opportunity" : "public/js/opportunity.js",
     "Payment Entry" : "public/js/payment_entry.js",
     "Program" : "public/js/program.js",
+    "Program Enrollment" : "public/js/program_enrollment.js",
     "Student" : "public/js/student.js",
     
 }
 
 doctype_list_js = {
-    "Lead" : ["public/js/lead_list.js", "public/js/lead_handover_list.js"],
+    "Lead" : ["public/js/lead_list.js", "public/js/lead_handover_list.js", "public/js/assign_role_patch.js"],
     "Payment Approval Log" : "public/js/payment_approval_log_list.js"
 }
 

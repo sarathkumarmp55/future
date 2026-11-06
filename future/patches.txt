@@ -6,3 +6,4 @@
 # Patches added in this section will be executed after doctypes are migrated
 future.patches.copy_lead_source_to_utm_source
 future.patches.unblock_future_module_for_sales_users
+future.patches.backfill_lead_assignment

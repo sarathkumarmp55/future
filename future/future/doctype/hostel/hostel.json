@@ -7,28 +7,90 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "hostel_name",
+  "hostel_code",
+  "location",
+  "locality",
+  "column_break_s",
+  "status",
+  "start_date",
+  "vacated_date",
   "naming_series",
+  "section_capacity",
+  "ac_capacity",
+  "non_ac_capacity",
+  "column_break_c",
+  "total_capacity",
+  "occupied",
+  "area_sqft",
+  "section_lease",
+  "monthly_rent",
+  "security_deposit",
+  "rcm_applicable",
+  "rcm_gst",
+  "column_break_l",
+  "payment_day",
+  "escalation_period",
+  "escalation_rate",
+  "notice_period",
+  "section_address",
+  "address",
+  "section_fees",
   "hostel_type",
   "details"
  ],
  "fields": [
   {
-   "fieldname": "hostel_type",
-   "fieldtype": "Select",
-   "in_filter": 1,
-   "in_global_search": 1,
+   "fieldname": "hostel_name",
+   "fieldtype": "Data",
+   "label": "Hostel Name",
    "in_list_view": 1,
-   "in_preview": 1,
-   "in_standard_filter": 1,
-   "label": "Hostel Type",
-   "options": "\nAC\nNON-AC",
-   "reqd": 1
+   "in_global_search": 1,
+   "bold": 1
   },
   {
-   "fieldname": "details",
-   "fieldtype": "Table",
-   "label": "Details",
-   "options": "Hostel Details"
+   "fieldname": "hostel_code",
+   "fieldtype": "Data",
+   "label": "Hostel Code",
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "label": "Location",
+   "options": "Location",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "locality",
+   "fieldtype": "Data",
+   "label": "Locality"
+  },
+  {
+   "fieldname": "column_break_s",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nYet to Open\nVacated",
+   "default": "Active",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date"
+  },
+  {
+   "fieldname": "vacated_date",
+   "fieldtype": "Date",
+   "label": "Vacated Date",
+   "depends_on": "eval:doc.status==\"Vacated\""
   },
   {
    "default": "HOSTEL-",
@@ -37,11 +99,134 @@
    "label": "Naming Series",
    "options": "HOSTEL-",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_capacity",
+   "fieldtype": "Section Break",
+   "label": "Capacity"
+  },
+  {
+   "fieldname": "ac_capacity",
+   "fieldtype": "Int",
+   "label": "AC Capacity"
+  },
+  {
+   "fieldname": "non_ac_capacity",
+   "fieldtype": "Int",
+   "label": "Non AC Capacity"
+  },
+  {
+   "fieldname": "column_break_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_capacity",
+   "fieldtype": "Int",
+   "label": "Total Capacity",
+   "read_only": 1
+  },
+  {
+   "fieldname": "occupied",
+   "fieldtype": "Int",
+   "label": "Occupied",
+   "read_only": 1,
+   "description": "Students currently allotted here."
+  },
+  {
+   "fieldname": "area_sqft",
+   "fieldtype": "Float",
+   "label": "Area (Sq ft)"
+  },
+  {
+   "fieldname": "section_lease",
+   "fieldtype": "Section Break",
+   "label": "Lease",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "monthly_rent",
+   "fieldtype": "Currency",
+   "label": "Monthly Rent"
+  },
+  {
+   "fieldname": "security_deposit",
+   "fieldtype": "Currency",
+   "label": "Security Deposit"
+  },
+  {
+   "fieldname": "rcm_applicable",
+   "fieldtype": "Check",
+   "label": "RCM Applicable"
+  },
+  {
+   "fieldname": "rcm_gst",
+   "fieldtype": "Currency",
+   "label": "RCM GST",
+   "depends_on": "rcm_applicable"
+  },
+  {
+   "fieldname": "column_break_l",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_day",
+   "fieldtype": "Data",
+   "label": "Rent Payment Date"
+  },
+  {
+   "fieldname": "escalation_period",
+   "fieldtype": "Data",
+   "label": "Escalation Period"
+  },
+  {
+   "fieldname": "escalation_rate",
+   "fieldtype": "Percent",
+   "label": "Escalation Rate"
+  },
+  {
+   "fieldname": "notice_period",
+   "fieldtype": "Data",
+   "label": "Notice Period"
+  },
+  {
+   "fieldname": "section_address",
+   "fieldtype": "Section Break",
+   "label": "Address",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "section_fees",
+   "fieldtype": "Section Break",
+   "label": "Fees"
+  },
+  {
+   "fieldname": "hostel_type",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Default Room Type",
+   "options": "\nAC\nNON-AC",
+   "reqd": 0
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Table",
+   "label": "Fee Components",
+   "options": "Hostel Details",
+   "description": "Used by Payment Approval Log when this hostel is picked."
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-25 21:24:56.248841",
+ "modified": "2026-11-06 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Hostel",
@@ -59,10 +244,30 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "share": 1,
+   "email": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "report": 1,
+   "print": 1
   }
  ],
- "search_fields": "hostel_type",
+ "search_fields": "hostel_code,location",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "hostel_name",
+ "show_title_field_in_link": 1,
+ "track_changes": 1
 }

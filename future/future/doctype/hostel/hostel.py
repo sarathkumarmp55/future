@@ -1,9 +1,7 @@
-# Copyright (c) 2026, sarath and contributors
-# For license information, please see license.txt
-
-# import frappe
 from frappe.model.document import Document
+from frappe.utils import cint
 
 
 class Hostel(Document):
-	pass
+	def validate(self):
+		self.total_capacity = cint(self.ac_capacity) + cint(self.non_ac_capacity)

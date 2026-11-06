@@ -1,0 +1,174 @@
+{
+ "actions": [],
+ "creation": "2026-11-06 17:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_hostel",
+  "hostel_rates",
+  "hostel_fee_item",
+  "hostel_months",
+  "section_other",
+  "fsp_plus_one_school_fee",
+  "fsp_plus_two_school_fee",
+  "mess_fee_per_day",
+  "column_break_o",
+  "workbook_fee",
+  "study_kit_fee",
+  "tablet_fee",
+  "section_course",
+  "course_installments",
+  "column_break_ci",
+  "installment_gap_days",
+  "section_items",
+  "transport_fee_item",
+  "tablet_fee_item",
+  "column_break_i",
+  "caution_deposit_item"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_hostel",
+   "fieldtype": "Section Break",
+   "label": "Hostel Fee",
+   "description": "Applicable only for offline programs."
+  },
+  {
+   "fieldname": "hostel_rates",
+   "fieldtype": "Table",
+   "label": "Hostel Fee Rates",
+   "options": "Hostel Fee Rate"
+  },
+  {
+   "fieldname": "hostel_fee_item",
+   "fieldtype": "Link",
+   "label": "Hostel Fee Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "hostel_months",
+   "fieldtype": "Int",
+   "label": "Hostel Months per Year",
+   "default": "10"
+  },
+  {
+   "fieldname": "section_other",
+   "fieldtype": "Section Break",
+   "label": "Other Fees"
+  },
+  {
+   "fieldname": "fsp_plus_one_school_fee",
+   "fieldtype": "Currency",
+   "label": "FSP Plus One School Fee (per year)"
+  },
+  {
+   "fieldname": "fsp_plus_two_school_fee",
+   "fieldtype": "Currency",
+   "label": "FSP Plus Two School Fee (per year)"
+  },
+  {
+   "fieldname": "mess_fee_per_day",
+   "fieldtype": "Currency",
+   "label": "Mess Fee, Day Scholars (per day)"
+  },
+  {
+   "fieldname": "column_break_o",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "workbook_fee",
+   "fieldtype": "Currency",
+   "label": "Work Book / Material"
+  },
+  {
+   "fieldname": "study_kit_fee",
+   "fieldtype": "Currency",
+   "label": "Study Kit, Online Students"
+  },
+  {
+   "fieldname": "tablet_fee",
+   "fieldtype": "Currency",
+   "label": "Tablet Fee"
+  },
+  {
+   "fieldname": "section_course",
+   "fieldtype": "Section Break",
+   "label": "Course Fee Instalments",
+   "description": "Default schedule built for a new enrollment: registration, material and orientation fees are due on admission; the course fee is split into instalments."
+  },
+  {
+   "fieldname": "course_installments",
+   "fieldtype": "Int",
+   "label": "Number of Instalments",
+   "default": "3"
+  },
+  {
+   "fieldname": "column_break_ci",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "installment_gap_days",
+   "fieldtype": "Int",
+   "label": "Days Between Instalments",
+   "default": "45"
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Fee Items",
+   "description": "Items used to classify payments on the enrollment dashboard."
+  },
+  {
+   "fieldname": "transport_fee_item",
+   "fieldtype": "Link",
+   "label": "Transportation Fee Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "tablet_fee_item",
+   "fieldtype": "Link",
+   "label": "Tablet Fee Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_i",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "caution_deposit_item",
+   "fieldtype": "Link",
+   "label": "Caution Deposit Item",
+   "options": "Item"
+  }
+ ],
+ "modified": "2026-11-06 17:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Admission Settings",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "issingle": 1,
+ "track_changes": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1
+  }
+ ]
+}

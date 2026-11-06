@@ -12,23 +12,7 @@ from frappe.utils import add_days, date_diff, getdate, nowdate
 
 from future.permissions.visibility import get_visible_users, is_unrestricted, lead_condition, record_condition
 
-# Lead.status values grouped into funnel stages. Anything not listed counts as "New".
-STAGES = {
-	"Contacted": ("Contacted", "Did Not Pick", "Set Reminder", "Schedule Callback", "Follow-up"),
-	"Interested": (
-		"Interested",
-		"Demo Scheduled",
-		"Negotiation",
-		"Opportunity",
-		"Qualified",
-		"Manager Approval",
-		"Discount Approval Pending",
-		"Discount Approved",
-		"Payment Approval Pending",
-	),
-	"Won": ("Payment Done", "Won", "Converted Student"),
-	"Lost": ("Disqualified", "Invalid", "Close Lead", "Lost"),
-}
+from future.lead_stages import STAGES, late_filters, stage_statuses
 
 
 def _in(values):
@@ -143,6 +127,7 @@ def get_data(filters=None):
 		"recent": _recent(where),
 		"opportunities": _opportunities(from_date, to_date, member, visible_users),
 		"handovers": _handovers() if role != "lead_user" else None,
+		"tile_filters": _tile_filters(filters, from_date, to_date, member),
 		"pending_requests": len(
 			frappe.get_list("Lead Handover", filters={"docstatus": 0, "request_status": "Requested"}, pluck="name")
 		)
@@ -315,3 +300,22 @@ def _handovers():
 		r.to_name = frappe.utils.get_fullname(r.to_user) if r.to_user else _("Several people")
 		r.by_name = frappe.utils.get_fullname(r.handed_over_by)
 	return rows
+
+
+def _tile_filters(filters, from_date, to_date, member):
+	"""Lead list route options for each KPI tile, so a click shows exactly the counted leads."""
+	base = {"creation": ["between", [str(from_date), str(to_date)]]}
+	if filters.get("source"):
+		base["utm_source"] = filters["source"]
+	if filters.get("course_category"):
+		base["custom_course_categories"] = filters["course_category"]
+	if filters.get("location"):
+		base["custom_location"] = filters["location"]
+	if member:
+		base["_assign"] = ["like", f'%"{member}"%']
+	out = {"all": dict(base)}
+	for key, stage in (("new", "New"), ("contacted", "Contacted"), ("interested", "Interested"), ("won", "Won"), ("lost", "Lost")):
+		out[key] = {**base, "status": ["in", stage_statuses(stage)]}
+	late = {f[1]: [f[2], f[3]] if f[2] != "is" else ["is", f[3]] for f in late_filters()}
+	out["late"] = {**{k: v for k, v in base.items() if k != "creation"}, **late}
+	return out
