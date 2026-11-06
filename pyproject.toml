@@ -8,7 +8,7 @@ requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
-    # "frappe~=15.0.0" # Installed and managed by bench.
+    # "frappe~=16.0.0" # Installed and managed by bench.
 ]
 
 [build-system]
@@ -19,5 +19,9 @@ build-backend = "flit_core.buildapi"
 [tool.bench.dev-dependencies]
 # package_name = "~=1.1.0"
 
+# Frappe Cloud checks these before adding the app to a bench. The desk layout
+# (Sidebar / Dock / Workspace rails) needs Frappe 16.50 or later.
 [tool.bench.frappe-dependencies]
-frappe = ">=15,<16"
+frappe = ">=16.50.0,<17.0.0"
+erpnext = ">=16.50.0,<17.0.0"
+education = ">=16.0.0,<17.0.0"

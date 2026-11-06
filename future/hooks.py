@@ -24,7 +24,9 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+# Future adds fields and logic to ERPNext (Lead, Opportunity, invoices) and Education
+# (Student, Program, Program Enrollment), so those install first.
+required_apps = ["frappe/erpnext", "frappe/education"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
