@@ -482,7 +482,24 @@ def get_enrollment_dashboard(name):
 		or_filters={"from_enrollment": doc.name, "to_enrollment": doc.name},
 		fields=["name", "from_category", "to_category", "amount"],
 	)
+	def schedule(rows):
+		out = []
+		for r in sorted(rows or [], key=lambda r: str(r.due_date or "")):
+			label = frappe.db.get_value("Item", r.component, "item_name") or r.component
+			out.append(
+				{
+					"label": "Course fee" if r.component == doc.program else label,
+					"due_date": r.due_date,
+					"amount": flt(r.final_amount),
+					"paid": flt(r.paid_amount),
+					"status": r.status,
+				}
+			)
+		return out
+
 	return {
+		"course_schedule": schedule(doc.custom_fee_schedule),
+		"hostel_schedule": schedule(doc.custom_hostel_schedule),
 		"discounts": discounts,
 		"refunds": refunds,
 		"transfers": transfers,

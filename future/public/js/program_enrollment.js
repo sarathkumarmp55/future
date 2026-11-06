@@ -119,180 +119,174 @@ function set_final(frm) {
 	frm.set_value("custom_final_amount", flt(frm.doc.custom_offered_amount) - flt(frm.doc.custom_discount_amount));
 }
 
+// The 360 view answers one question first: what does this student owe, and are they on time?
+// One accent (the Future blue) on the data only: progress bars and the next instalment.
+// Colour elsewhere means status: red overdue, green paid, amber due soon. Figures are tabular.
 function render_360(d) {
 	const e = d.enrollment, s = d.student, c = d.course, h = d.hostel, x = d.extras;
 	const esc = (v) => frappe.utils.escape_html(v == null ? "" : String(v));
 	const money = (v) => format_currency(v || 0, null, 0);
 	const date = (v) => (v ? frappe.datetime.str_to_user(v) : "—");
-	const ico = (name, size = "sm") => frappe.utils.icon(name, size);
-	const initials = (s.student_name || "?").split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 	const is_hosteller = e.hosteller === "Hosteller";
-
-	// fee status chip, as in the PDF ("Pending" next to "Joined")
-	const fee_status = c.balance <= 0 && c.total ? ["Fees Paid", "good"] : c.paid > 0 ? ["Part Paid", "warn"] : ["Payment Pending", "warn"];
-	const adm_tone = { Pending: "warn", Joined: "teal", Completed: "indigo", Dropped: "bad", Cancelled: "bad" }[e.status] || "";
-	const chip = (text, tone = "", dot = false) => `<span class="fe-chip ${tone}">${dot ? '<i class="fe-dot"></i>' : ""}${esc(text)}</span>`;
-	const status_chip = (status) => chip(__(status || ""), { Approved: "good", Paid: "good", Pending: "warn", Requested: "warn", Waiting: "warn", Rejected: "bad", Cancelled: "bad" }[status] || "");
+	const initials = (s.student_name || "?").split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 	const link = (route, name) => `<a href="/desk/${route}/${encodeURIComponent(name)}">${esc(name)}</a>`;
 
-	const alert = d.overdue
-		? `<div class="fe-alert bad">${ico("triangle-alert")}<span><b>${__("Overdue")}</b> ${__("{0} past its due date", [money(d.overdue)])}</span></div>`
-		: c.balance
-		? `<div class="fe-alert warn">${ico("triangle-alert")}<span><b>${__("Outstanding Balance")}</b> ${__("{0} pending on course fee", [money(c.balance)])}${
-				c.next_due ? ` · ${__("next {0} on {1}", [money(c.next_due.amount), date(c.next_due.date)])}` : ""
-		  }</span></div>`
+	const PILL = {
+		Paid: "pos", Approved: "pos", Joined: "pos", Completed: "pos", "Fees paid": "pos",
+		Overdue: "neg", Rejected: "neg", Cancelled: "neg", Dropped: "neg",
+		"Partly Paid": "warn", Requested: "warn", Waiting: "warn", Pending: "warn", "Part paid": "warn", "Payment pending": "warn",
+	};
+	const pill = (text) => `<span class="fe-pill ${PILL[text] || ""}">${esc(__(text))}</span>`;
+	const fee_state = c.total && c.balance <= 0 ? "Fees paid" : d.overdue ? "Overdue" : c.paid > 0 ? "Part paid" : "Payment pending";
+
+	// ---- notice: only when something needs doing
+	const notice = d.overdue
+		? `<div class="fe-notice neg"><b>${money(d.overdue)} ${__("overdue")}</b><span>${__("An instalment is past its due date. Collect it or agree a new date with the parent.")}</span></div>`
+		: c.next_due && c.balance
+		? `<div class="fe-notice"><b>${__("Next instalment {0} on {1}", [money(c.next_due.amount), date(c.next_due.date)])}</b><span>${__("{0} of the course fee is still to be paid.", [money(c.balance)])}</span></div>`
 		: "";
 
+	// ---- who
+	const meta_line = [e.program, e.center, [e.program_type, e.vertical].filter(Boolean).join(" · "), e.academic_year].filter(Boolean).map(esc).join(" · ");
 	const header = `
 		<section class="fe-card fe-head">
-			<div class="fe-avatar">${s.image ? `<img src="${esc(s.image)}" alt="">` : initials}</div>
+			<div class="fe-avatar">${s.image ? `<img src="${esc(s.image)}" alt="">` : esc(initials)}</div>
 			<div class="fe-who">
-				<div class="fe-name">${esc(s.student_name || s.id)}</div>
-				<div class="fe-mono fe-muted">${[s.id, s.student_mobile_number, s.student_email_id].filter(Boolean).map(esc).join(" · ")}</div>
-				<div class="fe-chips">
-					${chip(__(fee_status[0]), fee_status[1], true)}
-					${chip(__(e.status || "Pending"), adm_tone, true)}
-					${e.program ? chip(e.program, "indigo") : ""}
-					${e.center ? chip(e.center) : ""}
-					${e.vertical || e.academic_year ? chip([e.vertical, e.academic_year].filter(Boolean).join(" · ")) : ""}
-					${e.program_type ? chip(e.program_type, "teal", true) : ""}
-				</div>
+				<div class="fe-name-row"><h4 class="fe-name">${esc(s.student_name || s.id)}</h4>${pill(e.status || "Pending")}${fee_state === "Fees paid" ? pill(fee_state) : ""}</div>
+				<div class="fe-line">${meta_line}</div>
+				<div class="fe-line fe-muted">${[s.id, s.student_mobile_number, s.student_email_id].filter(Boolean).map(esc).join(" · ")}</div>
 			</div>
-			<div class="fe-meta">
-				<div><span>${__("Enrollment")}</span><b class="fe-mono">${esc(e.name)}</b></div>
-				<div><span>${__("Date")}</span><b class="fe-mono">${esc(e.date || "")}</b></div>
-				<div><span>${__("Batch")}</span><b class="fe-mono">${esc(e.batch || "—")}</b></div>
-			</div>
+			<dl class="fe-facts">
+				<div><dt>${__("Enrollment")}</dt><dd>${esc(e.name)}</dd></div>
+				<div><dt>${__("Enrolled on")}</dt><dd>${date(e.date)}</dd></div>
+				<div><dt>${__("Batch")}</dt><dd>${esc(e.batch || "Not assigned")}</dd></div>
+			</dl>
 		</section>`;
 
-	const tile = (accent, icon, label, value, foot, value_tone = "") => `
-		<div class="fe-tile" style="--acc: var(--fe-${accent})">
-			<span class="fe-tile-ico">${ico(icon)}</span>
-			<div class="fe-label">${label}</div>
-			<div class="fe-value ${value_tone}">${value}</div>
-			<div class="fe-foot">${foot}</div>
-		</div>`;
-	const tiles = `
-		<div class="fe-tiles">
-			${tile("indigo", "target", __("Offered"), money(c.offered), c.discount ? __("{0} discount", [money(c.discount)]) : esc(e.academic_year || ""))}
-			${tile("green", "circle-check", __("Course Paid"), money(c.paid), __("{0}% of total", [c.pct]), "green")}
-			${tile("red", "hourglass", __("Balance"), money(c.balance), c.next_due ? __("Next due {0}", [date(c.next_due.date)]) : __("Course fee due"), c.balance ? "red" : "")}
-			${tile("violet", "clipboard-list", __("Course Type"), esc(e.vertical || e.program_type || "—"), esc([e.program_type, e.vertical].filter(Boolean).join(" · ")), "text")}
-			${tile("teal", "house", __("Hostel Paid"), is_hosteller ? money(h.paid) : "—", is_hosteller ? __("Bal: {0}", [money(h.balance)]) : __("Day scholar"), "teal")}
-		</div>`;
-
-	const fee_card = (accent, icon, title, sub, total, paid, balance, pct, labels, footer) => `
-		<section class="fe-card fe-accent" style="--acc: var(--fe-${accent})">
-			<header>
-				<span class="fe-ico">${ico(icon)}</span>
-				<div><h5>${title}</h5><span class="fe-muted">${sub}</span></div>
-				<span class="fe-chip soft">${__("{0}% collected", [pct])}</span>
-			</header>
-			<div class="fe-progress">
-				<div class="fe-pct"><b>${pct}<small>%</small></b><span>${__("Paid")}</span></div>
-				<div class="fe-progress-main">
-					<div class="fe-big">${money(paid)}</div>
-					<div class="fe-muted">${__("of {0} total", [money(total)])}</div>
-					<div class="fe-bar"><div style="width:${Math.min(pct, 100)}%"></div></div>
-					<div class="fe-trio">
-						<div><span>${labels[0]}</span><b class="acc">${money(total)}</b></div>
-						<div><span>${__("Paid")}</span><b class="green">${money(paid)}</b></div>
-						<div><span>${__("Balance")}</span><b class="${balance ? "red" : ""}">${money(balance)}</b></div>
-					</div>
-				</div>
-			</div>
-			${footer ? `<footer class="fe-card-foot ${balance ? "warn" : "good"}">${ico(balance ? "triangle-alert" : "circle-check", "xs")}<span>${footer}</span><span class="fe-chip ${balance ? "warn" : "good"}">${__("{0}% paid", [pct])}</span></footer>` : ""}
+	// ---- the figures: one strip, the balance leads
+	const fig = (label, value, note, cls = "") => `
+		<div class="fe-fig ${cls}"><span class="fe-fig-label">${label}</span><span class="fe-fig-value">${value}</span><span class="fe-fig-note">${note}</span></div>`;
+	const strip = `
+		<section class="fe-card fe-strip">
+			${fig(__("Balance due"), money(c.balance),
+				d.overdue ? __("{0} of it overdue", [money(d.overdue)])
+				: c.next_due ? __("Next {0} on {1}", [money(c.next_due.amount), date(c.next_due.date)])
+				: c.balance ? "" : __("Nothing due"), `lead ${d.overdue ? "neg" : ""}`)}
+			${fig(__("Course fee"), money(c.total), c.discount ? __("{0} offered, {1} discount", [money(c.offered), money(c.discount)]) : __("as offered"))}
+			${fig(__("Paid so far"), money(c.paid), __("{0}% of the course fee", [c.pct]))}
+			${is_hosteller ? fig(__("Hostel balance"), money(h.balance), __("{0}% of the hostel fee paid", [h.pct])) : fig(__("Hostel"), __("Day scholar"), __("no hostel fee"))}
 		</section>`;
 
-	const course_card = fee_card("indigo", "credit-card", __("Course Fee"), __("Payment Progress"), c.total, c.paid, c.balance, c.pct,
-		[__("Offered")], c.balance ? __("Balance Outstanding") : __("Course fee fully paid"));
-	const hostel_card = is_hosteller
-		? fee_card("teal", "house", esc(e.hostel || __("Hostel")), __("Hostel Fee Summary"), h.total, h.paid, h.balance, h.pct,
-			[__("Total")], h.balance ? __("{0} pending", [money(h.balance)]) : __("Hostel fee fully paid"))
+	// ---- schedules: the instalments themselves
+	const schedule_table = (rows, limit) => {
+		if (!rows.length) return `<p class="fe-empty">${__("No schedule yet. Use Fees → Build Default Schedules.")}</p>`;
+		const shown = limit ? rows.slice(0, limit) : rows;
+		const next = rows.find((r) => r.status !== "Paid");
+		return `<table class="fe-table">
+			<thead><tr><th>${__("Due")}</th><th>${__("For")}</th><th class="num">${__("Amount")}</th><th class="num">${__("Paid")}</th><th>${__("Status")}</th></tr></thead>
+			<tbody>${shown
+				.map(
+					(r) => `<tr class="${r === next ? "is-next" : ""}">
+				<td>${date(r.due_date)}</td><td>${esc(r.label)}</td>
+				<td class="num">${money(r.amount)}</td><td class="num">${r.paid ? money(r.paid) : '<span class="fe-muted">—</span>'}</td>
+				<td>${pill(r.status)}</td></tr>`
+				)
+				.join("")}</tbody></table>
+			${limit && rows.length > limit ? `<p class="fe-more">${__("{0} more instalments in the Fee Plan tab", [rows.length - limit])}</p>` : ""}`;
+	};
+	const bar = (pct) => `<div class="fe-bar" role="img" aria-label="${pct}% paid"><span style="width:${Math.min(pct, 100)}%"></span></div>`;
+	const course = `
+		<section class="fe-card">
+			<div class="fe-card-head"><h5>${__("Course fee")}</h5><span class="fe-muted">${__("{0} of {1} paid", [money(c.paid), money(c.total)])}</span></div>
+			${bar(c.pct)}
+			${schedule_table(d.course_schedule)}
+		</section>`;
+	const hostel = is_hosteller
+		? `<section class="fe-card">
+			<div class="fe-card-head"><h5>${__("Hostel fee")}</h5><span class="fe-muted">${esc([e.hostel, e.hostel_type].filter(Boolean).join(" · "))}</span></div>
+			<div class="fe-sub">${__("{0} of {1} paid", [money(h.paid), money(h.total)])}</div>
+			${bar(h.pct)}
+			${schedule_table(d.hostel_schedule, 6)}
+		</section>`
 		: "";
 
-	const step = (label, when, done, icon, tag) => `
-		<div class="fe-step ${done ? "done" : ""}">
-			<span class="fe-step-dot">${ico(icon)}</span>
-			<b>${label}</b>
-			<span class="fe-muted fe-mono">${when ? esc(when) : "&nbsp;"}</span>
-			${tag || ""}
-		</div>`;
-	const arrow = (done) => `<span class="fe-arrow ${done ? "done" : ""}">${ico("arrow-right")}</span>`;
+	// ---- journey: a plain stepper
+	const steps = [
+		[__("Enrolled"), e.date, true],
+		[__("Joined"), e.joined_on, !!e.joined_on],
+		[__("Completed"), null, e.status === "Completed"],
+	];
+	const current = steps.findIndex((st) => !st[2]);
 	const journey = `
-		<section class="fe-card fe-accent" style="--acc: var(--fe-indigo)">
-			<header><span class="fe-ico">${ico("graduation-cap")}</span><div><h5>${__("Student Journey")}</h5><span class="fe-muted">${__("Enrollment milestones")}</span></div></header>
-			<div class="fe-journey">
-				${step(__("Enrolled"), e.date, true, "clipboard-list", e.discount ? chip(__("Discount"), "green") : "")}
-				${arrow(!!e.joined_on)}
-				${step(__("Joined"), e.joined_on, !!e.joined_on, "graduation-cap", e.hostel ? chip(__("Hostel"), "teal") : "")}
-				${arrow(e.status === "Completed")}
-				${step(__("Completed"), null, e.status === "Completed", "trophy")}
-			</div>
+		<section class="fe-card">
+			<div class="fe-card-head"><h5>${__("Journey")}</h5></div>
+			<ol class="fe-steps">${steps
+				.map(
+					([label, when, done], i) => `<li class="${done ? "done" : i === current ? "now" : ""}">
+				<span class="fe-step-mark"></span><span class="fe-step-label">${label}</span>
+				<span class="fe-muted">${when ? date(when) : i === current ? __("Next step") : ""}</span></li>`
+				)
+				.join("")}</ol>
+			${e.discount || e.hostel ? `<p class="fe-note">${[e.discount ? __("Discount of {0} applied", [money(c.discount)]) : "", e.hostel ? __("Hostel allotted: {0}", [esc(e.hostel)]) : ""].filter(Boolean).join(" · ")}</p>` : ""}
 		</section>`;
 
-	const extra = (accent, icon, label, sub, value) => `
-		<div class="fe-extra" style="--acc: var(--fe-${accent})">
-			<span class="fe-ico">${ico(icon)}</span>
-			<div><b>${label}</b><span class="fe-muted">${sub}</span></div>
-			<b class="fe-extra-val ${value ? "acc" : "fe-muted"}">${money(value)}</b>
-		</div>`;
-	const extras = `
-		<section class="fe-card fe-accent fe-rainbow">
-			<header><span class="fe-ico" style="--acc: var(--fe-orange)">${ico("package")}</span><div><h5>${__("Additional Charges")}</h5><span class="fe-muted">${__("Transport · Tablet · Refund")}</span></div></header>
-			${extra("orange", "bus", __("Transportation Fee"), __("Total transport paid"), x.transport)}
-			${extra("violet", "tablet-smartphone", __("Tablet Fee"), __("Total tab fee paid"), x.tablet)}
-			${extra("teal", "shield-check", __("Caution Deposit"), __("Refundable"), x.caution)}
-			${extra("pink", "undo-2", __("Refunded Amount"), __("Total amount refunded"), x.refunded)}
+	// ---- other money: definition rows, no icons
+	const row = (label, value, note) => `<div class="fe-row"><dt>${label}${note ? `<span class="fe-muted">${note}</span>` : ""}</dt><dd>${value ? money(value) : '<span class="fe-muted">—</span>'}</dd></div>`;
+	const other = `
+		<section class="fe-card">
+			<div class="fe-card-head"><h5>${__("Other charges")}</h5></div>
+			<dl class="fe-rows">
+				${row(__("Transportation"), x.transport, __("paid"))}
+				${row(__("Tablet"), x.tablet, __("paid"))}
+				${row(__("Caution deposit"), x.caution, __("refundable"))}
+				${row(__("Refunded"), x.refunded)}
+			</dl>
 		</section>`;
 
-	const table_card = (accent, icon, title, rows, headers, cells, empty) => `
-		<section class="fe-card fe-accent" style="--acc: var(--fe-${accent})">
-			<header><span class="fe-ico">${ico(icon)}</span><div><h5>${title}</h5></div></header>
-			${rows.length
-				? `<div class="fe-table-wrap"><table class="fe-table"><thead><tr>${headers.map((hd, i) => `<th class="${i === 2 ? "num" : ""}">${hd}</th>`).join("")}</tr></thead>
-					<tbody>${rows.map((r) => `<tr>${cells(r).map((v, i) => `<td class="${i === 2 ? "num" : ""}">${v}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
-				: `<div class="fe-empty">${empty}</div>`}
+	const list_card = (title, rows, render, empty) => `
+		<section class="fe-card">
+			<div class="fe-card-head"><h5>${title}</h5>${rows.length ? `<span class="fe-muted">${rows.length}</span>` : ""}</div>
+			${rows.length ? `<ul class="fe-list">${rows.map(render).join("")}</ul>` : `<p class="fe-empty">${empty}</p>`}
 		</section>`;
-
-	const discounts = table_card("green", "percent", __("Discount & Concessions"), d.discounts,
-		[__("Request"), __("Discount"), __("Amount"), __("Status")],
-		(r) => [link("discount-approval-log", r.name), esc(r.discount_id || r.base_of_discount || ""), money(r.amount), status_chip(r.discount_status)],
-		__("No discount requests"));
-	const moves = [...d.refunds.map((r) => ({ ...r, _t: "refund" })), ...d.transfers.map((t) => ({ ...t, _t: "transfer" })), ...d.pending_transfers.map((t) => ({ ...t, _t: "pending" }))];
-	const refunds = table_card("pink", "undo-2", __("Refunds & Transfers"), moves,
-		[__("Document"), __("What"), __("Amount"), __("Status")],
-		(r) => r._t === "refund"
-			? [link("fee-refund-request", r.name), esc(__("Refund of {0}", [r.category])), money(-r.amount), status_chip(r.status)]
-			: r._t === "pending"
-			? [link("fee-transfer-request", r.name), esc(`${r.from_category} → ${r.to_category}`), money(r.amount), status_chip("Waiting")]
-			: [link("fee-transfer-request", r.name), esc(`${__(r.kind)}: ${r.category}`), money(r.amount), status_chip("Approved")],
-		__("No refunds or transfers"));
+	const discounts = list_card(__("Discounts"), d.discounts,
+		(r) => `<li><span>${link("discount-approval-log", r.name)}<span class="fe-muted">${esc(r.discount_id || r.base_of_discount || "")}</span></span><span class="num">${money(r.amount)}</span>${pill(r.discount_status)}</li>`,
+		__("No discount requested"));
+	const moves = [
+		...d.refunds.map((r) => ({ doc: r.name, route: "fee-refund-request", what: __("Refund of {0}", [r.category]), amount: -r.amount, status: r.status })),
+		...d.transfers.map((t) => ({ doc: t.name, route: "fee-transfer-request", what: `${__(t.kind)} · ${t.category}`, amount: t.amount, status: "Approved" })),
+		...d.pending_transfers.map((t) => ({ doc: t.name, route: "fee-transfer-request", what: `${t.from_category} → ${t.to_category}`, amount: t.amount, status: "Waiting" })),
+	];
+	const refunds = list_card(__("Refunds and transfers"), moves,
+		(m) => `<li><span>${link(m.route, m.doc)}<span class="fe-muted">${esc(m.what)}</span></span><span class="num">${money(m.amount)}</span>${pill(m.status)}</li>`,
+		__("None so far"));
 	const tablets = d.tablets.length
-		? table_card("violet", "tablet-smartphone", __("Tablet"), d.tablets, [__("Tablet ID"), __("Model"), __("Allocated"), __("Returned")],
-			(t) => [esc(t.tablet_id), esc(t.model || ""), date(t.allocated_on), t.returned_on ? date(t.returned_on) : chip(__("With student"), "teal")], "")
+		? list_card(__("Tablet"), d.tablets,
+			(t) => `<li><span>${esc(t.tablet_id)}<span class="fe-muted">${esc(t.model || "")} · ${__("given {0}", [date(t.allocated_on)])}</span></span><span></span>${t.returned_on ? pill("Returned") : pill("With student")}</li>`, "")
 		: "";
-	const payments = table_card("indigo", "receipt", __("Payments"), d.payments,
-		[__("Payment"), __("Category"), __("Amount"), __("Item"), __("Mode"), __("Date")],
-		(p) => [link("payment-approval-log", p.log), esc(p.category), money(p.amount), esc(p.item), esc(p.mode || ""), date(p.date)],
-		__("No approved payments yet"));
+
+	const payments = `
+		<section class="fe-card">
+			<div class="fe-card-head"><h5>${__("Payments received")}</h5><span class="fe-muted">${d.payments.length ? money(d.payments.reduce((a, p) => a + p.amount, 0)) : ""}</span></div>
+			${d.payments.length
+				? `<table class="fe-table"><thead><tr><th>${__("Date")}</th><th>${__("For")}</th><th class="num">${__("Amount")}</th><th>${__("Mode")}</th><th>${__("Approval")}</th></tr></thead>
+				<tbody>${d.payments.map((p) => `<tr><td>${date(p.date)}</td><td>${esc(p.category)}<span class="fe-muted"> · ${esc(p.item)}</span></td>
+				<td class="num">${money(p.amount)}</td><td>${esc(p.mode || "")}</td><td>${link("payment-approval-log", p.log)}</td></tr>`).join("")}</tbody></table>`
+				: `<p class="fe-empty">${__("No approved payments yet")}</p>`}
+		</section>`;
 
 	return `
 		<div class="fe-toolbar">
-			<button type="button" class="btn btn-sm fe-dl-png">${ico("image", "xs")} ${__("Download PNG")}</button>
-			<button type="button" class="btn btn-sm fe-dl-pdf">${ico("file-text", "xs")} ${__("Download PDF")}</button>
+			<button type="button" class="btn btn-default btn-sm fe-dl-png">${__("Download PNG")}</button>
+			<button type="button" class="btn btn-default btn-sm fe-dl-pdf">${__("Download PDF")}</button>
 		</div>
 		<div class="fe-sheet">
-			${alert}
+			${notice}
 			${header}
-			${tiles}
+			${strip}
 			<div class="fe-grid">
-				<div class="fe-col">${course_card}${hostel_card}</div>
-				<div class="fe-col">${journey}${extras}</div>
+				<div class="fe-col">${course}${hostel}${payments}</div>
+				<div class="fe-col">${journey}${other}${discounts}${refunds}${tablets}</div>
 			</div>
-			<div class="fe-grid">${discounts}${refunds}</div>
-			${tablets}
-			${payments}
 		</div>`;
 }
 
@@ -387,113 +381,109 @@ function fe360_styles() {
 	if (document.getElementById("fe360-styles")) return;
 	const css = `
 .fe-360 {
-	--fe-indigo:#4f46e5; --fe-green:#059669; --fe-red:#dc2626; --fe-violet:#7c3aed; --fe-teal:#0d9488;
-	--fe-orange:#ea580c; --fe-pink:#db2777; --fe-warn:#b45309; --fe-warn-bg:#fffbeb; --fe-warn-line:#fde68a;
-	--fe-bad-bg:#fef2f2; --fe-bad-line:#fecaca; --fe-sheet:#f1f5f9;
+	/* Frappe 16 neutrals; one accent (the Future logo blue) for data; status as pale pills */
+	--fe-accent: #2a78d6; --fe-accent-soft: rgba(42,120,214,.08);
+	--fe-pos: #247b50; --fe-pos-bg: #dcfae5; --fe-pos-ink: #04250e;
+	--fe-neg: #c4242a; --fe-neg-bg: #ffedea; --fe-neg-ink: #831c1e;
+	--fe-warn-bg: #fffbeb; --fe-warn-line: #fde68a; --fe-warn-ink: #92400e;
+	--fe-rule: color-mix(in srgb, var(--border-color) 60%, transparent);
 	padding: 12px 0 4px;
 }
+.fe-fig-value, .fe-table td.num, .fe-row dd, .fe-list .num, .fe-card-head .fe-muted { font-variant-numeric: tabular-nums; }
 [data-theme="dark"] .fe-360 {
-	--fe-indigo:#818cf8; --fe-green:#34d399; --fe-red:#f87171; --fe-violet:#a78bfa; --fe-teal:#2dd4bf;
-	--fe-orange:#fb923c; --fe-pink:#f472b6; --fe-warn:#fbbf24; --fe-warn-bg:rgba(251,191,36,.10); --fe-warn-line:rgba(251,191,36,.30);
-	--fe-bad-bg:rgba(248,113,113,.10); --fe-bad-line:rgba(248,113,113,.30); --fe-sheet:rgba(255,255,255,.03);
+	--fe-accent: #5598e7; --fe-accent-soft: rgba(85,152,231,.12);
+	--fe-pos: #3fc07a; --fe-pos-bg: #172a1d; --fe-pos-ink: #3fc07a;
+	--fe-neg: #e5566f; --fe-neg-bg: #2c1a20; --fe-neg-ink: #e5566f;
+	--fe-warn-bg: #2a2412; --fe-warn-line: #4a3d16; --fe-warn-ink: #f0c060;
 }
-.fe-loading, .fe-empty { color: var(--text-muted); font-size: var(--text-sm); padding: 18px; text-align:center; }
-.fe-toolbar { display:flex; justify-content:flex-end; gap:8px; margin-bottom:10px; }
-.fe-toolbar .btn { display:inline-flex; align-items:center; gap:6px; font-weight:600; }
-.fe-dl-png { background: var(--fe-indigo); color:#fff; border-color: var(--fe-indigo); }
-.fe-dl-png:hover { color:#fff; opacity:.92; }
-.fe-dl-pdf { background: var(--card-bg); color: var(--fe-red); border: 1px solid var(--fe-bad-line); }
-.fe-toolbar .icon { stroke: currentColor; }
-.fe-sheet { background: var(--fe-sheet); border-radius: 16px; padding: 14px; display:flex; flex-direction:column; gap:12px; }
-.fe-alert { display:flex; align-items:center; gap:10px; padding: 11px 16px; border-radius: 12px; font-size: var(--text-sm); border:1px solid; }
-.fe-alert .icon { stroke: currentColor; margin:0; flex-shrink:0; }
-.fe-alert > span { flex:1; text-align:left; }
-.fe-alert.warn { background: var(--fe-warn-bg); color: var(--fe-warn); border-color: var(--fe-warn-line); }
-.fe-alert.bad { background: var(--fe-bad-bg); color: var(--fe-red); border-color: var(--fe-bad-line); }
-.fe-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 18px; min-width:0; position:relative; overflow:hidden; }
-.fe-accent { border-top: 3px solid var(--acc); }
-.fe-rainbow { border-top: 0; } .fe-rainbow::before { content:""; position:absolute; inset:0 0 auto 0; height:3px; background: linear-gradient(90deg, var(--fe-orange), var(--fe-pink), var(--fe-violet)); }
-.fe-card header { display:flex; align-items:center; gap:12px; margin-bottom: 14px; }
-.fe-card header > div { flex:1; min-width:0; display:flex; flex-direction:column; }
-.fe-card h5 { margin:0; font-size: var(--text-base); font-weight:700; color: var(--heading-color, var(--text-color)); }
-.fe-ico { width:36px; height:36px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-	color: var(--acc, var(--fe-indigo)); background: color-mix(in srgb, var(--acc, var(--fe-indigo)) 13%, transparent); }
-.fe-ico .icon { stroke: currentColor; }
-.fe-muted { color: var(--text-muted); font-size: var(--text-xs); }
-.fe-mono { font-family: var(--font-family-monospace, ui-monospace, monospace); }
-.fe-head { display:flex; gap:18px; align-items:center; flex-wrap: wrap;
-	background: linear-gradient(110deg, var(--card-bg) 55%, color-mix(in srgb, var(--fe-indigo) 6%, var(--card-bg))); }
-.fe-avatar { width:60px; height:60px; border-radius:16px; background: linear-gradient(135deg,#2563eb,#4f46e5); color:#fff; font-weight:700; font-size:20px;
+.fe-loading { color: var(--text-muted); font-size: var(--text-sm); padding: 18px; }
+.fe-toolbar { display:flex; justify-content:flex-end; gap:6px; margin-bottom:10px; }
+.fe-sheet { display:flex; flex-direction:column; gap:12px; }
+.fe-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px 20px; min-width:0; }
+.fe-card-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom: 10px; }
+.fe-card h5 { margin:0; font-size: 15px; font-weight: 600; color: var(--heading-color, var(--text-color)); }
+.fe-muted { color: var(--text-muted); font-size: 13px; }
+.fe-sub { font-size: 13px; color: var(--text-muted); margin-top: -6px; }
+.fe-empty { color: var(--text-muted); font-size: 13px; margin: 2px 0 0; }
+.fe-note { color: var(--text-muted); font-size: 13px; margin: 12px 0 0; }
+.fe-more { color: var(--text-muted); font-size: 12px; margin: 8px 0 0; }
+
+.fe-notice { display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; padding: 10px 16px; border-radius: 8px; font-size: 13px;
+	background: var(--fe-warn-bg); border: 1px solid var(--fe-warn-line); color: var(--fe-warn-ink); }
+.fe-notice b { font-weight: 600; }
+.fe-notice.neg { background: var(--fe-neg-bg); border-color: color-mix(in srgb, var(--fe-neg) 25%, transparent); color: var(--fe-neg-ink); }
+
+.fe-head { display:flex; gap:16px; align-items:center; flex-wrap: wrap; }
+.fe-avatar { width:48px; height:48px; border-radius: 50%; background: var(--fe-accent-soft); color: var(--fe-accent); font-weight:600; font-size:16px;
 	display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
 .fe-avatar img { width:100%; height:100%; object-fit:cover; }
-.fe-who { flex:1; min-width: 240px; }
-.fe-name { font-size: 18px; font-weight: 800; letter-spacing:.01em; text-transform: uppercase; color: var(--heading-color, var(--text-color)); }
-.fe-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-.fe-chip { display:inline-flex; align-items:center; gap:5px; font-size: 11px; font-weight:600; padding: 2px 9px; border-radius: 999px;
-	background: var(--control-bg); color: var(--text-color); border: 1px solid var(--border-color); white-space:nowrap; }
-.fe-dot { width:6px; height:6px; border-radius:50%; background: currentColor; display:inline-block; }
-.fe-chip.warn { background: var(--fe-warn-bg); color: var(--fe-warn); border-color: var(--fe-warn-line); }
-.fe-chip.good, .fe-chip.green { background: color-mix(in srgb, var(--fe-green) 12%, transparent); color: var(--fe-green); border-color: color-mix(in srgb, var(--fe-green) 30%, transparent); }
-.fe-chip.teal { background: color-mix(in srgb, var(--fe-teal) 12%, transparent); color: var(--fe-teal); border-color: color-mix(in srgb, var(--fe-teal) 30%, transparent); }
-.fe-chip.indigo { background: color-mix(in srgb, var(--fe-indigo) 10%, transparent); color: var(--fe-indigo); border-color: color-mix(in srgb, var(--fe-indigo) 28%, transparent); }
-.fe-chip.bad { background: var(--fe-bad-bg); color: var(--fe-red); border-color: var(--fe-bad-line); }
-.fe-chip.soft { background: color-mix(in srgb, var(--acc) 10%, transparent); color: var(--acc); border-color: color-mix(in srgb, var(--acc) 30%, transparent); }
-.fe-meta { display:flex; gap: 26px; padding-left: 20px; border-left: 1px solid var(--border-color); }
-.fe-meta div { display:flex; flex-direction:column; gap:3px; }
-.fe-meta span { font-size: 10px; letter-spacing:.1em; text-transform: uppercase; color: var(--text-muted); text-align:center; }
-.fe-meta b { font-size: var(--text-sm); color: var(--text-color); }
-.fe-tiles { display:grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap:12px; }
-.fe-tile { background: var(--card-bg); border:1px solid var(--border-color); border-top: 3px solid var(--acc); border-radius:14px; padding: 14px 16px; }
-.fe-tile-ico { width:28px; height:28px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:8px;
-	color: var(--acc); background: color-mix(in srgb, var(--acc) 13%, transparent); }
-.fe-tile-ico .icon { stroke: currentColor; }
-.fe-label { font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--text-muted); font-weight:600; }
-.fe-value { font-size: 20px; font-weight: 800; margin: 3px 0 2px; font-family: var(--font-family-monospace, ui-monospace, monospace); color: var(--heading-color, var(--text-color)); }
-.fe-value.text { font-family: inherit; font-size: 17px; padding-top: 3px; }
-.fe-value.green { color: var(--fe-green); } .fe-value.red { color: var(--fe-red); } .fe-value.teal { color: var(--fe-teal); }
-.fe-foot { font-size: var(--text-xs); color: var(--text-muted); }
-.fe-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items:start; }
+.fe-who { flex:1 1 360px; min-width: 0; display:flex; flex-direction:column; gap:3px; }
+.fe-name-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; row-gap:4px; }
+.fe-name-row .fe-pill:first-of-type { margin-left: 4px; }
+.fe-name { margin:0; font-size: 18px; font-weight: 600; color: var(--heading-color, var(--text-color)); }
+.fe-line { font-size: 13px; color: var(--text-color); }
+.fe-facts { display:flex; gap: 24px; margin:0 0 0 auto; }
+.fe-facts div { display:flex; flex-direction:column; gap:2px; }
+.fe-facts dt { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+.fe-facts dd { margin:0; font-size: 13px; color: var(--text-color); }
+
+.fe-pill { display:inline-flex; align-items:center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 11.5px; font-weight: 500;
+	background: var(--control-bg); color: var(--text-color); white-space:nowrap; }
+.fe-pill.pos { background: var(--fe-pos-bg); color: var(--fe-pos-ink); }
+.fe-pill.neg { background: var(--fe-neg-bg); color: var(--fe-neg-ink); }
+.fe-pill.warn { background: var(--fe-warn-bg); color: var(--fe-warn-ink); }
+
+.fe-strip { display:grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; padding: 0; }
+.fe-fig { display:flex; flex-direction:column; gap:2px; padding: 14px 20px; border-left: 1px solid var(--border-color); min-width:0; }
+.fe-fig:first-child { border-left: 0; }
+.fe-fig-label { font-size: 13px; color: var(--text-muted); }
+.fe-fig-value { font-size: 22px; font-weight: 500; color: var(--heading-color, var(--text-color)); letter-spacing: -.01em; white-space:nowrap; }
+.fe-fig.lead .fe-fig-value { font-size: 30px; font-weight: 600; }
+.fe-fig.neg .fe-fig-value { color: var(--fe-neg); }
+.fe-fig-note { font-size: 12px; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.fe-grid { display:grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 12px; align-items:start; }
 .fe-col { display:flex; flex-direction:column; gap:12px; min-width:0; }
-.fe-progress { display:flex; gap:18px; align-items:center; }
-.fe-pct { width:64px; text-align:center; flex-shrink:0; display:flex; flex-direction:column; }
-.fe-pct b { font-size: 22px; font-weight:800; color: var(--acc); } .fe-pct small { font-size: 12px; }
-.fe-pct span { font-size: 10px; letter-spacing:.08em; text-transform: uppercase; color: var(--text-muted); }
-.fe-progress-main { flex:1; min-width:0; }
-.fe-big { font-size: 26px; font-weight: 800; color: var(--acc); font-family: var(--font-family-monospace, ui-monospace, monospace); line-height:1.1; }
-.fe-bar { height:8px; background: var(--control-bg); border-radius:4px; margin: 10px 0 12px; overflow:hidden; }
-.fe-bar div { height:100%; border-radius:4px; background: linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 60%, #22d3ee)); }
-.fe-trio { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; }
-.fe-trio div { background: var(--control-bg); border:1px solid var(--border-color); border-radius: 10px; padding: 6px 10px; display:flex; flex-direction:column; }
-.fe-trio span { font-size: 10px; text-transform: uppercase; letter-spacing:.06em; color: var(--text-muted); font-weight:600; }
-.fe-trio b { font-family: var(--font-family-monospace, ui-monospace, monospace); font-size: var(--text-sm); white-space:nowrap; color: var(--text-color); }
-.fe-trio b.acc, .fe-extra-val.acc { color: var(--acc); } .fe-trio b.green { color: var(--fe-green); } .fe-trio b.red { color: var(--fe-red); }
-.fe-card-foot { display:flex; align-items:center; gap:8px; margin: 14px -18px -16px; padding: 10px 18px; font-size: var(--text-sm); font-weight:600; border-top:1px solid var(--border-color); }
-.fe-card-foot > span:first-of-type { flex:1; }
-.fe-card-foot .icon { stroke: currentColor; }
-.fe-card-foot.warn { background: var(--fe-warn-bg); color: var(--fe-warn); }
-.fe-card-foot.good { background: color-mix(in srgb, var(--fe-green) 8%, transparent); color: var(--fe-green); }
-.fe-journey { display:flex; align-items:flex-start; justify-content:space-around; padding: 6px 4px 6px; gap:4px; }
-.fe-step { display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; min-width: 90px; color: var(--text-muted); }
-.fe-step b { font-size: var(--text-sm); }
-.fe-step-dot { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--border-color); display:flex; align-items:center; justify-content:center;
-	background: var(--control-bg); color: var(--text-muted); }
-.fe-step-dot .icon { stroke: currentColor; }
-.fe-step.done { color: var(--fe-indigo); }
-.fe-step.done .fe-step-dot { border-color: var(--fe-indigo); background: color-mix(in srgb, var(--fe-indigo) 10%, var(--card-bg)); color: var(--fe-indigo); }
-.fe-arrow { margin-top: 14px; color: var(--border-color); } .fe-arrow.done { color: var(--fe-indigo); }
-.fe-arrow .icon { stroke: currentColor; }
-.fe-extra { display:flex; align-items:center; gap:12px; padding: 11px 0; border-top: 1px solid var(--border-color); }
-.fe-extra > div { flex:1; display:flex; flex-direction:column; } .fe-extra b { font-size: var(--text-sm); color: var(--text-color); }
-.fe-extra-val { font-family: var(--font-family-monospace, ui-monospace, monospace); font-size: 16px !important; }
-.fe-table-wrap { overflow-x:auto; }
-.fe-table { width:100%; border-collapse: collapse; font-size: var(--text-sm); }
-.fe-table th { color: var(--text-muted); font-weight:600; text-align:left; padding: 7px 10px; border-bottom: 1px solid var(--border-color); white-space:nowrap;
-	font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
-.fe-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); white-space:nowrap; color: var(--text-color); }
-.fe-table tr:last-child td { border-bottom: 0; }
-.fe-table .num { text-align:right; font-family: var(--font-family-monospace, ui-monospace, monospace); }
-@media (max-width: 1100px) { .fe-tiles { grid-template-columns: repeat(3, minmax(0,1fr)); } }
-@media (max-width: 800px) { .fe-grid { grid-template-columns: 1fr; } .fe-meta { border-left:0; padding-left:0; } .fe-tiles { grid-template-columns: 1fr 1fr; } }
+.fe-bar { height: 6px; background: var(--control-bg); border-radius: 3px; margin: 2px 0 14px; overflow:hidden; }
+.fe-bar span { display:block; height:100%; background: var(--fe-accent); border-radius: 3px; }
+
+.fe-table { width:100%; border-collapse: collapse; font-size: 13px; }
+.fe-table th { font-size: 12px; font-weight: 400; color: var(--text-muted); text-align:left; padding: 0 8px 8px; }
+.fe-table td { padding: 8px; border-top: 1px solid var(--fe-rule); color: var(--text-color); white-space:nowrap; }
+.fe-table th:first-child, .fe-table td:first-child { padding-left: 0; }
+.fe-table th:last-child, .fe-table td:last-child { padding-right: 0; }
+.fe-table .num { text-align:right; }
+.fe-table tr.is-next td { background: var(--fe-accent-soft); }
+.fe-table tr.is-next td:first-child { box-shadow: inset 2px 0 0 var(--fe-accent); padding-left: 8px; }
+
+.fe-steps { list-style:none; margin: 0; padding: 0; display:flex; flex-direction:column; }
+.fe-steps li { display:grid; grid-template-columns: 18px 1fr auto; align-items:center; gap: 10px; padding: 7px 0; position:relative; }
+.fe-steps li:not(:last-child)::after { content:""; position:absolute; left: 5px; top: 22px; bottom: -8px; width: 1px; background: var(--border-color); }
+.fe-step-mark { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--border-color); background: var(--card-bg); }
+.fe-steps li.done .fe-step-mark { background: var(--text-color); border-color: var(--text-color); }
+.fe-steps li.now .fe-step-mark { border-color: var(--fe-accent); box-shadow: 0 0 0 3px var(--fe-accent-soft); }
+.fe-step-label { font-size: 13px; color: var(--text-color); }
+.fe-steps li:not(.done):not(.now) .fe-step-label { color: var(--text-muted); }
+
+.fe-rows { margin:0; display:flex; flex-direction:column; }
+.fe-row { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding: 8px 0; border-top: 1px solid var(--fe-rule); }
+.fe-row:first-child { border-top: 0; padding-top: 0; }
+.fe-row dt { font-size: 13px; font-weight: 400; color: var(--text-color); display:flex; gap:6px; align-items:baseline; }
+.fe-row dd { margin:0; font-size: 13px; color: var(--text-color); }
+.fe-list { list-style:none; margin:0; padding:0; }
+.fe-list li { display:grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items:center; padding: 8px 0; border-top: 1px solid var(--fe-rule); font-size: 13px; }
+.fe-list li:first-child { border-top:0; padding-top:0; }
+.fe-list li > span:first-child { display:flex; flex-direction:column; min-width:0; }
+.fe-list .num { text-align:right; }
+
+@media (max-width: 1100px) { .fe-grid { grid-template-columns: 1fr; } }
+@media (max-width: 720px) {
+	.fe-strip { grid-template-columns: 1fr 1fr; }
+	.fe-fig:nth-child(3) { border-left: 0; }
+	.fe-fig:nth-child(n+3) { border-top: 1px solid var(--border-color); }
+	.fe-facts { gap: 18px; }
+	.fe-table { display:block; overflow-x:auto; }
+}
 `;
 	const el = document.createElement("style");
 	el.id = "fe360-styles";

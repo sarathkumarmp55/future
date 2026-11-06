@@ -260,7 +260,7 @@ doctype_list_js = {
     "Discount Approval Log" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
     "Fee Refund Request" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
     "Fee Transfer Request" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
-    "Payment Approval Log" : "public/js/payment_approval_log_list.js"
+    "Payment Approval Log" : ["public/js/list_tiles.js", "public/js/payment_approval_log_list.js"]
 }
 
 

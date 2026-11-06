@@ -288,7 +288,7 @@ class LeadDashboard {
 				</a>`
 					)
 					.join("")
-			: empty_html(__("Nothing due. Nice work."));
+			: empty_html(__("No follow-ups due today."));
 		return `<header><h4>${__("My follow-ups")}</h4><a class="ld-link" href="/desk/todo?status=Open&reference_type=Lead">${__("All")} →</a></header>
 			<div class="ld-fu-counts">
 				<div class="ld-fu ${c.overdue ? "overdue" : ""}"><b>${c.overdue}</b><span>${__("Overdue")}</span></div>
@@ -536,20 +536,22 @@ function inject_styles() {
 	color: var(--text-color); background: var(--subtle-fg, var(--control-bg)); border:1px solid var(--border-color);
 	padding: 3px 10px; border-radius: 999px; }
 .ld-period { color: var(--text-muted); font-size: var(--text-sm); margin-top:6px; }
-.ld-kpis { display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:12px; margin-bottom:12px; }
-.ld-kpi { background: var(--card-bg); border:1px solid var(--border-color); border-radius: 12px; padding: 14px 16px;
-	text-align:left; cursor:pointer; transition: border-color .12s; width:100%; }
-.ld-kpi:hover { border-color: var(--ld-series); }
+.ld-kpis { display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:0; margin-bottom:12px;
+	background: var(--card-bg); border:1px solid var(--border-color); border-radius: 8px; overflow:hidden; }
+.ld-kpi { background: transparent; border:0; border-left:1px solid var(--border-color); border-radius: 0; padding: 14px 16px;
+	text-align:left; cursor:pointer; width:100%; color: var(--text-color); }
+.ld-kpi:first-child { border-left: 0; }
+.ld-kpi:hover { background: var(--control-bg); }
 .ld-kpi:focus-visible { outline: 2px solid var(--ld-series); outline-offset: 2px; }
-.ld-kpi-hero { background: linear-gradient(135deg, var(--ld-series-soft), transparent 70%), var(--card-bg); }
+.ld-kpi-hero .ld-kpi-value { font-size: 30px; }
 .ld-kpi-label { color: var(--text-muted); font-size: var(--text-sm); }
-.ld-kpi-value { font-size: 28px; font-weight: 650; letter-spacing: -.02em; color: var(--heading-color, var(--text-color)); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.ld-kpi-value { font-size: 24px; font-weight: 500; letter-spacing: -.02em; color: var(--heading-color, var(--text-color)); margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
 .ld-kpi-foot { color: var(--text-muted); font-size: var(--text-xs); min-height: 16px; }
 .ld-delta.up { color: var(--ld-good); } .ld-delta.down { color: var(--ld-critical); }
 .ld-grid { display:grid; gap:12px; margin-bottom:12px; }
 .ld-grid-2 { grid-template-columns: 5fr 7fr; }
 .ld-grid-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
-.ld-card { background: var(--card-bg); border:1px solid var(--border-color); border-radius: 12px; padding: 16px 18px; min-width:0; margin-bottom: 12px; }
+.ld-card { background: var(--card-bg); border:1px solid var(--border-color); border-radius: 8px; padding: 16px 18px; min-width:0; margin-bottom: 12px; }
 .ld-grid > .ld-card { margin-bottom: 0; }
 .ld-card header { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom: 14px; flex-wrap: wrap; }
 .ld-card h4 { margin:0; font-size: var(--text-base); font-weight:600; color: var(--heading-color, var(--text-color)); }
@@ -575,11 +577,12 @@ function inject_styles() {
 .ld-bar-row { display:grid; grid-template-columns: minmax(80px, 38%) 1fr 40px; gap:10px; align-items:center; }
 .ld-bar-label { font-size: var(--text-sm); color: var(--text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .ld-bar-track { height: 10px; } .ld-bar { height:100%; background: var(--ld-series); border-radius: 4px; }
-.ld-fu-counts { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; margin-bottom:12px; }
-.ld-fu { background: var(--control-bg); border-radius: 8px; padding: 8px 10px; display:flex; flex-direction:column; }
-.ld-fu b { font-size: 20px; font-variant-numeric: tabular-nums; color: var(--text-color); }
+.ld-fu-counts { display:grid; grid-template-columns: repeat(3,1fr); gap:0; margin-bottom:12px; }
+.ld-fu { padding: 2px 12px; display:flex; flex-direction:column; border-left:1px solid var(--border-color); }
+.ld-fu:first-child { border-left:0; padding-left:0; }
+.ld-fu b { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-color); }
 .ld-fu span { font-size: var(--text-xs); color: var(--text-muted); }
-.ld-fu.overdue { background: var(--ld-critical-bg); } .ld-fu.overdue b { color: var(--ld-critical); }
+.ld-fu.overdue b { color: var(--ld-critical); }
 .ld-tasks { display:flex; flex-direction:column; max-height: 230px; overflow:auto; }
 .ld-task { display:grid; grid-template-columns: auto 1fr auto; gap:10px; align-items:center; padding: 8px 4px; border-top:1px solid var(--border-color); color: var(--text-color); text-decoration:none; }
 .ld-task:hover { background: var(--control-bg); text-decoration:none; }
@@ -603,7 +606,7 @@ function inject_styles() {
 .ld-status { font-size: var(--text-xs); background: var(--control-bg); padding: 2px 8px; border-radius: 999px; }
 .ld-late { color: var(--ld-critical); display:inline-flex; gap:4px; align-items:center; }
 .ld-late .icon { stroke: currentColor; }
-.ld-kpi-alert { border-color: var(--ld-critical-bg); box-shadow: inset 0 3px 0 var(--ld-critical); }
+.ld-kpi-alert .ld-kpi-value { color: var(--ld-critical); }
 .ld-request { display:flex; align-items:center; gap:6px; margin-bottom:10px; padding: 8px 10px; border-radius: 8px;
 	background: var(--ld-warn-bg); color: var(--ld-warn); font-size: var(--text-sm); font-weight:600; }
 .ld-request:hover { text-decoration:none; color: var(--ld-warn); }
@@ -614,7 +617,7 @@ function inject_styles() {
 	background: var(--card-bg); color: var(--text-color); border:1px solid var(--border-color); box-shadow: var(--shadow-md);
 	border-radius: 8px; padding: 6px 10px; font-size: var(--text-xs); line-height:1.5; transition: opacity .1s; white-space:nowrap; }
 .ld-tip.show { opacity:1; }
-@media (max-width: 1200px) { .ld-kpis { grid-template-columns: repeat(3, minmax(0,1fr)); } .ld-grid-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 1200px) { .ld-kpis { grid-template-columns: repeat(3, minmax(0,1fr)); } .ld-kpi:nth-child(4) { border-left:0; } .ld-kpi:nth-child(n+4) { border-top:1px solid var(--border-color); } .ld-grid-3 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 900px) { .ld-grid-2, .ld-grid-3 { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .ld-kpis { grid-template-columns: 1fr 1fr; } .ld-fstep { grid-template-columns: 80px 1fr 70px; } }
 `;

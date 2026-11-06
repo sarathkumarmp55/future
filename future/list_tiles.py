@@ -159,7 +159,30 @@ def _transfer_tiles():
 	]
 
 
+def _payment_tiles():
+	P = "Payment Approval Log"
+	return [
+		{"key": "all", "label": _("All Payments"), "filters": [], "foot": _("matching the filters")},
+		{"key": "pending", "label": _("Pending"), "filters": [[P, "docstatus", "=", 0]], "foot": _("waiting for approval"), "tone": "warn"},
+		{"key": "approved", "label": _("Approved"), "filters": [[P, "docstatus", "=", 1], [P, "payment_status", "=", "Approved"]], "foot": _("invoiced and receipted"), "tone": "good"},
+		{"key": "rejected", "label": _("Rejected"), "filters": [[P, "payment_status", "=", "Rejected"]], "foot": _("not accepted"), "tone": "muted"},
+		{"key": "opportunity", "label": _("New Admissions"), "filters": [[P, "from_opportunity", "=", 1]], "foot": _("from an opportunity")},
+		{"key": "service", "label": _("Existing Students"), "filters": [[P, "from_student_service", "=", 1]], "foot": _("from student service")},
+	]
+
+
+# Money totals shown above the tiles: (field, label). They follow every filter on the list.
+SUMS = {
+	"Payment Approval Log": [
+		("fees_received_amount", _("Course Fees")),
+		("hostel_received_amount", _("Hostel")),
+		("vehicle_received_amount", _("Transport")),
+	],
+}
+
+
 CONFIG = {
+	"Payment Approval Log": _payment_tiles,
 	"Lead": _lead_tiles,
 	"Opportunity": _opportunity_tiles,
 	"Program Enrollment": _enrollment_tiles,
@@ -175,7 +198,7 @@ def get_tile_counts(doctype, filters=None):
 		frappe.throw(_("No tiles for {0}").format(doctype))
 	tiles = CONFIG[doctype]()
 	owned = {f[1] for t in tiles for f in t["filters"]}
-	if doctype == "Program Enrollment":
+	if doctype in ("Program Enrollment",):
 		owned -= {"docstatus"}
 	filters = frappe.parse_json(filters) if filters else []
 	base = [f for f in filters if not (isinstance(f, (list, tuple)) and len(f) >= 2 and f[1] in owned)]
@@ -195,4 +218,12 @@ def get_tile_counts(doctype, filters=None):
 		t["count"] = counts[t["key"]]
 		if t.get("tone") == "alert" and not t["count"]:
 			t["tone"] = "muted"
-	return {"tiles": tiles, "owned_fields": sorted(owned)}
+	sums = []
+	if doctype in SUMS:
+		fields = [{"SUM": f, "as": f} for f, _label in SUMS[doctype]]
+		row = frappe.get_list(doctype, filters=filters, fields=fields, order_by=None)
+		row = row[0] if row else {}
+		sums = [{"label": label, "value": row.get(f) or 0} for f, label in SUMS[doctype]]
+		# the total is the sum of its parts: older logs never stored total_bill_amount
+		sums.insert(0, {"label": _("Total Received"), "value": sum(x["value"] for x in sums)})
+	return {"tiles": tiles, "owned_fields": sorted(owned), "sums": sums}

@@ -23,6 +23,7 @@ class FutureListTiles {
 				<div class="lt-period" role="group" aria-label="${__("Created")}"></div>
 				<span class="lt-hint">${__("Click a tile to filter the list. Click again to clear.")}</span>
 			</div>
+			<div class="lt-sums"></div>
 			<div class="lt-tiles"></div>
 		</div>`);
 		listview.page.main.find(".lt-wrap").remove();
@@ -90,6 +91,17 @@ class FutureListTiles {
 				.join("")
 		);
 		this.$wrap.find(".lt-tile").on("click", (e) => this.apply($(e.currentTarget).attr("data-key")));
+		const sums = this.data.sums || [];
+		this.$wrap.find(".lt-sums").toggle(!!sums.length).html(
+			sums
+				.map(
+					(x, i) => `<div class="lt-sum ${i === 0 ? "lead" : ""}">
+					<span class="lt-label">${frappe.utils.escape_html(x.label)}</span>
+					<span class="lt-sum-value">${format_currency(x.value, null, 0)}</span>
+				</div>`
+				)
+				.join("")
+		);
 		this.render_periods();
 	}
 
@@ -119,24 +131,33 @@ function future_list_tile_styles() {
 [data-theme="dark"] .lt-wrap { --lt-blue:#3987e5; --lt-blue-soft:rgba(57,135,229,.16); --lt-good:#4cc38a; --lt-bad:#f08585; --lt-bad-soft:rgba(230,103,103,.14); --lt-warn:#f0b84a; }
 .lt-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
 .lt-period { display:flex; gap:4px; flex-wrap:wrap; }
-.lt-chip { border:1px solid var(--border-color); background: var(--card-bg); color: var(--text-muted); border-radius: 999px;
+.lt-chip { border:1px solid transparent; background: transparent; color: var(--text-muted); border-radius: 999px;
 	padding: 3px 11px; font-size: var(--text-xs); font-weight:500; cursor:pointer; }
 .lt-chip:hover { color: var(--text-color); }
-.lt-chip.active { background: var(--text-color); border-color: var(--text-color); color: var(--card-bg); }
+.lt-chip.active { background: var(--control-bg); border-color: var(--border-color); color: var(--text-color); font-weight:600; }
 .lt-hint { color: var(--text-muted); font-size: var(--text-xs); }
-.lt-tiles { display:grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap:10px; }
-.lt-tile { text-align:left; background: var(--card-bg); border:1px solid var(--border-color); border-radius: 12px;
-	padding: 11px 13px; cursor:pointer; display:flex; flex-direction:column; gap:2px; transition: border-color .12s, box-shadow .12s; min-width:0; }
-.lt-tile:hover { border-color: var(--lt-blue); }
-.lt-tile:focus-visible { outline: 2px solid var(--lt-blue); outline-offset: 2px; }
-.lt-tile.active { border-color: var(--lt-blue); box-shadow: inset 0 3px 0 var(--lt-blue); background: var(--lt-blue-soft); }
-.lt-label { font-size: var(--text-xs); color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.lt-value { font-size: 22px; font-weight: 650; color: var(--heading-color, var(--text-color)); font-variant-numeric: tabular-nums; letter-spacing:-.01em; }
-.lt-foot { font-size: 11px; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.lt-tile.good .lt-value { color: var(--lt-good); }
-.lt-tile.alert .lt-value { color: var(--lt-bad); } .lt-tile.alert { background: var(--lt-bad-soft); }
-.lt-tile.alert.active { box-shadow: inset 0 3px 0 var(--lt-bad); border-color: var(--lt-bad); }
-.lt-tile.warn .lt-value { color: var(--lt-warn); }
+.lt-sums { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:0; margin-bottom:10px;
+	background: var(--card-bg); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; }
+.lt-sum { display:flex; flex-direction:column; gap:2px; padding: 12px 16px; border-left:1px solid var(--border-color); min-width:0; }
+.lt-sum:first-child { border-left:0; }
+.lt-sum.lead .lt-sum-value { font-weight: 600; }
+.lt-sum-value { font-size: 20px; font-weight: 500; color: var(--heading-color, var(--text-color)); font-variant-numeric: tabular-nums; letter-spacing:-.01em;
+	white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.lt-tiles { display:flex; flex-wrap:wrap; background: var(--card-bg); border:1px solid var(--border-color); border-radius:8px; overflow:hidden; }
+.lt-tile { flex: 1 1 120px; text-align:left; background: transparent; border:0; border-left:1px solid var(--border-color); border-radius:0;
+	padding: 10px 14px 11px; cursor:pointer; display:flex; flex-direction:column; gap:1px; min-width:0; position:relative; color: var(--text-color); }
+.lt-tile:first-child { border-left:0; }
+.lt-tile:hover { background: var(--control-bg); }
+.lt-tile:focus-visible { outline: 2px solid var(--lt-blue); outline-offset: -2px; }
+.lt-tile.active::after { content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background: var(--lt-blue); }
+.lt-label { font-size: 12px; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lt-tile.active .lt-label { color: var(--text-color); }
+.lt-value { font-size: 20px; font-weight: 500; color: var(--heading-color, var(--text-color)); font-variant-numeric: tabular-nums; letter-spacing:-.01em; }
+.lt-tile.active .lt-value { font-weight: 600; }
+.lt-foot { font-size: 11.5px; color: var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lt-tile.alert .lt-value { color: var(--lt-bad); }
+.lt-tile.alert.active::after { background: var(--lt-bad); }
 @media (max-width: 640px) { .lt-tiles { grid-template-columns: repeat(2, minmax(0,1fr)); } .lt-hint { display:none; } }
 `;
 	const el = document.createElement("style");
