@@ -28,6 +28,7 @@ frappe.ui.form.on("Program Enrollment", {
 				__("Fees")
 			);
 		}
+		if (frm.doc.docstatus === 1 && frm.perm[0]?.write) add_hostel_buttons(frm);
 		if (frm.doc.docstatus === 1 && frm.doc.custom_admission_status === "Pending") {
 			frm.add_custom_button(__("Mark as Joined"), () => {
 				frappe.prompt(
@@ -49,6 +50,60 @@ frappe.ui.form.on("Program Enrollment", {
 	},
 });
 
+function add_hostel_buttons(frm) {
+	const allotted = frm.doc.custom_hostel_status === "Allotted" && frm.doc.custom_hostel;
+	const run = (method, args, msg) =>
+		frappe.xcall(`future.hostel_management.${method}`, { name: frm.doc.name, ...args }).then(() => {
+			frappe.show_alert({ message: msg, indicator: "green" });
+			frm.reload_doc();
+		});
+	const pick = (title, action_label, current, on_ok) => {
+		const d = new frappe.ui.Dialog({
+			title,
+			fields: [
+				{ fieldname: "room_type", fieldtype: "Select", label: __("Room Type"), options: ["Non AC", "AC"], default: frm.doc.custom_hostel_type || "Non AC", reqd: 1,
+				  change: () => load(d.get_value("room_type")) },
+				{ fieldname: "hostel", fieldtype: "Autocomplete", label: __("Hostel"), reqd: 1, options: [] },
+				{ fieldname: "date", fieldtype: "Date", label: __("From"), default: frappe.datetime.get_today(), reqd: 1 },
+				{ fieldname: "notes", fieldtype: "Small Text", label: __("Notes") },
+			],
+			primary_action_label: action_label,
+			primary_action(v) {
+				d.hide();
+				on_ok(v);
+			},
+		});
+		const load = (room_type) =>
+			frappe.xcall("future.hostel_management.get_hostel_options", { room_type }).then((opts) => {
+				const field = d.fields_dict.hostel;
+				field.set_data(opts.filter((o) => o.value !== current || room_type !== frm.doc.custom_hostel_type));
+			});
+		d.show();
+		load(d.get_value("room_type"));
+	};
+
+	if (!allotted) {
+		frm.add_custom_button(__("Allot Hostel"), () =>
+			pick(__("Allot hostel"), __("Allot"), null, (v) => run("allot", v, __("Hostel allotted")))
+		, __("Hostel"));
+	} else {
+		frm.add_custom_button(__("Transfer Hostel"), () =>
+			pick(__("Move to another hostel or room type"), __("Transfer"), frm.doc.custom_hostel, (v) => run("transfer", v, __("Hostel transferred")))
+		, __("Hostel"));
+		frm.add_custom_button(__("Vacate Hostel"), () =>
+			frappe.prompt(
+				[
+					{ fieldname: "date", fieldtype: "Date", label: __("Vacating On"), default: frappe.datetime.get_today(), reqd: 1 },
+					{ fieldname: "notes", fieldtype: "Small Text", label: __("Reason") },
+				],
+				(v) => run("vacate", v, __("Hostel vacated. Unpaid hostel fees after that date were removed.")),
+				__("Vacate hostel"),
+				__("Vacate")
+			)
+		, __("Hostel"));
+	}
+}
+
 function set_final(frm) {
 	frm.set_value("custom_final_amount", flt(frm.doc.custom_offered_amount) - flt(frm.doc.custom_discount_amount));
 }
@@ -67,11 +122,11 @@ function render_360(d) {
 	const status_cls = { Pending: "warn", Joined: "good", Completed: "info", Dropped: "bad", Cancelled: "bad" }[e.status] || "muted";
 
 	const alert = d.overdue
-		? `<div class="fe-alert bad">${frappe.utils.icon("triangle-alert", "sm")} <b>${__("Overdue")}</b> ${__("{0} past its due date", [money(d.overdue)])}</div>`
+		? `<div class="fe-alert bad">${frappe.utils.icon("triangle-alert", "sm")}<span><b>${__("Overdue")}</b> ${__("{0} past its due date", [money(d.overdue)])}</span></div>`
 		: c.balance
-		? `<div class="fe-alert warn">${frappe.utils.icon("info", "sm")} <b>${__("Outstanding balance")}</b> ${__("{0} pending on course fee", [money(c.balance)])}${
+		? `<div class="fe-alert warn">${frappe.utils.icon("info", "sm")}<span><b>${__("Outstanding balance")}</b> ${__("{0} pending on course fee", [money(c.balance)])}${
 				c.next_due ? ` · ${__("next {0} on {1}", [money(c.next_due.amount), date(c.next_due.date)])}` : ""
-		  }</div>`
+		  }</span></div>`
 		: "";
 
 	const chips = [
@@ -197,8 +252,9 @@ function fe360_styles() {
 [data-theme="dark"] .fe-360 { --fe-blue:#3987e5; --fe-blue-soft:rgba(57,135,229,.18); --fe-good:#4cc38a; --fe-good-bg:rgba(76,195,138,.15);
 	--fe-bad:#f08585; --fe-bad-bg:rgba(230,103,103,.16); --fe-warn:#f0b84a; --fe-warn-bg:rgba(201,133,0,.2); }
 .fe-loading, .fe-empty { color: var(--text-muted); font-size: var(--text-sm); padding: 18px; text-align:center; }
-.fe-alert { display:flex; align-items:center; gap:8px; padding: 10px 14px; border-radius: 10px; font-size: var(--text-sm); }
-.fe-alert .icon { stroke: currentColor; }
+.fe-alert { display:flex; align-items:center; justify-content:flex-start; gap:8px; padding: 10px 14px; border-radius: 10px; font-size: var(--text-sm); }
+.fe-alert .icon { stroke: currentColor; margin:0; flex-shrink:0; }
+.fe-alert > span { flex:1; text-align:left; }
 .fe-alert.warn { background: var(--fe-warn-bg); color: var(--fe-warn); } .fe-alert.bad { background: var(--fe-bad-bg); color: var(--fe-bad); }
 .fe-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 18px; min-width:0; }
 .fe-card header { display:flex; align-items:center; gap:10px; margin-bottom: 14px; }
@@ -242,7 +298,7 @@ function fe360_styles() {
 .fe-trio { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; }
 .fe-trio div { background: var(--control-bg); border-radius: 8px; padding: 6px 10px; display:flex; flex-direction:column; }
 .fe-trio span { font-size: 10px; text-transform: uppercase; letter-spacing:.05em; color: var(--text-muted); }
-.fe-trio b { font-variant-numeric: tabular-nums; color: var(--text-color); } .fe-trio b.good { color: var(--fe-good); } .fe-trio b.bad { color: var(--fe-bad); }
+.fe-trio b { font-variant-numeric: tabular-nums; color: var(--text-color); white-space:nowrap; font-size: var(--text-sm); } .fe-trio b.good { color: var(--fe-good); } .fe-trio b.bad { color: var(--fe-bad); }
 .fe-journey { display:flex; align-items:flex-start; justify-content:space-between; padding: 6px 4px 10px; }
 .fe-step { display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center; min-width: 76px; color: var(--text-muted); }
 .fe-step b { font-size: var(--text-sm); }

@@ -40,6 +40,38 @@ SPEC = {
             ],
         },
         {
+            "title": "Admissions",
+            "module": "future",
+            "icon": "graduation-cap",
+            "items": [
+                ("doctype", "Admissions", "Program Enrollment", "clipboard-check"),
+                ("doctype", "Students", "Student", "users"),
+                ("doctype", "Payment Approval", "Payment Approval Log", "badge-check"),
+                ("doctype", "Student Service", "Student Service", "receipt"),
+                ("section", "Setup", "settings", [
+                    ("doctype", "Program", "Program"),
+                    ("doctype", "Centre", "Center"),
+                    ("doctype", "Discount", "Discount"),
+                    ("doctype", "Admission Settings", "Admission Settings"),
+                ]),
+            ],
+        },
+        {
+            "title": "Hostels",
+            "module": "future",
+            "icon": "bed-double",
+            "items": [
+                ("report", "Occupancy", "Hostel Occupancy", "chart-column"),
+                ("report", "Fee Collection", "Hostel Fee Collection", "wallet"),
+                ("doctype", "Hostel", "Hostel", "hotel"),
+                ("url", "Hostellers", "/desk/program-enrollment?custom_hosteller=Hosteller&custom_hostel_status=Allotted&docstatus=1", "users"),
+                ("section", "Setup", "settings", [
+                    ("doctype", "Transport Routes", "Vehicle Fee"),
+                    ("doctype", "Fee Rates", "Admission Settings"),
+                ]),
+            ],
+        },
+        {
             "title": "Payments",
             "module": "future",
             "icon": "wallet",

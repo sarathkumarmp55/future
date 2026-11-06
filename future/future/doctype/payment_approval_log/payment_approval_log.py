@@ -9,6 +9,25 @@ from frappe.utils import flt
 from frappe.model.document import Document
 
 
+def set_inclusive_item_taxes(invoice):
+	"""Add the item tax templates' taxes as price-inclusive rows.
+
+	append_taxes_from_item_tax_template also copies every 0% row of templates like
+	"Non-GST", which duplicates the CGST/SGST accounts; India Compliance then rejects
+	any invoice mixing GST (course) and Non-GST (hostel, transport) items. Keep one
+	row per account and drop the empty ones.
+	"""
+	invoice.append_taxes_from_item_tax_template()
+	seen, rows = set(), []
+	for tax in invoice.get("taxes"):
+		if not tax.rate or tax.account_head in seen:
+			continue
+		seen.add(tax.account_head)
+		tax.included_in_print_rate = 1
+		rows.append(tax)
+	invoice.set("taxes", rows)
+
+
 class PaymentApprovalLog(Document):
 	def on_submit(self):
 		if self.payment_status == "Approved":
@@ -75,9 +94,7 @@ class PaymentApprovalLog(Document):
 
 						invoice.company = self.company or frappe.defaults.get_global_default("company")
 						invoice.set_missing_values()
-						invoice.append_taxes_from_item_tax_template()
-						for tax in invoice.get("taxes"):
-							tax.included_in_print_rate = 1
+						set_inclusive_item_taxes(invoice)
 
 			
 			
@@ -192,9 +209,7 @@ class PaymentApprovalLog(Document):
 
 						invoice.company = self.company or frappe.defaults.get_global_default("company")
 						invoice.set_missing_values()
-						invoice.append_taxes_from_item_tax_template()
-						for tax in invoice.get("taxes"):
-							tax.included_in_print_rate = 1
+						set_inclusive_item_taxes(invoice)
 
 			
 			

@@ -1,6 +1,6 @@
 {
  "app": "future",
- "creation": "2026-11-06 09:54:52.445046",
+ "creation": "2026-11-06 10:19:17.473281",
  "docstatus": 0,
  "doctype": "Dock",
  "idx": 0,
@@ -16,13 +16,29 @@
   {
    "added": 0,
    "hidden": 0,
+   "icon": "graduation-cap",
+   "link_to": "Admissions",
+   "link_type": "Sidebar",
+   "title": "Admissions"
+  },
+  {
+   "added": 0,
+   "hidden": 0,
+   "icon": "bed-double",
+   "link_to": "Hostels",
+   "link_type": "Sidebar",
+   "title": "Hostels"
+  },
+  {
+   "added": 0,
+   "hidden": 0,
    "icon": "wallet",
    "link_to": "Payments",
    "link_type": "Sidebar",
    "title": "Payments"
   }
  ],
- "modified": "2026-11-06 09:54:52.445046",
+ "modified": "2026-11-06 10:19:17.473281",
  "modified_by": "Administrator",
  "name": "future",
  "owner": "Administrator",

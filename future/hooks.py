@@ -67,7 +67,12 @@ app_license = "mit"
 doc_events = {
     "Program Enrollment": {
         "validate": "future.admissions.enrollment_validate",
-        "on_update_after_submit": "future.admissions.enrollment_after_submit_update",
+        "on_submit": "future.hostel_management.on_enrollment_change",
+        "on_cancel": "future.hostel_management.on_enrollment_change",
+        "on_update_after_submit": [
+            "future.admissions.enrollment_after_submit_update",
+            "future.hostel_management.on_enrollment_change",
+        ],
     },
     "Payment Approval Log": {
         "on_submit": "future.admissions.on_pal_submit",
@@ -108,7 +113,10 @@ has_permission = {
 
 scheduler_events = {
     "hourly": ["future.lead_management.check_first_call_sla"],
-    "daily": ["future.lead_management.send_daily_digest"],
+    "daily": [
+        "future.lead_management.send_daily_digest",
+        "future.hostel_management.refresh_all_occupancy",
+    ],
 }
 
 add_to_apps_screen = [

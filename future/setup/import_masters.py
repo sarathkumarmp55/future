@@ -15,9 +15,10 @@ GENERIC_ITEMS = {
 	"Registration Fee": "GST 18%",
 	"Material Fee": "GST 18%",
 	"Orientation Fee": "GST 18%",
-	"Transportation Fee": None,
-	"Tablet Fee": None,
-	"Caution Deposit": None,
+	# Same treatment as the existing "Hostel Fee" item; confirm with the accountant.
+	"Transportation Fee": "Non-GST",
+	"Tablet Fee": "Non-GST",
+	"Caution Deposit": "Non-GST",
 }
 
 
@@ -58,6 +59,11 @@ def _tax_template(prefix):
 
 def _ensure_item(code, tax_prefix=None):
 	if frappe.db.exists("Item", code):
+		template = _tax_template(tax_prefix)
+		if template and not frappe.db.exists("Item Tax", {"parent": code, "parenttype": "Item"}):
+			item = frappe.get_doc("Item", code)
+			item.append("taxes", {"item_tax_template": template})
+			item.save(ignore_permissions=True)
 		return code
 	item = frappe.get_doc(
 		{

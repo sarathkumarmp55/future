@@ -207,7 +207,14 @@ def build_hostel_schedule(program, hostel_type, start_date, months=None):
 		return []
 	months = cint(months) or cint(s.hostel_months) or 10
 	first = add_days(get_first_day(getdate(start_date or nowdate())), 4)  # the 5th, as in the hostel fee sheet
-	return [{"component": item, "due_date": add_months(first, i), "amount": rate} for i in range(months)]
+	end = frappe.db.get_value("Program", program, "custom_end_date")
+	rows = []
+	for i in range(months):
+		due = add_months(first, i)
+		if end and getdate(due) > getdate(end):
+			break  # no hostel fee after the program ends
+		rows.append({"component": item, "due_date": due, "amount": rate})
+	return rows
 
 
 # ----------------------------------------------------------------------------- Program Enrollment hooks
@@ -270,7 +277,15 @@ def create_enrollment_from_pal(pal):
 	offered = flt(pal.total_amount) or flt(frappe.db.get_value("Program", pal.program, "custom_selling_price"))
 	discount = _discount_amount(pal.discount_id, offered) if cint(pal.discount_applied) else 0
 	start = pal.date or nowdate()
-	center = frappe.db.get_value("Center", {"location": pal.location, "is_active": 1}, "name") if pal.location else None
+	center = None
+	if pal.location:
+		# prefer the main campus of that location over schools and crash centres
+		centers = frappe.get_all(
+			"Center", filters={"location": pal.location, "is_active": 1}, fields=["name", "center_type"]
+		)
+		rank = {"Campus": 0, "School": 1, "Crash Course": 2}
+		centers.sort(key=lambda c: rank.get(c.center_type, 3))
+		center = centers[0].name if centers else None
 	hosteller = "Hosteller" if (cint(pal.hostel_required) or pal.hostel) else "Day Scholar"
 	hostel_type = None
 	if pal.hostel:
@@ -303,6 +318,29 @@ def create_enrollment_from_pal(pal):
 			"custom_hostel_schedule": build_hostel_schedule(pal.program, hostel_type, start) if pal.hostel else [],
 		}
 	)
+	if pal.hostel:
+		from future.hostel_management import check_capacity
+
+		try:
+			check_capacity(pal.hostel, hostel_type or "Non AC")
+		except frappe.ValidationError as e:
+			frappe.clear_last_message()
+			frappe.msgprint(
+				_("Hostel allotted anyway because the payment is approved, but: {0}").format(e),
+				indicator="orange",
+				title=_("Hostel capacity"),
+			)
+		pe.append(
+			"custom_hostel_log",
+			{
+				"hostel": pal.hostel,
+				"log_type": "Allotted",
+				"room_type": hostel_type,
+				"log_date": start,
+				"notes": _("Allotted on admission ({0})").format(pal.name),
+				"logged_by": frappe.session.user,
+			},
+		)
 	pe.flags.ignore_permissions = True
 	pe.flags.ignore_mandatory = True
 	pe.insert()

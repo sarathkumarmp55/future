@@ -1,6 +1,6 @@
 {
  "app": "future",
- "creation": "2026-11-06 09:54:52.445046",
+ "creation": "2026-11-06 10:19:17.473281",
  "docstatus": 0,
  "doctype": "Sidebar",
  "header_icon": "handshake",
@@ -354,7 +354,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-06 09:54:52.445046",
+ "modified": "2026-11-06 10:19:17.473281",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Leads",

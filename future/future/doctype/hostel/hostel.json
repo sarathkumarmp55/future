@@ -21,7 +21,10 @@
   "non_ac_capacity",
   "column_break_c",
   "total_capacity",
+  "ac_occupied",
+  "non_ac_occupied",
   "occupied",
+  "free_beds",
   "area_sqft",
   "section_lease",
   "monthly_rent",
@@ -126,11 +129,31 @@
    "read_only": 1
   },
   {
+   "fieldname": "ac_occupied",
+   "fieldtype": "Int",
+   "label": "AC Occupied",
+   "read_only": 1
+  },
+  {
+   "fieldname": "non_ac_occupied",
+   "fieldtype": "Int",
+   "label": "Non AC Occupied",
+   "read_only": 1
+  },
+  {
    "fieldname": "occupied",
    "fieldtype": "Int",
-   "label": "Occupied",
+   "label": "Total Occupied",
    "read_only": 1,
-   "description": "Students currently allotted here."
+   "in_list_view": 1,
+   "description": "Students currently allotted here. Updated automatically."
+  },
+  {
+   "fieldname": "free_beds",
+   "fieldtype": "Int",
+   "label": "Free Beds",
+   "read_only": 1,
+   "in_list_view": 1
   },
   {
    "fieldname": "area_sqft",
@@ -226,7 +249,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-06 17:00:00.000000",
+ "modified": "2026-11-07 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Hostel",
