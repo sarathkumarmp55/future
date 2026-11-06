@@ -1,0 +1,130 @@
+{
+ "app": "future",
+ "charts": [],
+ "content": "[{\"id\": \"hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Admissions</b></span>\", \"col\": 12}}, {\"id\": \"pending_jo\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Pending Joining\", \"col\": 4}}, {\"id\": \"joined\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Joined\", \"col\": 4}}, {\"id\": \"fees_overd\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fees Overdue\", \"col\": 4}}, {\"id\": \"payments_t\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payments to Approve\", \"col\": 4}}, {\"id\": \"students\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Students\", \"col\": 4}}, {\"id\": \"programs\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Programs\", \"col\": 4}}]",
+ "creation": "2026-11-06 10:40:18.892990",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "graduation-cap",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Admissions",
+ "links": [],
+ "modified": "2026-11-06 10:40:18.892990",
+ "modified_by": "Administrator",
+ "module": "Future Admissions",
+ "name": "Admissions",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Sales Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Accounts User"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Academics User"
+  }
+ ],
+ "sequence_id": 51,
+ "shortcuts": [
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Pending",
+   "idx": 1,
+   "label": "Pending Joining",
+   "link_to": "Program Enrollment",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Program Enrollment\", \"docstatus\", \"=\", 1], [\"Program Enrollment\", \"custom_admission_status\", \"=\", \"Pending\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Joined",
+   "idx": 2,
+   "label": "Joined",
+   "link_to": "Program Enrollment",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Program Enrollment\", \"docstatus\", \"=\", 1], [\"Program Enrollment\", \"custom_admission_status\", \"=\", \"Joined\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Overdue",
+   "idx": 3,
+   "label": "Fees Overdue",
+   "link_to": "Program Enrollment",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Program Enrollment\", \"docstatus\", \"=\", 1], [\"Enrollment Fee Schedule\", \"status\", \"=\", \"Overdue\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Pending",
+   "idx": 4,
+   "label": "Payments to Approve",
+   "link_to": "Payment Approval Log",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Payment Approval Log\", \"docstatus\", \"=\", 0]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "idx": 5,
+   "label": "Students",
+   "link_to": "Student",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "idx": 6,
+   "label": "Programs",
+   "link_to": "Program",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "type": "DocType"
+  }
+ ],
+ "title": "Admissions",
+ "type": "Workspace"
+}

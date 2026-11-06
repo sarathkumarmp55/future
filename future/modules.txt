@@ -1,1 +1,5 @@
 future
+Future Leads
+Future Admissions
+Future Hostels
+Future Payments

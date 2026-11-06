@@ -1,0 +1,83 @@
+{
+ "actions": [],
+ "creation": "2026-11-07 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "istable": 1,
+ "editable_grid": 0,
+ "field_order": [
+  "call_time",
+  "mentor",
+  "call_with",
+  "call_type",
+  "outcome",
+  "duration_minutes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "call_time",
+   "fieldtype": "Datetime",
+   "label": "Time of Call",
+   "in_list_view": 1,
+   "columns": 2,
+   "default": "Now"
+  },
+  {
+   "fieldname": "mentor",
+   "fieldtype": "Link",
+   "label": "Mentor",
+   "options": "User",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "call_with",
+   "fieldtype": "Select",
+   "label": "Spoke To",
+   "options": "Student\nParent\nBoth",
+   "default": "Student",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "call_type",
+   "fieldtype": "Select",
+   "label": "Call Type",
+   "options": "Academic\nAttendance\nFee\nHostel\nWellbeing\nOther",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "outcome",
+   "fieldtype": "Select",
+   "label": "Outcome",
+   "options": "Connected\nNot Reachable\nCall Back Later",
+   "default": "Connected",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "duration_minutes",
+   "fieldtype": "Int",
+   "label": "Duration (min)",
+   "columns": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "in_list_view": 1,
+   "columns": 3
+  }
+ ],
+ "modified": "2026-11-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Mentor Call Log",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -126,7 +126,14 @@ add_to_apps_screen = [
         "logo": "/assets/future/images/future-logo.svg",
         "title": app_title,
         "route": "/desk/leads",
-    }
+    },
+    {
+        "name": app_name,
+        "logo": "/assets/future/images/hostel-logo.svg",
+        "title": "Hostels",
+        "route": "/desk/hostels",
+        "has_permission": "future.hostel_management.can_open_hostels",
+    },
 ]
 
 # Svg Icons

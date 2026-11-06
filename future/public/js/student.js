@@ -1,98 +1,104 @@
+// Student form: enrollment fee summary (links to each enrollment's 360 view)
+// and a quick "Log Mentor Call" action.
+
 frappe.ui.form.on("Student", {
 	refresh(frm) {
 		render_student_dashboard(frm);
-	}
+		if (!frm.is_new()) {
+			frm.add_custom_button(__("Log Mentor Call"), () => log_mentor_call(frm));
+		}
+	},
 });
+
+function log_mentor_call(frm) {
+	const d = new frappe.ui.Dialog({
+		title: __("Log a call with {0}", [frm.doc.student_name]),
+		fields: [
+			{ fieldname: "call_with", fieldtype: "Select", label: __("Spoke To"), options: ["Student", "Parent", "Both"], default: "Student" },
+			{ fieldname: "call_type", fieldtype: "Select", label: __("About"), options: ["Academic", "Attendance", "Fee", "Hostel", "Wellbeing", "Other"], default: "Academic" },
+			{ fieldname: "outcome", fieldtype: "Select", label: __("Outcome"), options: ["Connected", "Not Reachable", "Call Back Later"], default: "Connected" },
+			{ fieldname: "duration_minutes", fieldtype: "Int", label: __("Duration (min)") },
+			{ fieldname: "notes", fieldtype: "Small Text", label: __("Notes"), reqd: 1 },
+		],
+		primary_action_label: __("Save Call"),
+		primary_action(v) {
+			frm.add_child("custom_mentor_calls", {
+				...v,
+				call_time: frappe.datetime.now_datetime(),
+				mentor: frappe.session.user,
+			});
+			frm.save().then(() => {
+				d.hide();
+				frappe.show_alert({ message: __("Call logged"), indicator: "green" });
+			});
+		},
+	});
+	d.show();
+}
 
 function render_student_dashboard(frm) {
 	const control = frm.fields_dict.custom_student_dashboard;
-	if (!control) {
-		return;
-	}
-
-	const d = frm.doc;
+	if (!control || frm.is_new()) return;
+	const money = (v) => format_currency(v || 0, null, 0);
 	const esc = (v) => frappe.utils.escape_html(v || "");
-	const currency = frappe.defaults.get_default("currency") || "INR";
-	const sections = [
-		{
-			label: "Program",
-			value: d.custom_program,
-			total: flt(d.custom_program_total_amount),
-			received: flt(d.custom_program_total_received_amount),
-			balance: flt(d.custom_program_balance_amount),
-			letter: "P",
-			color: "#2563eb"
-		},
-		{
-			label: "Hostel",
-			value: d.custom_hostel,
-			total: flt(d.custom_hostel_total_amount),
-			received: flt(d.custom_hostel_total_received_amount),
-			balance: flt(d.custom_hostel_balance_amount),
-			letter: "H",
-			color: "#ed3a3a"
-		},
-		{
-			label: "Transportation",
-			value: d.custom_vehicle,
-			total: flt(d.custom_vehicle_total_amount),
-			received: flt(d.custom_vehicle_total_received_amount),
-			balance: flt(d.custom_vehicle_balance_amount),
-			letter: "V",
-			color: "#1bd906"
-		}
-	];
 
-	const cards = sections
-		.map((s) => {
-			const pct = Math.max(0, Math.min(100, s.total > 0 ? (s.received / s.total) * 100 : 0));
-			return `
-			<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;box-shadow:0 1px 2px rgba(17,24,39,.06);">
-				<div style="height:5px;background:${s.color};"></div>
-				<div style="padding:18px 20px 20px;">
-					<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-						<div style="width:40px;height:40px;border-radius:10px;background:${s.color}1a;color:${s.color};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;">${s.letter}</div>
-						<div style="min-width:0;">
-							<div style="font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#6b7280;font-weight:700;">${s.label}</div>
-							<div style="font-size:14px;color:#111827;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.value ? esc(s.value) : "—"}</div>
-						</div>
-					</div>
-					<div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Total Amount</div>
-					<div style="font-size:22px;font-weight:800;color:#111827;font-variant-numeric:tabular-nums;margin-bottom:12px;">${format_currency(s.total, currency)}</div>
-					<div style="height:8px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-bottom:6px;">
-						<div style="height:100%;width:${pct}%;background:${s.color};border-radius:999px;"></div>
-					</div>
-					<div style="font-size:11px;color:#6b7280;margin-bottom:14px;">${pct.toFixed(0)}% received</div>
-					<div style="display:flex;justify-content:space-between;gap:8px;border-top:1px solid #f1f5f9;padding-top:14px;">
-						<div style="min-width:0;">
-							<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;margin-bottom:2px;">
-								<span style="width:8px;height:8px;border-radius:999px;background:#059669;flex-shrink:0;"></span>Received
-							</div>
-							<div style="font-size:14px;font-weight:700;color:#047857;font-variant-numeric:tabular-nums;white-space:nowrap;">${format_currency(s.received, currency)}</div>
-						</div>
-						<div style="min-width:0;text-align:right;">
-							<div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:11px;color:#6b7280;margin-bottom:2px;">
-								<span style="width:8px;height:8px;border-radius:999px;background:#d97706;flex-shrink:0;"></span>Balance
-							</div>
-							<div style="font-size:14px;font-weight:700;color:#b45309;font-variant-numeric:tabular-nums;white-space:nowrap;">${format_currency(s.balance, currency)}</div>
-						</div>
-					</div>
-				</div>
-			</div>`;
+	frappe.db
+		.get_list("Program Enrollment", {
+			filters: { student: frm.doc.name, docstatus: ["<", 2] },
+			fields: [
+				"name", "program", "academic_year", "custom_admission_status", "custom_final_amount",
+				"custom_course_paid", "custom_course_balance", "custom_total_hostel_fee", "custom_hostel_paid",
+				"custom_hostel_balance", "custom_transport_paid", "custom_hosteller", "custom_hostel",
+			],
+			order_by: "enrollment_date desc",
 		})
-		.join("");
+		.then((rows) => {
+			const bar = (label, total, paid, balance) => {
+				const pct = total ? Math.min(100, Math.round((paid * 100) / total)) : 0;
+				return `<div class="sd-line">
+					<div class="sd-line-head"><span>${label}</span><span class="sd-muted">${pct}% · ${money(paid)} / ${money(total)}</span></div>
+					<div class="sd-bar"><div style="width:${pct}%"></div></div>
+					${balance ? `<div class="sd-bal">${__("Balance {0}", [money(balance)])}</div>` : ""}
+				</div>`;
+			};
+			const cards = rows.length
+				? rows
+						.map(
+							(e) => `<a class="sd-card" href="/desk/program-enrollment/${encodeURIComponent(e.name)}">
+					<div class="sd-head"><b>${esc(e.program)}</b><span class="sd-chip">${esc(__(e.custom_admission_status || "Pending"))}</span></div>
+					<div class="sd-muted">${esc(e.academic_year)} · ${esc(e.name)}</div>
+					${bar(__("Course fee"), e.custom_final_amount, e.custom_course_paid, e.custom_course_balance)}
+					${e.custom_hosteller === "Hosteller" ? bar(__("Hostel fee"), e.custom_total_hostel_fee, e.custom_hostel_paid, e.custom_hostel_balance) : ""}
+					${e.custom_transport_paid ? `<div class="sd-muted">${__("Transport paid {0}", [money(e.custom_transport_paid)])}</div>` : ""}
+					<div class="sd-open">${__("Open full view")} →</div>
+				</a>`
+						)
+						.join("")
+				: `<div class="sd-muted">${__("No program enrollment yet.")}</div>`;
+			control.html(`<div class="sd-wrap">${cards}</div>`);
+		});
+	student_dashboard_styles();
+}
 
-	const html = `
-	<div style="font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;color:#111827;line-height:1.4;">
-		<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
-			<div>
-				<div style="font-size:18px;font-weight:800;letter-spacing:-.2px;">Student Fee Dashboard</div>
-				<div style="font-size:12px;color:#6b7280;">Fee, hostel and Transportation summary at a glance</div>
-			</div>
-			<div style="background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;white-space:nowrap;">Academic Year: ${d.custom_academic_year ? esc(d.custom_academic_year) : "—"}</div>
-		</div>
-		<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;">${cards}</div>
-	</div>`;
-
-	control.html(html);
+function student_dashboard_styles() {
+	if (document.getElementById("sd-styles")) return;
+	const el = document.createElement("style");
+	el.id = "sd-styles";
+	el.textContent = `
+.sd-wrap { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px; }
+.sd-card { display:flex; flex-direction:column; gap:8px; padding:14px 16px; border:1px solid var(--border-color); border-radius:12px;
+	background: var(--card-bg); color: var(--text-color); text-decoration:none; }
+.sd-card:hover { border-color: var(--primary, #2a78d6); text-decoration:none; color: var(--text-color); }
+.sd-head { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+.sd-chip { font-size: var(--text-xs); font-weight:600; padding: 2px 9px; border-radius: 999px; background: var(--control-bg); }
+.sd-muted { color: var(--text-muted); font-size: var(--text-xs); }
+.sd-line-head { display:flex; justify-content:space-between; font-size: var(--text-sm); }
+.sd-bar { height:8px; background: var(--control-bg); border-radius:4px; overflow:hidden; margin-top:4px; }
+.sd-bar div { height:100%; background: #2a78d6; border-radius:4px; }
+[data-theme="dark"] .sd-bar div { background: #3987e5; }
+.sd-bal { font-size: var(--text-xs); color: #c62a2f; margin-top:2px; }
+[data-theme="dark"] .sd-bal { color: #f08585; }
+.sd-open { font-size: var(--text-xs); color: var(--text-muted); }
+`;
+	document.head.appendChild(el);
 }

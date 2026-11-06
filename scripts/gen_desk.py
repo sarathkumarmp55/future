@@ -10,13 +10,27 @@ SPEC = {
     "app": "future",
     "app_title": "Future",
     "logo": "/assets/future/images/future-logo.svg",
-    "tiles": [{"label": "Future", "link": "auto"}],
+    "tiles": [
+        {"label": "Future", "link": "auto"},
+        {"label": "Hostels", "link": "/desk/hostels", "logo": "/assets/future/images/hostel-logo.svg"},
+    ],
     "rail": [
         {
             "title": "Leads",
-            "module": "future",
+            "owns": ["Leads", "lead-dashboard", "Lead", "Opportunity", "Lead Handover", "Lead Settings", "Team Heirarchy"],
+            "module": "Future Leads",
             "icon": "handshake",
+            "roles": ["Sales User", "Sales Manager", "System Manager"],
+            "pins": [
+                ("page", "Lead Dashboard", "lead-dashboard", "Blue", None, None),
+                ("doctype", "My Open Leads", "Lead", "Blue", "{} Open", [["Lead", "status", "not in", ["Converted Student", "Lost", "Disqualified", "Invalid", "Close Lead", "Won"]]]),
+                ("doctype", "Opportunities", "Opportunity", "Cyan", "{} Open", [["Opportunity", "status", "not in", ["Converted", "Converted Student", "Lost", "Closed"]]]),
+                ("doctype", "Follow-ups", "ToDo", "Orange", "{} Open", [["ToDo", "status", "=", "Open"], ["ToDo", "reference_type", "=", "Lead"]]),
+                ("doctype", "Hand-over Requests", "Lead Handover", "Yellow", "{} Waiting", [["Lead Handover", "docstatus", "=", 0], ["Lead Handover", "request_status", "=", "Requested"]]),
+                ("doctype", "Hand-overs", "Lead Handover", "Grey", None, None),
+            ],
             "items": [
+                ("workspace", "Home", "Leads", "home"),
                 ("page", "Dashboard", "lead-dashboard", "layout-dashboard"),
                 ("doctype", "Lead", "Lead", "users-round"),
                 ("doctype", "Opportunity", "Opportunity", "lightbulb"),
@@ -41,9 +55,20 @@ SPEC = {
         },
         {
             "title": "Admissions",
-            "module": "future",
+            "owns": ["Admissions", "Program Enrollment", "Student", "Center", "Admission Settings", "Program", "Discount"],
+            "module": "Future Admissions",
             "icon": "graduation-cap",
+            "roles": ["Sales Manager", "System Manager", "Accounts User", "Academics User"],
+            "pins": [
+                ("doctype", "Pending Joining", "Program Enrollment", "Orange", "{} Pending", [["Program Enrollment", "docstatus", "=", 1], ["Program Enrollment", "custom_admission_status", "=", "Pending"]]),
+                ("doctype", "Joined", "Program Enrollment", "Green", "{} Joined", [["Program Enrollment", "docstatus", "=", 1], ["Program Enrollment", "custom_admission_status", "=", "Joined"]]),
+                ("doctype", "Fees Overdue", "Program Enrollment", "Red", "{} Overdue", [["Program Enrollment", "docstatus", "=", 1], ["Enrollment Fee Schedule", "status", "=", "Overdue"]]),
+                ("doctype", "Payments to Approve", "Payment Approval Log", "Yellow", "{} Pending", [["Payment Approval Log", "docstatus", "=", 0]]),
+                ("doctype", "Students", "Student", "Blue", None, None),
+                ("doctype", "Programs", "Program", "Grey", None, None),
+            ],
             "items": [
+                ("workspace", "Home", "Admissions", "home"),
                 ("doctype", "Admissions", "Program Enrollment", "clipboard-check"),
                 ("doctype", "Students", "Student", "users"),
                 ("doctype", "Payment Approval", "Payment Approval Log", "badge-check"),
@@ -58,9 +83,20 @@ SPEC = {
         },
         {
             "title": "Hostels",
-            "module": "future",
+            "owns": ["Hostels", "Hostel", "Hostel Occupancy", "Hostel Fee Collection", "Vehicle Fee"],
+            "module": "Future Hostels",
             "icon": "bed-double",
+            "roles": ["Sales Manager", "System Manager", "Accounts User", "Academics User"],
+            "pins": [
+                ("report", "Occupancy", "Hostel Occupancy", "Blue", None, None),
+                ("report", "Fee Collection", "Hostel Fee Collection", "Green", None, None),
+                ("doctype", "Hostellers", "Program Enrollment", "Cyan", "{} in hostels", [["Program Enrollment", "docstatus", "=", 1], ["Program Enrollment", "custom_hosteller", "=", "Hosteller"], ["Program Enrollment", "custom_hostel_status", "=", "Allotted"]]),
+                ("doctype", "Hostel Dues", "Program Enrollment", "Red", "{} with dues", [["Program Enrollment", "docstatus", "=", 1], ["Program Enrollment", "custom_hostel_status", "=", "Allotted"], ["Program Enrollment", "custom_hostel_balance", ">", 0]]),
+                ("doctype", "Hostels", "Hostel", "Grey", "{} active", [["Hostel", "status", "=", "Active"]]),
+                ("doctype", "Fee Rates", "Admission Settings", "Grey", None, None),
+            ],
             "items": [
+                ("workspace", "Home", "Hostels", "home"),
                 ("report", "Occupancy", "Hostel Occupancy", "chart-column"),
                 ("report", "Fee Collection", "Hostel Fee Collection", "wallet"),
                 ("doctype", "Hostel", "Hostel", "hotel"),
@@ -73,9 +109,19 @@ SPEC = {
         },
         {
             "title": "Payments",
-            "module": "future",
+            "owns": ["Payments", "Payment Approval Log", "Student Service", "Sales Invoice", "Payment Entry", "App Access Approval Log"],
+            "module": "Future Payments",
             "icon": "wallet",
+            "roles": ["Sales Manager", "System Manager", "Accounts User", "Accounts Manager"],
+            "pins": [
+                ("doctype", "To Approve", "Payment Approval Log", "Yellow", "{} Pending", [["Payment Approval Log", "docstatus", "=", 0]]),
+                ("doctype", "Approved", "Payment Approval Log", "Green", None, [["Payment Approval Log", "docstatus", "=", 1]]),
+                ("doctype", "Student Service", "Student Service", "Blue", None, None),
+                ("doctype", "Sales Invoices", "Sales Invoice", "Grey", None, None),
+                ("doctype", "Payment Entries", "Payment Entry", "Grey", None, None),
+            ],
             "items": [
+                ("workspace", "Home", "Payments", "home"),
                 ("doctype", "Payment Approval", "Payment Approval Log", "badge-check"),
                 ("doctype", "Student Service", "Student Service", "clipboard-check"),
                 ("doctype", "Sales Invoice", "Sales Invoice", "receipt"),
@@ -145,9 +191,42 @@ assert len({slug(r["title"]) for r in SPEC["rail"]}) == len(SPEC["rail"]), "dupl
 
 for r in SPEC["rail"]:
     doc = meta("Sidebar", r["title"])
-    doc.update(title=r["title"], module=r["module"], header_icon=r["icon"], items=rows(r["items"]))
+    items = rows(r["items"])
+    for it in items:
+        # claim these pages for this rail, so opening them shows this sidebar (boot.build_entity_module_map)
+        if it.get("link_to") in r.get("owns", []):
+            it["is_default_module"] = 1
+    doc.update(title=r["title"], module=r["module"], header_icon=r["icon"], items=items)
     s = scrub(r["title"])
     dump(f"{ROOT}/{scrub(r['module'])}/sidebar/{s}/{s}.json", doc)
+
+def workspace(r):
+    """Workspace page for a rail: the route /desk/<slug> and the pinned shortcuts with live counts."""
+    doc = meta("Workspace", r["title"])
+    shortcuts, blocks = [], [{"id": "hdr", "type": "header", "data": {"text": f'<span class="h4"><b>{r["title"]}</b></span>', "col": 12}}]
+    for kind, label, target, color, fmt, stats in r.get("pins", []):
+        row = {"doctype": "Workspace Shortcut", "parentfield": "shortcuts", "parenttype": "Workspace",
+               "label": label, "link_to": target, "type": TYPES.get(kind, "URL"), "color": color, "doc_view": "List" if kind == "doctype" else ""}
+        if fmt:
+            row["format"] = fmt
+        if stats:
+            row["stats_filter"] = json.dumps(stats)
+        shortcuts.append(row)
+        blocks.append({"id": scrub(label)[:10], "type": "shortcut", "data": {"shortcut_name": label, "col": 4}})
+    for i, row in enumerate(shortcuts, 1):
+        row["idx"] = i
+    doc.update(label=r["title"], title=r["title"], module=r["module"], icon=r["icon"], public=1, is_hidden=0,
+               type="Workspace", for_user="", parent_page="", content=json.dumps(blocks), shortcuts=shortcuts,
+               links=[], charts=[], number_cards=[], quick_lists=[], custom_blocks=[],
+               roles=[{"doctype": "Has Role", "parentfield": "roles", "parenttype": "Workspace", "role": x} for x in r.get("roles", [])],
+               sequence_id=50 + SPEC["rail"].index(r), hide_custom=0)
+    doc.pop("standard", None)
+    s = scrub(r["title"])
+    dump(f"{ROOT}/{scrub(r['module'])}/workspace/{s}/{s}.json", doc)
+
+
+for r in SPEC["rail"]:
+    workspace(r)
 
 dock = meta("Dock", SPEC["app"])
 dock.update(user="", items=[{"added": 0, "hidden": 0, "icon": r["icon"], "link_type": "Sidebar",

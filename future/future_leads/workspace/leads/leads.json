@@ -1,0 +1,124 @@
+{
+ "app": "future",
+ "charts": [],
+ "content": "[{\"id\": \"hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Leads</b></span>\", \"col\": 12}}, {\"id\": \"lead_dashb\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Lead Dashboard\", \"col\": 4}}, {\"id\": \"my_open_le\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"My Open Leads\", \"col\": 4}}, {\"id\": \"opportunit\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Opportunities\", \"col\": 4}}, {\"id\": \"follow_ups\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Follow-ups\", \"col\": 4}}, {\"id\": \"hand_over_\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hand-over Requests\", \"col\": 4}}, {\"id\": \"hand_overs\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hand-overs\", \"col\": 4}}]",
+ "creation": "2026-11-06 10:40:18.892990",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "handshake",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Leads",
+ "links": [],
+ "modified": "2026-11-06 10:40:18.892990",
+ "modified_by": "Administrator",
+ "module": "Future Leads",
+ "name": "Leads",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Sales User"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Sales Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 50,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "doctype": "Workspace Shortcut",
+   "idx": 1,
+   "label": "Lead Dashboard",
+   "link_to": "lead-dashboard",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "type": "Page"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Open",
+   "idx": 2,
+   "label": "My Open Leads",
+   "link_to": "Lead",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Lead\", \"status\", \"not in\", [\"Converted Student\", \"Lost\", \"Disqualified\", \"Invalid\", \"Close Lead\", \"Won\"]]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Open",
+   "idx": 3,
+   "label": "Opportunities",
+   "link_to": "Opportunity",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Opportunity\", \"status\", \"not in\", [\"Converted\", \"Converted Student\", \"Lost\", \"Closed\"]]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Open",
+   "idx": 4,
+   "label": "Follow-ups",
+   "link_to": "ToDo",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"ToDo\", \"status\", \"=\", \"Open\"], [\"ToDo\", \"reference_type\", \"=\", \"Lead\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Yellow",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} Waiting",
+   "idx": 5,
+   "label": "Hand-over Requests",
+   "link_to": "Lead Handover",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Lead Handover\", \"docstatus\", \"=\", 0], [\"Lead Handover\", \"request_status\", \"=\", \"Requested\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "idx": 6,
+   "label": "Hand-overs",
+   "link_to": "Lead Handover",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "type": "DocType"
+  }
+ ],
+ "title": "Leads",
+ "type": "Workspace"
+}

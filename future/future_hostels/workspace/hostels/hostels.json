@@ -1,0 +1,128 @@
+{
+ "app": "future",
+ "charts": [],
+ "content": "[{\"id\": \"hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Hostels</b></span>\", \"col\": 12}}, {\"id\": \"occupancy\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Occupancy\", \"col\": 4}}, {\"id\": \"fee_collec\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fee Collection\", \"col\": 4}}, {\"id\": \"hostellers\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hostellers\", \"col\": 4}}, {\"id\": \"hostel_due\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hostel Dues\", \"col\": 4}}, {\"id\": \"hostels\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Hostels\", \"col\": 4}}, {\"id\": \"fee_rates\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Fee Rates\", \"col\": 4}}]",
+ "creation": "2026-11-06 10:40:18.892990",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "bed-double",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Hostels",
+ "links": [],
+ "modified": "2026-11-06 10:40:18.892990",
+ "modified_by": "Administrator",
+ "module": "Future Hostels",
+ "name": "Hostels",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Sales Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Accounts User"
+  },
+  {
+   "doctype": "Has Role",
+   "parentfield": "roles",
+   "parenttype": "Workspace",
+   "role": "Academics User"
+  }
+ ],
+ "sequence_id": 52,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "doctype": "Workspace Shortcut",
+   "idx": 1,
+   "label": "Occupancy",
+   "link_to": "Hostel Occupancy",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "type": "Report"
+  },
+  {
+   "color": "Green",
+   "doc_view": "",
+   "doctype": "Workspace Shortcut",
+   "idx": 2,
+   "label": "Fee Collection",
+   "link_to": "Hostel Fee Collection",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "type": "Report"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} in hostels",
+   "idx": 3,
+   "label": "Hostellers",
+   "link_to": "Program Enrollment",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Program Enrollment\", \"docstatus\", \"=\", 1], [\"Program Enrollment\", \"custom_hosteller\", \"=\", \"Hosteller\"], [\"Program Enrollment\", \"custom_hostel_status\", \"=\", \"Allotted\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} with dues",
+   "idx": 4,
+   "label": "Hostel Dues",
+   "link_to": "Program Enrollment",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Program Enrollment\", \"docstatus\", \"=\", 1], [\"Program Enrollment\", \"custom_hostel_status\", \"=\", \"Allotted\"], [\"Program Enrollment\", \"custom_hostel_balance\", \">\", 0]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{} active",
+   "idx": 5,
+   "label": "Hostels",
+   "link_to": "Hostel",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "stats_filter": "[[\"Hostel\", \"status\", \"=\", \"Active\"]]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "idx": 6,
+   "label": "Fee Rates",
+   "link_to": "Admission Settings",
+   "parentfield": "shortcuts",
+   "parenttype": "Workspace",
+   "type": "DocType"
+  }
+ ],
+ "title": "Hostels",
+ "type": "Workspace"
+}

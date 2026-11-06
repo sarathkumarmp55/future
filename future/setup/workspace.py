@@ -12,6 +12,11 @@ VISIBLE_WORKSPACES = {
 	"Education",
 	"Payroll",
 	"CRM",
+	# future app rails (Workspace pages behind /desk/leads etc.)
+	"Leads",
+	"Admissions",
+	"Hostels",
+	"Payments",
 }
 
 

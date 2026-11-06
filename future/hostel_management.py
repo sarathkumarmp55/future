@@ -219,3 +219,8 @@ def refresh_all_occupancy():
 	"""Daily safety net."""
 	for h in frappe.get_all("Hostel", pluck="name"):
 		update_hostel_occupancy(h)
+
+
+def can_open_hostels():
+	"""Apps-screen tile: shown to people who can read hostels."""
+	return bool(frappe.has_permission("Hostel", "read"))
