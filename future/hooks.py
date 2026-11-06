@@ -131,13 +131,13 @@ add_to_apps_screen = [
         "name": app_name,
         "logo": "/assets/future/images/future-logo.svg",
         "title": app_title,
-        "route": "/desk/leads",
+        "route": "/desk/lead-dashboard",
     },
     {
         "name": app_name,
         "logo": "/assets/future/images/hostel-logo.svg",
         "title": "Hostels",
-        "route": "/desk/hostels",
+        "route": "/desk/hostel-dashboard",
         "has_permission": "future.hostel_management.can_open_hostels",
     },
 ]
@@ -260,7 +260,9 @@ doctype_list_js = {
     "Discount Approval Log" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
     "Fee Refund Request" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
     "Fee Transfer Request" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
-    "Payment Approval Log" : ["public/js/list_tiles.js", "public/js/payment_approval_log_list.js"]
+    "Payment Approval Log" : ["public/js/list_tiles.js", "public/js/payment_approval_log_list.js"],
+    "ToDo" : ["public/js/list_tiles.js", "public/js/followup_lists.js"],
+    "Lead Handover" : ["public/js/list_tiles.js", "public/js/followup_lists.js", "public/js/lead_handover_list_status.js"],
 }
 
 

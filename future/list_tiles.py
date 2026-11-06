@@ -7,7 +7,7 @@ Counts use frappe.get_list, so record privacy (visibility.py) always applies.
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, now_datetime
+from frappe.utils import add_days, get_last_day, now_datetime, nowdate
 
 from future import lead_stages
 
@@ -171,6 +171,51 @@ def _payment_tiles():
 	]
 
 
+def _todo_tiles():
+	"""Follow-ups. Frappe already limits ToDo to what you were given or gave."""
+	T, today = "ToDo", nowdate()
+	week_end = str(add_days(today, 6 - frappe.utils.getdate(today).weekday()))
+	return [
+		{"key": "open", "label": _("Open"), "filters": [[T, "status", "=", "Open"]], "foot": _("still to do")},
+		{
+			"key": "overdue",
+			"label": _("Overdue"),
+			"filters": [[T, "status", "=", "Open"], [T, "date", "<", today]],
+			"foot": _("past the due date"),
+			"tone": "alert",
+			"dynamic": 1,
+		},
+		{"key": "today", "label": _("Due Today"), "filters": [[T, "status", "=", "Open"], [T, "date", "=", today]], "foot": _("call or close today"), "dynamic": 1},
+		{
+			"key": "week",
+			"label": _("Rest of the Week"),
+			"filters": [[T, "status", "=", "Open"], [T, "date", "between", [str(add_days(today, 1)), week_end]]],
+			"foot": _("coming up"),
+			"dynamic": 1,
+		},
+		{"key": "undated", "label": _("No Due Date"), "filters": [[T, "status", "=", "Open"], [T, "date", "is", "not set"]], "foot": _("needs a date"), "tone": "warn"},
+		{"key": "done", "label": _("Done"), "filters": [[T, "status", "=", "Closed"]], "foot": _("closed"), "tone": "muted"},
+	]
+
+
+def _handover_tiles():
+	H = "Lead Handover"
+	return [
+		{"key": "all", "label": _("All Hand-overs"), "filters": [], "foot": _("matching the filters")},
+		{
+			"key": "requests",
+			"label": _("Requests Waiting"),
+			"filters": [[H, "docstatus", "=", 0], [H, "request_status", "=", "Requested"]],
+			"foot": _("a salesperson asked"),
+			"tone": "alert",
+		},
+		{"key": "drafts", "label": _("Drafts"), "filters": [[H, "docstatus", "=", 0], [H, "request_status", "is", "not set"]], "foot": _("not submitted yet"), "tone": "warn"},
+		{"key": "done", "label": _("Handed Over"), "filters": [[H, "docstatus", "=", 1]], "foot": _("leads moved"), "tone": "good"},
+		{"key": "rejected", "label": _("Rejected"), "filters": [[H, "request_status", "=", "Rejected"]], "foot": _("request turned down"), "tone": "muted"},
+		{"key": "cancelled", "label": _("Cancelled"), "filters": [[H, "docstatus", "=", 2]], "foot": _("leads handed back"), "tone": "muted"},
+	]
+
+
 # Money totals shown above the tiles: (field, label). They follow every filter on the list.
 SUMS = {
 	"Payment Approval Log": [
@@ -182,6 +227,8 @@ SUMS = {
 
 
 CONFIG = {
+	"ToDo": _todo_tiles,
+	"Lead Handover": _handover_tiles,
 	"Payment Approval Log": _payment_tiles,
 	"Lead": _lead_tiles,
 	"Opportunity": _opportunity_tiles,

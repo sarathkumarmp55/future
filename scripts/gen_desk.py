@@ -11,8 +11,8 @@ SPEC = {
     "app_title": "Future",
     "logo": "/assets/future/images/future-logo.svg",
     "tiles": [
-        {"label": "Future", "link": "auto"},
-        {"label": "Hostels", "link": "/desk/hostels", "logo": "/assets/future/images/hostel-logo.svg"},
+        {"label": "Future", "link": "/desk/lead-dashboard"},
+        {"label": "Hostels", "link": "/desk/hostel-dashboard", "logo": "/assets/future/images/hostel-logo.svg"},
     ],
     "rail": [
         {
@@ -30,7 +30,7 @@ SPEC = {
                 ("doctype", "Hand-overs", "Lead Handover", "Grey", None, None),
             ],
             "items": [
-                ("workspace", "Home", "Leads", "home"),
+                # The dashboard is the rail's landing page (the first item is what the rail opens).
                 ("page", "Dashboard", "lead-dashboard", "layout-dashboard"),
                 ("doctype", "Lead", "Lead", "users-round"),
                 ("doctype", "Opportunity", "Opportunity", "lightbulb"),
@@ -55,7 +55,7 @@ SPEC = {
         },
         {
             "title": "Admissions",
-            "owns": ["Admissions", "Program Enrollment", "Student", "Center", "Admission Settings", "Program", "Discount"],
+            "owns": ["Admissions", "admissions-dashboard", "Program Enrollment", "Student", "Center", "Admission Settings", "Program", "Discount"],
             "module": "Future Admissions",
             "icon": "graduation-cap",
             "roles": ["Sales Manager", "System Manager", "Accounts User", "Academics User"],
@@ -68,7 +68,7 @@ SPEC = {
                 ("doctype", "Programs", "Program", "Grey", None, None),
             ],
             "items": [
-                ("workspace", "Home", "Admissions", "home"),
+                ("page", "Dashboard", "admissions-dashboard", "layout-dashboard"),
                 ("doctype", "Admissions", "Program Enrollment", "clipboard-check"),
                 ("doctype", "Students", "Student", "users"),
                 ("doctype", "Payment Approval", "Payment Approval Log", "badge-check"),
@@ -83,7 +83,7 @@ SPEC = {
         },
         {
             "title": "Hostels",
-            "owns": ["Hostels", "Hostel", "Hostel Occupancy", "Hostel Fee Collection", "Vehicle Fee"],
+            "owns": ["Hostels", "hostel-dashboard", "Hostel", "Hostel Occupancy", "Hostel Fee Collection", "Vehicle Fee"],
             "module": "Future Hostels",
             "icon": "bed-double",
             "roles": ["Sales Manager", "System Manager", "Accounts User", "Academics User"],
@@ -96,7 +96,7 @@ SPEC = {
                 ("doctype", "Fee Rates", "Admission Settings", "Grey", None, None),
             ],
             "items": [
-                ("workspace", "Home", "Hostels", "home"),
+                ("page", "Dashboard", "hostel-dashboard", "layout-dashboard"),
                 ("report", "Occupancy", "Hostel Occupancy", "chart-column"),
                 ("report", "Fee Collection", "Hostel Fee Collection", "wallet"),
                 ("doctype", "Hostel", "Hostel", "hotel"),
@@ -109,7 +109,7 @@ SPEC = {
         },
         {
             "title": "Payments",
-            "owns": ["Payments", "Payment Approval Log", "Discount Approval Log", "Fee Refund Request", "Fee Transfer Request", "Student Service", "Sales Invoice", "Payment Entry", "App Access Approval Log"],
+            "owns": ["Payments", "payments-dashboard", "Payment Approval Log", "Discount Approval Log", "Fee Refund Request", "Fee Transfer Request", "Student Service", "Sales Invoice", "Payment Entry", "App Access Approval Log"],
             "module": "Future Payments",
             "icon": "wallet",
             "roles": ["Sales Manager", "System Manager", "Accounts User", "Accounts Manager"],
@@ -125,7 +125,7 @@ SPEC = {
                 ("doctype", "Payment Entries", "Payment Entry", "Grey", None, None),
             ],
             "items": [
-                ("workspace", "Home", "Payments", "home"),
+                ("page", "Dashboard", "payments-dashboard", "layout-dashboard"),
                 ("doctype", "Payment Approval", "Payment Approval Log", "badge-check"),
                 ("doctype", "Discount Approval", "Discount Approval Log", "percent"),
                 ("doctype", "Refunds", "Fee Refund Request", "undo-2"),
