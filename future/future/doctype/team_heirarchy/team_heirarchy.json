@@ -9,7 +9,13 @@
   "user",
   "role",
   "section_break_rgvg",
-  "team_heirarchy_table"
+  "team_heirarchy_table",
+  "section_auto_assign",
+  "auto_assign",
+  "assign_method",
+  "column_break_aa",
+  "max_open_leads",
+  "last_assigned_user"
  ],
  "fields": [
   {
@@ -41,11 +47,50 @@
   {
    "fieldname": "section_break_rgvg",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_auto_assign",
+   "fieldtype": "Section Break",
+   "label": "Auto-assign",
+   "depends_on": "eval:doc.role==\"Team Lead\"",
+   "description": "When a lead reaches this Team Lead without a salesperson, give it to an active member of the team automatically."
+  },
+  {
+   "fieldname": "auto_assign",
+   "fieldtype": "Check",
+   "label": "Auto-assign Leads to Team"
+  },
+  {
+   "fieldname": "assign_method",
+   "fieldtype": "Select",
+   "label": "Method",
+   "options": "Fewest Open Leads\nRound Robin",
+   "default": "Fewest Open Leads",
+   "depends_on": "auto_assign"
+  },
+  {
+   "fieldname": "column_break_aa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "max_open_leads",
+   "fieldtype": "Int",
+   "label": "Max Open Leads per Salesperson",
+   "depends_on": "auto_assign",
+   "description": "0 = no limit. Salespeople at the limit are skipped."
+  },
+  {
+   "fieldname": "last_assigned_user",
+   "fieldtype": "Link",
+   "label": "Last Auto-assigned To",
+   "options": "User",
+   "read_only": 1,
+   "depends_on": "auto_assign"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-22 14:14:26.039136",
+ "modified": "2026-11-06 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Team Heirarchy",
@@ -61,6 +106,18 @@
    "read": 1,
    "report": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
    "share": 1,
    "write": 1
   }

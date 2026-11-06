@@ -178,23 +178,9 @@ def _escape_like(value):
 
 
 def _get_lead_visibility_condition():
-    user = frappe.session.user
+    from future.permissions.visibility import lead_condition
 
-    if user == "Administrator":
-        return None
-
-    if frappe.db.exists(
-        "Has Role",
-        {"parent": user, "role": "Sales Manager"},
-    ):
-        return None
-
-    escaped_user = _escape_like(user)
-
-    return (
-        f"(l.owner = '{escaped_user}' "
-        f"OR l._assign LIKE '%{escaped_user}%')"
-    )
+    return lead_condition("l")
 
 
 # =========================================================
@@ -259,7 +245,7 @@ def _build_conditions(filters, date_filters):
 
     if filters.get("source"):
         conditions.append(
-            "l.source = "
+            "l.utm_source = "
             + frappe.db.escape(
                 filters["source"]
             )
@@ -391,7 +377,7 @@ def _get_kpis(conditions):
         assigned_conditions.append(visibility)
 
     assigned_conditions.append(
-        f"l._assign LIKE '%{_escape_like(frappe.session.user)}%'"
+        "l._assign LIKE " + frappe.db.escape(f'%"{_escape_like(frappe.session.user)}"%')
     )
 
     assigned_leads = _count(" AND ".join(assigned_conditions))
@@ -450,7 +436,7 @@ def _get_sources(conditions):
         f"""
         SELECT
             COALESCE(
-                NULLIF(l.source, ''),
+                NULLIF(l.utm_source, ''),
                 'Unknown'
             ) AS source,
 
@@ -462,7 +448,7 @@ def _get_sources(conditions):
 
         GROUP BY
             COALESCE(
-                NULLIF(l.source, ''),
+                NULLIF(l.utm_source, ''),
                 'Unknown'
             )
 
@@ -851,34 +837,31 @@ def get_team_lead_users(team_lead=None, role="Team Lead"):
 
 @frappe.whitelist()
 def set_lead_assignment_role(doctype, names, allocated_to, role):
-    field_map = {
-        "Lead Manager": "custom_lead_manager_name",
-        "Team Lead": "custom_team_leader",
-        "Lead User": "custom_lead_user",
-    }
-    field = field_map.get(role)
-    if not field:
+    """Called by the Assign To dialog after it assigned `names` to `allocated_to`.
+
+    Lead assignments are hand-overs (future.lead_management.hand_over_lead):
+    whoever held `role` before loses the lead, and the move is commented on it.
+    """
+    from future.lead_management import ROLE_FIELDS, check_can_hand_over, hand_over_lead
+
+    if role not in ROLE_FIELDS:
         frappe.throw("Invalid Role")
 
     if isinstance(names, str):
         names = frappe.parse_json(names)
 
     for name in names or []:
-        frappe.db.set_value(
-            "ToDo",
-            {
-                "reference_type": doctype,
-                "reference_name": name,
-                "allocated_to": allocated_to,
-            },
-            "custom_lead_role",
-            role,
-        )
-
         if doctype == "Lead":
-            frappe.db.set_value("Lead", name, field, allocated_to)
-
-    frappe.db.commit()
+            check_can_hand_over(name, allocated_to)
+            hand_over_lead(name, allocated_to, role, reason=frappe._("Assigned from the list"))
+        else:
+            frappe.has_permission(doctype, "write", name, throw=True)
+            frappe.db.set_value(
+                "ToDo",
+                {"reference_type": doctype, "reference_name": name, "allocated_to": allocated_to, "status": "Open"},
+                "custom_lead_role",
+                role,
+            )
 
     return True
 

@@ -1,0 +1,23 @@
+{
+ "actions": [],
+ "creation": "2026-11-06 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["user", "full_name", "lead_count"],
+ "fields": [
+  {"fieldname": "user", "fieldtype": "Link", "in_list_view": 1, "label": "Salesperson", "options": "User", "reqd": 1},
+  {"fetch_from": "user.full_name", "fieldname": "full_name", "fieldtype": "Data", "in_list_view": 1, "label": "Name", "read_only": 1},
+  {"fieldname": "lead_count", "fieldtype": "Int", "in_list_view": 1, "label": "Leads", "read_only": 1}
+ ],
+ "istable": 1,
+ "modified": "2026-11-06 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Lead Handover Target",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,256 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-11-06 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "handover_type",
+  "role",
+  "request_status",
+  "requested_by",
+  "column_break_a",
+  "to_user",
+  "handed_over_by",
+  "handover_on",
+  "section_targets",
+  "targets",
+  "section_pick",
+  "from_user",
+  "pick_statuses",
+  "column_break_b",
+  "pick_count",
+  "oldest_first",
+  "get_leads",
+  "section_leads",
+  "leads",
+  "total_leads",
+  "section_reason",
+  "reason",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "LHO-.YYYY.-.#####",
+   "default": "LHO-.YYYY.-.#####",
+   "hidden": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "handover_type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Hand Over\nDistribute",
+   "default": "Hand Over",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Hand Over: all picked leads go to one person. Distribute: picked leads are split evenly between several people."
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "label": "As",
+   "options": "Lead User\nTeam Lead\nLead Manager",
+   "default": "Lead User",
+   "reqd": 1,
+   "description": "The position the new person takes on these leads. Whoever held that position before loses the lead."
+  },
+  {
+   "fieldname": "request_status",
+   "fieldtype": "Select",
+   "label": "Request",
+   "options": "\nRequested\nApproved\nRejected",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "depends_on": "request_status",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "read_only": 1,
+   "depends_on": "requested_by"
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "to_user",
+   "fieldtype": "Link",
+   "label": "Hand Over To",
+   "options": "User",
+   "depends_on": "eval:doc.handover_type==\"Hand Over\"",
+   "mandatory_depends_on": "eval:doc.handover_type==\"Hand Over\" && !doc.request_status",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "handed_over_by",
+   "fieldtype": "Link",
+   "label": "Handed Over By",
+   "options": "User",
+   "read_only": 1,
+   "in_standard_filter": 1,
+   "depends_on": "eval:doc.docstatus>0"
+  },
+  {
+   "fieldname": "handover_on",
+   "fieldtype": "Datetime",
+   "label": "Handed Over On",
+   "read_only": 1,
+   "depends_on": "eval:doc.docstatus>0"
+  },
+  {
+   "fieldname": "section_targets",
+   "fieldtype": "Section Break",
+   "label": "Distribute Between",
+   "depends_on": "eval:doc.handover_type==\"Distribute\""
+  },
+  {
+   "fieldname": "targets",
+   "fieldtype": "Table",
+   "label": "Salespeople",
+   "options": "Lead Handover Target",
+   "mandatory_depends_on": "eval:doc.handover_type==\"Distribute\""
+  },
+  {
+   "fieldname": "section_pick",
+   "fieldtype": "Section Break",
+   "label": "Pick Leads",
+   "depends_on": "eval:doc.docstatus==0",
+   "description": "Optional helper: take leads from one person, e.g. 13 of Keerthana's oldest open leads."
+  },
+  {
+   "fieldname": "from_user",
+   "fieldtype": "Link",
+   "label": "Take From",
+   "options": "User"
+  },
+  {
+   "fieldname": "pick_statuses",
+   "fieldtype": "Small Text",
+   "label": "Only These Statuses",
+   "description": "One status per line. Leave empty for all statuses."
+  },
+  {
+   "fieldname": "column_break_b",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pick_count",
+   "fieldtype": "Int",
+   "label": "How Many",
+   "description": "0 = all of them"
+  },
+  {
+   "fieldname": "oldest_first",
+   "fieldtype": "Check",
+   "label": "Oldest Leads First",
+   "default": "1"
+  },
+  {
+   "fieldname": "get_leads",
+   "fieldtype": "Button",
+   "label": "Get Leads"
+  },
+  {
+   "fieldname": "section_leads",
+   "fieldtype": "Section Break",
+   "label": "Leads"
+  },
+  {
+   "fieldname": "leads",
+   "fieldtype": "Table",
+   "label": "Leads",
+   "options": "Lead Handover Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_leads",
+   "fieldtype": "Int",
+   "label": "Total Leads",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_reason",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Lead Handover",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "is_submittable": 1,
+ "track_changes": 1,
+ "modified": "2026-11-06 15:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Lead Handover",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "delete": 1,
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "print": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

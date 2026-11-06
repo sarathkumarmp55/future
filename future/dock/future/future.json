@@ -1,0 +1,31 @@
+{
+ "app": "future",
+ "creation": "2026-11-06 09:54:52.445046",
+ "docstatus": 0,
+ "doctype": "Dock",
+ "idx": 0,
+ "items": [
+  {
+   "added": 0,
+   "hidden": 0,
+   "icon": "handshake",
+   "link_to": "Leads",
+   "link_type": "Sidebar",
+   "title": "Leads"
+  },
+  {
+   "added": 0,
+   "hidden": 0,
+   "icon": "wallet",
+   "link_to": "Payments",
+   "link_type": "Sidebar",
+   "title": "Payments"
+  }
+ ],
+ "modified": "2026-11-06 09:54:52.445046",
+ "modified_by": "Administrator",
+ "name": "future",
+ "owner": "Administrator",
+ "standard": 1,
+ "user": ""
+}

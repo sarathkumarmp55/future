@@ -1,0 +1,19 @@
+{
+ "app": "future",
+ "creation": "2026-11-06 09:54:52.445046",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon_type": "App",
+ "idx": 20,
+ "label": "Future",
+ "link": "/desk/leads",
+ "link_type": "External",
+ "logo_url": "/assets/future/images/future-logo.svg",
+ "modified": "2026-11-06 09:54:52.445046",
+ "modified_by": "Administrator",
+ "name": "Future",
+ "owner": "Administrator",
+ "roles": [],
+ "standard": 1
+}

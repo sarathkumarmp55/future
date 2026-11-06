@@ -1,5 +1,5 @@
 app_name = "future"
-app_title = "future"
+app_title = "Future"
 app_publisher = "sarath"
 app_description = "future"
 app_email = "sarath@gmail.com"
@@ -59,26 +59,58 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Lead": "public/js/lead.js"}
-doctype_list_js = {"Lead": "public/js/lead_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
 # Document Events
 # ---------------
 doc_events = {
+    "ToDo": {
+        "validate": "future.lead_management.validate_todo_assignment",
+        "after_insert": "future.lead_management.on_todo_insert",
+    },
     "Lead": {
         "validate": "future.events.lead.validate_mobile_no_unique",
-        "on_update": "future.events.lead.on_update",
+        "on_update": [
+            "future.events.lead.on_update",
+            "future.lead_management.on_lead_update",
+        ],
     }
 }
 
 # Permission Query Conditions
 # ---------------------------
+# Salespeople compete, so Leads and Opportunities are private to the people
+# working them and their managers. See future/permissions/visibility.py.
 permission_query_conditions = {
-    "Lead": "future.permissions.lead.get_permission_query_conditions",
-    "Opportunity": "future.permissions.opportunity.get_permission_query_conditions",
+    "Lead": "future.permissions.visibility.lead_query_conditions",
+    "Opportunity": "future.permissions.visibility.opportunity_query_conditions",
+    "Contact": "future.permissions.visibility.contact_query_conditions",
+    "Address": "future.permissions.visibility.address_query_conditions",
+    "Lead Handover": "future.permissions.visibility.handover_query_conditions",
 }
+
+has_permission = {
+    "Lead": "future.permissions.visibility.lead_has_permission",
+    "Opportunity": "future.permissions.visibility.opportunity_has_permission",
+    "Contact": "future.permissions.visibility.contact_has_permission",
+    "Address": "future.permissions.visibility.address_has_permission",
+    "Lead Handover": "future.permissions.visibility.handover_has_permission",
+}
+
+scheduler_events = {
+    "hourly": ["future.lead_management.check_first_call_sla"],
+    "daily": ["future.lead_management.send_daily_digest"],
+}
+
+add_to_apps_screen = [
+    {
+        "name": app_name,
+        "logo": "/assets/future/images/future-logo.svg",
+        "title": app_title,
+        "route": "/desk/leads",
+    }
+]
 
 # Svg Icons
 # ------------------
@@ -182,7 +214,7 @@ after_migrate = ["future.setup.workspace.hide_unused_workspaces"]
 
 doctype_js = {
     
-    "Lead" : "public/js/lead.js",
+    "Lead" : ["public/js/lead.js", "public/js/lead_handover_form.js"],
     "Opportunity" : "public/js/opportunity.js",
     "Payment Entry" : "public/js/payment_entry.js",
     "Program" : "public/js/program.js",
@@ -191,7 +223,7 @@ doctype_js = {
 }
 
 doctype_list_js = {
-    "Lead" : "public/js/lead_list.js",
+    "Lead" : ["public/js/lead_list.js", "public/js/lead_handover_list.js"],
     "Payment Approval Log" : "public/js/payment_approval_log_list.js"
 }
 
