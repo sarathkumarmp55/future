@@ -309,15 +309,34 @@ def run(path, dry_run=0):
 			if words[0] == "FSP" and fam == "FSP" and words[1] in prog.name.upper() and " ".join(words[2:]).upper() in prog.name.upper():
 				frappe.db.set_value("Program", prog.name, "custom_transport_fee", amount)
 
+	# what the site holds after this import (counted before a dry run rolls back)
+	summary = {
+		"centers": frappe.db.count("Center"),
+		"hostels": frappe.db.count("Hostel"),
+		"programs": frappe.db.count("Program"),
+		"programs_priced": frappe.db.count("Program", {"custom_selling_price": [">", 0]}),
+		"hostel_rates": rates,
+		"transport_fees": transport,
+	}
 	if cint(dry_run):
 		frappe.db.rollback()
-		log.append("DRY RUN: rolled back")
+		log.append("DRY RUN: nothing was saved")
 	else:
 		frappe.db.commit()
 	for line in log:
 		print(line)
-	print(
-		"Centers:", frappe.db.count("Center"), "| Hostels:", frappe.db.count("Hostel"),
-		"| Programs:", frappe.db.count("Program"), "| Hostel rates:", rates, "| Transport:", transport,
-	)
-	return log
+	print(summary)
+	return {"log": log, "summary": summary, "dry_run": cint(dry_run)}
+
+
+@frappe.whitelist()
+def import_from_file(file_url, dry_run=1):
+	"""Import the masters workbook uploaded as a File (Admission Settings button, or the REST API).
+
+	System Managers only. Run with dry_run=1 first: it reports what would be created and
+	rolls everything back."""
+	frappe.only_for("System Manager")
+	file = frappe.get_doc("File", {"file_url": file_url})
+	if not (file.file_name or "").lower().endswith((".xlsx", ".xlsm")):
+		frappe.throw(frappe._("Upload the masters workbook as an .xlsx file."))
+	return run(file.get_full_path(), dry_run=cint(dry_run))
