@@ -11,6 +11,36 @@ from frappe.model.document import Document
 
 class DiscountApprovalLog(Document):
 	def on_submit(self):
+		if self.discount_status == "Rejected":
+			self.reopen_source()
+		self.notify_requester()
+		self._on_submit_approved()
+
+	def reopen_source(self):
+		"""A rejected discount must not leave the Opportunity / Student Service stuck as
+		"Discount Approval Pending": drop the discount and let the counsellor continue."""
+		if self.from_opportunity and self.opportunity_reference:
+			frappe.db.set_value(
+				"Opportunity",
+				self.opportunity_reference,
+				{"status": "Fee Discussion Completed", "custom_add_discount": 0, "custom_discount_id": None},
+			)
+		if self.from_student_service and self.student_service:
+			frappe.db.set_value("Student Service", self.student_service, {"service_status": "New", "add_discount": 0})
+
+	def notify_requester(self):
+		from future.lead_management import _notify
+
+		if self.owner and self.owner != frappe.session.user:
+			_notify(
+				[self.owner],
+				_("Discount {0} for {1} was {2}").format(self.name, self.lead_name or self.student or "", _(self.discount_status).lower()),
+				"Discount Approval Log",
+				self.name,
+				frappe.session.user,
+			)
+
+	def _on_submit_approved(self):
 		if self.from_opportunity ==1:
 
 			if self.discount_status != "Approved":
@@ -128,3 +158,28 @@ class DiscountApprovalLog(Document):
 				1,
 			)
 			
+
+APPROVER_ROLES = {"System Manager", "Sales Manager", "Accounts Manager"}
+
+
+def _decide(name, status, reason=None):
+	if not APPROVER_ROLES & set(frappe.get_roles()):
+		frappe.throw(_("Only managers can approve or reject discounts."), frappe.PermissionError)
+	doc = frappe.get_doc("Discount Approval Log", name)
+	if doc.docstatus != 0 or doc.discount_status != "Pending":
+		frappe.throw(_("This discount request is already decided."))
+	doc.discount_status = status
+	if reason:
+		doc.reject_reason = reason
+	doc.submit()
+	return doc.discount_status
+
+
+@frappe.whitelist()
+def approve(name):
+	return _decide(name, "Approved")
+
+
+@frappe.whitelist()
+def reject(name, reason):
+	return _decide(name, "Rejected", reason)

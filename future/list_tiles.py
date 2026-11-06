@@ -127,7 +127,46 @@ def _enrollment_tiles():
 	]
 
 
-CONFIG = {"Lead": _lead_tiles, "Opportunity": _opportunity_tiles, "Program Enrollment": _enrollment_tiles}
+def _discount_tiles():
+	D = "Discount Approval Log"
+	return [
+		{"key": "all", "label": _("All Requests"), "filters": [], "foot": _("matching the filters")},
+		{"key": "pending", "label": _("Pending"), "filters": [[D, "discount_status", "=", "Pending"]], "foot": _("waiting for a manager"), "tone": "warn"},
+		{"key": "approved", "label": _("Approved"), "filters": [[D, "discount_status", "=", "Approved"]], "foot": _("discount applied"), "tone": "good"},
+		{"key": "rejected", "label": _("Rejected"), "filters": [[D, "discount_status", "=", "Rejected"]], "foot": _("sent back"), "tone": "muted"},
+	]
+
+
+def _refund_tiles():
+	R = "Fee Refund Request"
+	return [
+		{"key": "all", "label": _("All Refunds"), "filters": [], "foot": _("matching the filters")},
+		{"key": "requested", "label": _("Requested"), "filters": [[R, "status", "=", "Requested"]], "foot": _("waiting for approval"), "tone": "warn"},
+		{"key": "approved", "label": _("Approved"), "filters": [[R, "status", "=", "Approved"]], "foot": _("to be paid out"), "tone": "alert"},
+		{"key": "paid", "label": _("Paid"), "filters": [[R, "status", "=", "Paid"]], "foot": _("refunded"), "tone": "good"},
+		{"key": "rejected", "label": _("Rejected"), "filters": [[R, "status", "=", "Rejected"]], "foot": _("not refunded"), "tone": "muted"},
+	]
+
+
+def _transfer_tiles():
+	T = "Fee Transfer Request"
+	return [
+		{"key": "all", "label": _("All Transfers"), "filters": [], "foot": _("matching the filters")},
+		{"key": "pending", "label": _("Waiting Approval"), "filters": [[T, "docstatus", "=", 0]], "foot": _("not yet approved"), "tone": "warn"},
+		{"key": "done", "label": _("Approved"), "filters": [[T, "docstatus", "=", 1]], "foot": _("money moved"), "tone": "good"},
+		{"key": "self", "label": _("Between Categories"), "filters": [[T, "transfer_type", "=", "Self"]], "foot": _("same student")},
+		{"key": "other", "label": _("Student to Student"), "filters": [[T, "transfer_type", "=", "Student to Student"]], "foot": _("with journal entry")},
+	]
+
+
+CONFIG = {
+	"Lead": _lead_tiles,
+	"Opportunity": _opportunity_tiles,
+	"Program Enrollment": _enrollment_tiles,
+	"Discount Approval Log": _discount_tiles,
+	"Fee Refund Request": _refund_tiles,
+	"Fee Transfer Request": _transfer_tiles,
+}
 
 
 @frappe.whitelist()
@@ -135,7 +174,9 @@ def get_tile_counts(doctype, filters=None):
 	if doctype not in CONFIG:
 		frappe.throw(_("No tiles for {0}").format(doctype))
 	tiles = CONFIG[doctype]()
-	owned = {f[1] for t in tiles for f in t["filters"]} - {"docstatus"}
+	owned = {f[1] for t in tiles for f in t["filters"]}
+	if doctype == "Program Enrollment":
+		owned -= {"docstatus"}
 	filters = frappe.parse_json(filters) if filters else []
 	base = [f for f in filters if not (isinstance(f, (list, tuple)) and len(f) >= 2 and f[1] in owned)]
 

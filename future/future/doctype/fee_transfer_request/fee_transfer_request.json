@@ -1,0 +1,215 @@
+{
+ "actions": [],
+ "creation": "2026-11-08 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "transfer_type",
+  "from_enrollment",
+  "from_student_name",
+  "from_category",
+  "available",
+  "cb1",
+  "to_enrollment",
+  "to_student_name",
+  "to_category",
+  "amount",
+  "reason_section",
+  "reason",
+  "journal_entry",
+  "approved_by",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "FTR-.YYYY.-.#####",
+   "default": "FTR-.YYYY.-.#####",
+   "hidden": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "transfer_type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "Self\nStudent to Student",
+   "default": "Self",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Self: move a student's money between fee categories. Student to Student: move it to another student's enrollment (posts a Journal Entry)."
+  },
+  {
+   "fieldname": "from_enrollment",
+   "fieldtype": "Link",
+   "label": "From Enrollment",
+   "options": "Program Enrollment",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "from_student_name",
+   "fieldtype": "Data",
+   "label": "From Student",
+   "fetch_from": "from_enrollment.student_name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "from_category",
+   "fieldtype": "Select",
+   "label": "From",
+   "options": "Course Fee\nHostel Fee\nTransportation Fee\nTablet Fee\nCaution Deposit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "available",
+   "fieldtype": "Currency",
+   "label": "Available in From",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "to_enrollment",
+   "fieldtype": "Link",
+   "label": "To Enrollment",
+   "options": "Program Enrollment",
+   "depends_on": "eval:doc.transfer_type==\"Student to Student\"",
+   "mandatory_depends_on": "eval:doc.transfer_type==\"Student to Student\""
+  },
+  {
+   "fieldname": "to_student_name",
+   "fieldtype": "Data",
+   "label": "To Student",
+   "fetch_from": "to_enrollment.student_name",
+   "read_only": 1,
+   "depends_on": "eval:doc.transfer_type==\"Student to Student\""
+  },
+  {
+   "fieldname": "to_category",
+   "fieldtype": "Select",
+   "label": "To",
+   "options": "Course Fee\nHostel Fee\nTransportation Fee\nTablet Fee\nCaution Deposit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "reason_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "journal_entry",
+   "fieldtype": "Link",
+   "label": "Journal Entry",
+   "options": "Journal Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Fee Transfer Request",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "modified": "2026-11-08 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Fee Transfer Request",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "naming_series:",
+ "is_submittable": 1,
+ "track_changes": 1,
+ "title_field": "from_student_name",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1,
+   "delete": 1
+  },
+  {
+   "role": "Accounts Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Accounts User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "print": 1
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "report": 1,
+   "print": 1
+  }
+ ]
+}

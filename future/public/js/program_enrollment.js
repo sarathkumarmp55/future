@@ -29,6 +29,14 @@ frappe.ui.form.on("Program Enrollment", {
 			);
 		}
 		if (frm.doc.docstatus === 1 && frm.perm[0]?.write) add_hostel_buttons(frm);
+		if (frm.doc.docstatus === 1) {
+			frm.add_custom_button(__("Request Refund"), () =>
+				frappe.new_doc("Fee Refund Request", { enrollment: frm.doc.name })
+			, __("Fees"));
+			frm.add_custom_button(__("Transfer Fee"), () =>
+				frappe.new_doc("Fee Transfer Request", { from_enrollment: frm.doc.name })
+			, __("Fees"));
+		}
 		if (frm.doc.docstatus === 1 && frm.doc.custom_admission_status === "Pending") {
 			frm.add_custom_button(__("Mark as Joined"), () => {
 				frappe.prompt(
@@ -140,6 +148,18 @@ function render_360(d) {
 		.filter(Boolean)
 		.join("");
 
+	const link = (route, name) => `<a href="/desk/${route}/${encodeURIComponent(name)}">${esc(name)}</a>`;
+	const chip = (status) => {
+		const tone = { Approved: "good", Paid: "good", Pending: "warn", Requested: "warn", Waiting: "warn", Rejected: "bad", Cancelled: "bad" }[status] || "";
+		return `<span class="fe-chip ${tone}">${esc(__(status || ""))}</span>`;
+	};
+	const money_card = (title, icon, rows, headers, cells, empty) => `
+		<section class="fe-card"><header><span class="fe-ico">${frappe.utils.icon(icon, "sm")}</span><div><h5>${title}</h5></div></header>
+		${rows.length
+			? `<div class="fe-table-wrap"><table class="fe-table"><thead><tr>${headers.map((h, i) => `<th class="${i === 2 ? "num" : ""}">${h}</th>`).join("")}</tr></thead>
+				<tbody>${rows.map((r) => `<tr>${cells(r).map((c, i) => `<td class="${i === 2 ? "num" : ""}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+			: `<div class="fe-empty">${empty}</div>`}
+		</section>`;
 	const tile = (label, value, foot, cls = "") => `
 		<div class="fe-tile ${cls}"><div class="fe-label">${label}</div><div class="fe-value">${value}</div><div class="fe-foot">${foot}</div></div>`;
 
@@ -240,6 +260,20 @@ function render_360(d) {
 			${e.hosteller === "Hosteller" ? progress(esc(e.hostel || __("Hostel")), __("Hostel fee summary"), h.total, h.paid, h.balance, h.pct, "bed-double") : ""}
 			${extras}
 		</div>
+		<div class="fe-grid">
+			${money_card(__("Discount & Concessions"), "percent", d.discounts, [__("Request"), __("Discount"), __("Amount"), __("Status")],
+				(r) => [link("discount-approval-log", r.name), esc(r.discount_id || r.base_of_discount || ""), money(r.amount), chip(r.discount_status)], __("No discount requests"))}
+			${money_card(__("Refunds & Transfers"), "undo-2", [...d.refunds.map((r) => ({ ...r, _t: "refund" })), ...d.transfers.map((t) => ({ ...t, _t: "transfer" })), ...d.pending_transfers.map((t) => ({ ...t, _t: "pending" }))],
+				[__("Document"), __("What"), __("Amount"), __("Status")],
+				(r) => r._t === "refund"
+					? [link("fee-refund-request", r.name), esc(__("Refund of {0}", [r.category])), money(-r.amount), chip(r.status)]
+					: r._t === "pending"
+					? [link("fee-transfer-request", r.name), esc(`${r.from_category} → ${r.to_category}`), money(r.amount), chip("Waiting")]
+					: [link("fee-transfer-request", r.name), esc(`${__(r.kind)}: ${r.category}`), money(r.amount), chip("Approved")],
+				__("No refunds or transfers"))}
+		</div>
+		${d.tablets.length ? money_card(__("Tablet"), "tablet-smartphone", d.tablets, [__("Tablet ID"), __("Model"), __("Allocated"), __("Returned")],
+			(t) => [esc(t.tablet_id), esc(t.model || ""), date(t.allocated_on), t.returned_on ? date(t.returned_on) : chip("With student")], "") : ""}
 		<section class="fe-card"><header><span class="fe-ico">${frappe.utils.icon("receipt", "sm")}</span><div><h5>${__("Payments")}</h5><span class="fe-muted">${__("Approved payments, newest first")}</span></div></header>${payments}</section>`;
 }
 

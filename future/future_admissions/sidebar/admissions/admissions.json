@@ -1,6 +1,6 @@
 {
  "app": "future",
- "creation": "2026-11-06 10:42:07.322828",
+ "creation": "2026-11-06 10:47:20.590318",
  "docstatus": 0,
  "doctype": "Sidebar",
  "header_icon": "graduation-cap",
@@ -202,7 +202,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-06 10:42:07.322828",
+ "modified": "2026-11-06 10:47:20.590318",
  "modified_by": "Administrator",
  "module": "Future Admissions",
  "name": "Admissions",

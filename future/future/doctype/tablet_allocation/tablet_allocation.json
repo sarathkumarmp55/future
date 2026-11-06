@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "creation": "2026-11-08 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tablet_id",
+  "model_number",
+  "allocated_on",
+  "returned_on",
+  "condition",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "tablet_id",
+   "fieldtype": "Data",
+   "label": "Tablet ID",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "model_number",
+   "fieldtype": "Data",
+   "label": "Model",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "allocated_on",
+   "fieldtype": "Date",
+   "label": "Allocated On",
+   "in_list_view": 1,
+   "columns": 2,
+   "default": "Today"
+  },
+  {
+   "fieldname": "returned_on",
+   "fieldtype": "Date",
+   "label": "Returned On",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "condition",
+   "fieldtype": "Select",
+   "label": "Condition",
+   "options": "\nGood\nDamaged\nLost",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "columns": 1
+  }
+ ],
+ "modified": "2026-11-08 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "name": "Tablet Allocation",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1,
+ "permissions": []
+}

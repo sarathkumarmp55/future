@@ -101,6 +101,9 @@ permission_query_conditions = {
     "Contact": "future.permissions.visibility.contact_query_conditions",
     "Address": "future.permissions.visibility.address_query_conditions",
     "Lead Handover": "future.permissions.visibility.handover_query_conditions",
+    "Discount Approval Log": "future.permissions.visibility.discount_log_query_conditions",
+    "Fee Refund Request": "future.permissions.visibility.refund_query_conditions",
+    "Fee Transfer Request": "future.permissions.visibility.transfer_query_conditions",
 }
 
 has_permission = {
@@ -109,6 +112,9 @@ has_permission = {
     "Contact": "future.permissions.visibility.contact_has_permission",
     "Address": "future.permissions.visibility.address_has_permission",
     "Lead Handover": "future.permissions.visibility.handover_has_permission",
+    "Discount Approval Log": "future.permissions.visibility.owner_has_permission",
+    "Fee Refund Request": "future.permissions.visibility.owner_has_permission",
+    "Fee Transfer Request": "future.permissions.visibility.owner_has_permission",
 }
 
 scheduler_events = {
@@ -251,6 +257,9 @@ doctype_list_js = {
     "Lead" : ["public/js/list_tiles.js", "public/js/lead_list.js", "public/js/lead_handover_list.js", "public/js/assign_role_patch.js"],
     "Opportunity" : ["public/js/list_tiles.js", "public/js/opportunity_list.js"],
     "Program Enrollment" : ["public/js/list_tiles.js", "public/js/program_enrollment_list.js"],
+    "Discount Approval Log" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
+    "Fee Refund Request" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
+    "Fee Transfer Request" : ["public/js/list_tiles.js", "public/js/money_lists.js"],
     "Payment Approval Log" : "public/js/payment_approval_log_list.js"
 }
 

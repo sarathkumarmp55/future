@@ -109,12 +109,16 @@ SPEC = {
         },
         {
             "title": "Payments",
-            "owns": ["Payments", "Payment Approval Log", "Student Service", "Sales Invoice", "Payment Entry", "App Access Approval Log"],
+            "owns": ["Payments", "Payment Approval Log", "Discount Approval Log", "Fee Refund Request", "Fee Transfer Request", "Student Service", "Sales Invoice", "Payment Entry", "App Access Approval Log"],
             "module": "Future Payments",
             "icon": "wallet",
             "roles": ["Sales Manager", "System Manager", "Accounts User", "Accounts Manager"],
             "pins": [
-                ("doctype", "To Approve", "Payment Approval Log", "Yellow", "{} Pending", [["Payment Approval Log", "docstatus", "=", 0]]),
+                ("doctype", "Payments to Approve", "Payment Approval Log", "Yellow", "{} Pending", [["Payment Approval Log", "docstatus", "=", 0]]),
+                ("doctype", "Discounts Pending", "Discount Approval Log", "Orange", "{} Pending", [["Discount Approval Log", "discount_status", "=", "Pending"], ["Discount Approval Log", "docstatus", "=", 0]]),
+                ("doctype", "Refunds to Approve", "Fee Refund Request", "Orange", "{} Requested", [["Fee Refund Request", "status", "=", "Requested"]]),
+                ("doctype", "Refunds to Pay", "Fee Refund Request", "Red", "{} Approved", [["Fee Refund Request", "status", "=", "Approved"]]),
+                ("doctype", "Transfers Waiting", "Fee Transfer Request", "Orange", "{} Waiting", [["Fee Transfer Request", "docstatus", "=", 0]]),
                 ("doctype", "Approved", "Payment Approval Log", "Green", None, [["Payment Approval Log", "docstatus", "=", 1]]),
                 ("doctype", "Student Service", "Student Service", "Blue", None, None),
                 ("doctype", "Sales Invoices", "Sales Invoice", "Grey", None, None),
@@ -123,6 +127,9 @@ SPEC = {
             "items": [
                 ("workspace", "Home", "Payments", "home"),
                 ("doctype", "Payment Approval", "Payment Approval Log", "badge-check"),
+                ("doctype", "Discount Approval", "Discount Approval Log", "percent"),
+                ("doctype", "Refunds", "Fee Refund Request", "undo-2"),
+                ("doctype", "Fee Transfers", "Fee Transfer Request", "arrow-right-left"),
                 ("doctype", "Student Service", "Student Service", "clipboard-check"),
                 ("doctype", "Sales Invoice", "Sales Invoice", "receipt"),
                 ("doctype", "Payment Entry", "Payment Entry", "credit-card"),

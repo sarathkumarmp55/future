@@ -199,3 +199,40 @@ def handover_has_permission(doc, ptype=None, user=None, debug=False):
 	if users is None or doc.is_new():
 		return True
 	return bool({doc.owner, doc.get("requested_by"), doc.get("handed_over_by")} & users)
+
+
+# ----------------------------------------------------------------------------- owner-scoped money documents
+#
+# Discount approvals, refund and transfer requests name students and amounts. Their
+# makers and the makers' heads see them; Sales / System Managers see all.
+
+
+def owner_query_conditions(doctype, user=None):
+	users = get_visible_users(user)
+	if users is None:
+		return ""
+	if {"Accounts Manager", "Accounts User"} & set(frappe.get_roles(user or frappe.session.user)):
+		return ""
+	in_list = ", ".join(frappe.db.escape(u) for u in sorted(users))
+	return f"`tab{doctype}`.owner in ({in_list})"
+
+
+def owner_has_permission(doc, ptype=None, user=None, debug=False):
+	users = get_visible_users(user)
+	if users is None or doc.is_new():
+		return True
+	if {"Accounts Manager", "Accounts User"} & set(frappe.get_roles(user or frappe.session.user)):
+		return True
+	return doc.owner in users
+
+
+def discount_log_query_conditions(user=None):
+	return owner_query_conditions("Discount Approval Log", user)
+
+
+def refund_query_conditions(user=None):
+	return owner_query_conditions("Fee Refund Request", user)
+
+
+def transfer_query_conditions(user=None):
+	return owner_query_conditions("Fee Transfer Request", user)

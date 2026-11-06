@@ -90,12 +90,65 @@ def _allocate(rows, paid, today):
 			row.status = "Unpaid"
 
 
-def compute(doc, payments=None):
-	"""Fill every derived amount on a Program Enrollment `doc` (not saved)."""
+CATEGORY_KEY = {
+	"Course Fee": "course",
+	"Hostel Fee": "hostel",
+	"Transportation Fee": "transport",
+	"Tablet Fee": "tablet",
+	"Caution Deposit": "caution",
+}
+
+
+def get_adjustments(enrollment):
+	"""Paid refunds and approved transfers touching `enrollment`, as signed amounts per category."""
+	out = []
+	if not enrollment:
+		return out
+	for r in frappe.get_all(
+		"Fee Refund Request",
+		filters={"enrollment": enrollment, "docstatus": 1, "status": "Paid"},
+		fields=["name", "category", "amount", "reference_date", "modified"],
+	):
+		out.append(frappe._dict(kind="Refund", doc=r.name, category=CATEGORY_KEY[r.category], amount=-flt(r.amount), date=r.reference_date or r.modified))
+	for t in frappe.get_all(
+		"Fee Transfer Request",
+		filters={"docstatus": 1},
+		or_filters={"from_enrollment": enrollment, "to_enrollment": enrollment},
+		fields=["name", "transfer_type", "from_enrollment", "to_enrollment", "from_category", "to_category", "amount", "modified"],
+	):
+		target = t.from_enrollment if t.transfer_type == "Self" else t.to_enrollment
+		if t.from_enrollment == enrollment:
+			out.append(frappe._dict(kind="Transfer Out", doc=t.name, category=CATEGORY_KEY[t.from_category], amount=-flt(t.amount), date=t.modified))
+		if target == enrollment:
+			out.append(frappe._dict(kind="Transfer In", doc=t.name, category=CATEGORY_KEY[t.to_category], amount=flt(t.amount), date=t.modified))
+	return out
+
+
+def category_sums(doc, payments=None, adjustments=None):
 	payments = get_payments(doc.student) if payments is None else payments
+	adjustments = get_adjustments(doc.name) if adjustments is None else adjustments
 	sums = {}
 	for p in payments:
 		sums[p.category] = sums.get(p.category, 0) + p.amount
+	for a in adjustments:
+		sums[a.category] = sums.get(a.category, 0) + a.amount
+	return sums
+
+
+@frappe.whitelist()
+def get_available(enrollment, category):
+	"""Money paid into `category` on `enrollment` that can still be refunded or transferred."""
+	doc = frappe.get_doc("Program Enrollment", enrollment)
+	doc.check_permission("read")
+	return max(flt(category_sums(doc).get(CATEGORY_KEY[category], 0)), 0)
+
+
+def compute(doc, payments=None):
+	"""Fill every derived amount on a Program Enrollment `doc` (not saved)."""
+	payments = get_payments(doc.student) if payments is None else payments
+	adjustments = get_adjustments(doc.name) if not doc.is_new() else []
+	sums = category_sums(doc, payments, adjustments)
+	doc.custom_refunded_amount = -sum(a.amount for a in adjustments if a.kind == "Refund")
 
 	doc.custom_final_amount = flt(doc.custom_offered_amount) - flt(doc.custom_discount_amount)
 	today = getdate(nowdate())
@@ -121,7 +174,8 @@ def refresh_enrollment(name):
 	compute(doc)
 	fields = (
 		"custom_final_amount custom_total_hostel_fee custom_course_paid custom_course_balance custom_hostel_paid "
-		"custom_hostel_balance custom_transport_paid custom_tablet_paid custom_caution_deposit custom_other_paid"
+		"custom_hostel_balance custom_transport_paid custom_tablet_paid custom_caution_deposit custom_other_paid "
+		"custom_refunded_amount"
 	).split()
 	doc.db_set({f: doc.get(f) for f in fields}, update_modified=False)
 	for table in ("custom_fee_schedule", "custom_hostel_schedule"):
@@ -402,7 +456,41 @@ def get_enrollment_dashboard(name):
 		for r in list(doc.custom_fee_schedule or []) + list(doc.custom_hostel_schedule or [])
 		if r.status == "Overdue"
 	)
+	discount_filters = [["Discount Approval Log", "student", "=", doc.student]]
+	if doc.custom_opportunity:
+		discount_filters = [["Discount Approval Log", "opportunity_reference", "=", doc.custom_opportunity]]
+	discounts = frappe.get_all(
+		"Discount Approval Log",
+		or_filters=discount_filters + [["Discount Approval Log", "student", "=", doc.student]],
+		fields=["name", "discount_id", "amount", "discount_status", "base_of_discount", "creation"],
+		order_by="creation desc",
+	)
+	refunds = frappe.get_all(
+		"Fee Refund Request",
+		filters={"enrollment": doc.name, "docstatus": ["<", 2]},
+		fields=["name", "category", "amount", "status", "creation"],
+		order_by="creation desc",
+	)
+	transfers = [
+		{"name": a.doc, "kind": a.kind, "category": a.category, "amount": a.amount}
+		for a in get_adjustments(doc.name)
+		if a.kind != "Refund"
+	]
+	pending_transfers = frappe.get_all(
+		"Fee Transfer Request",
+		filters={"docstatus": 0},
+		or_filters={"from_enrollment": doc.name, "to_enrollment": doc.name},
+		fields=["name", "from_category", "to_category", "amount"],
+	)
 	return {
+		"discounts": discounts,
+		"refunds": refunds,
+		"transfers": transfers,
+		"pending_transfers": pending_transfers,
+		"tablets": [
+			{"tablet_id": t.tablet_id, "model": t.model_number, "allocated_on": t.allocated_on, "returned_on": t.returned_on, "condition": t.condition}
+			for t in doc.get("custom_tablets") or []
+		],
 		"student": {"id": doc.student, **student},
 		"enrollment": {
 			"name": doc.name,
