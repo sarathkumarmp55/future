@@ -34,7 +34,7 @@ SPEC = {
                 ("page", "Dashboard", "lead-dashboard", "layout-dashboard"),
                 ("doctype", "Lead", "Lead", "users-round"),
                 ("doctype", "Opportunity", "Opportunity", "lightbulb"),
-                ("url", "Follow-ups", "/desk/todo?reference_type=Lead&status=Open", "list-todo"),
+                ("doctype", "Follow-ups", "ToDo", "list-todo", {"reference_type": "Lead", "status": "Open"}),
                 ("doctype", "Hand-overs", "Lead Handover", "arrow-right-left"),
                 ("section", "Reports", "chart-column", [
                     ("report", "Total Leads", "Total Leads Report"),
@@ -100,7 +100,7 @@ SPEC = {
                 ("report", "Occupancy", "Hostel Occupancy", "chart-column"),
                 ("report", "Fee Collection", "Hostel Fee Collection", "wallet"),
                 ("doctype", "Hostel", "Hostel", "hotel"),
-                ("url", "Hostellers", "/desk/program-enrollment?custom_hosteller=Hosteller&custom_hostel_status=Allotted&docstatus=1", "users"),
+                ("doctype", "Hostellers", "Program Enrollment", "users", {"custom_hosteller": "Hosteller", "custom_hostel_status": "Allotted", "docstatus": 1}),
                 ("section", "Setup", "settings", [
                     ("doctype", "Transport Routes", "Vehicle Fee"),
                     ("doctype", "Fee Rates", "Admission Settings"),
@@ -160,8 +160,11 @@ def dump(path, doc):
     print("wrote", path)
 
 
-def link(kind, label, target, icon=None, child=0):
+def link(kind, label, target, icon=None, filters=None, child=0):
+    """filters: preset list filters for a DocType link; it opens in the same window (unlike a URL link)."""
     row = {**FLAGS, "type": "Link", "label": label, "child": child}
+    if filters:
+        row["route_options"] = json.dumps(filters)
     if kind == "url":
         row.update(link_type="URL", url=target)
     else:

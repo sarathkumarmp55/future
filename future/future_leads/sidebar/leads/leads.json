@@ -1,6 +1,6 @@
 {
  "app": "future",
- "creation": "2026-11-06 10:40:18.892990",
+ "creation": "2026-11-06 10:42:07.322828",
  "docstatus": 0,
  "doctype": "Sidebar",
  "header_icon": "handshake",
@@ -98,13 +98,14 @@
    "is_default_module": 0,
    "keep_closed": 0,
    "label": "Follow-ups",
-   "link_type": "URL",
+   "link_to": "ToDo",
+   "link_type": "DocType",
    "open_in_new_tab": 0,
    "parentfield": "items",
    "parenttype": "Sidebar",
+   "route_options": "{\"reference_type\": \"Lead\", \"status\": \"Open\"}",
    "show_arrow": 0,
-   "type": "Link",
-   "url": "/desk/todo?reference_type=Lead&status=Open"
+   "type": "Link"
   },
   {
    "added": 0,
@@ -374,7 +375,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-06 10:40:18.892990",
+ "modified": "2026-11-06 10:42:07.322828",
  "modified_by": "Administrator",
  "module": "Future Leads",
  "name": "Leads",
