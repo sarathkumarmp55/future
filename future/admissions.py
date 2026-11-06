@@ -449,3 +449,15 @@ def get_enrollment_dashboard(name):
 			{**p, "category": _(p.category.title())} for p in sorted(payments, key=lambda p: str(p.date or ""), reverse=True)
 		],
 	}
+
+
+def refresh_overdue():
+	"""Daily: re-derive schedule statuses for enrollments with an unpaid row whose due date has passed."""
+	names = frappe.db.sql_list(
+		"""select distinct fs.parent from `tabEnrollment Fee Schedule` fs
+		inner join `tabProgram Enrollment` pe on pe.name = fs.parent and pe.docstatus = 1
+		where fs.parenttype = 'Program Enrollment' and fs.status in ('Unpaid', 'Partly Paid') and fs.due_date < %s""",
+		nowdate(),
+	)
+	for name in names:
+		refresh_enrollment(name)

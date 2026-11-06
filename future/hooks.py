@@ -116,6 +116,7 @@ scheduler_events = {
     "daily": [
         "future.lead_management.send_daily_digest",
         "future.hostel_management.refresh_all_occupancy",
+        "future.admissions.refresh_overdue",
     ],
 }
 
@@ -240,7 +241,9 @@ doctype_js = {
 }
 
 doctype_list_js = {
-    "Lead" : ["public/js/lead_list.js", "public/js/lead_handover_list.js", "public/js/assign_role_patch.js"],
+    "Lead" : ["public/js/list_tiles.js", "public/js/lead_list.js", "public/js/lead_handover_list.js", "public/js/assign_role_patch.js"],
+    "Opportunity" : ["public/js/list_tiles.js", "public/js/opportunity_list.js"],
+    "Program Enrollment" : ["public/js/list_tiles.js", "public/js/program_enrollment_list.js"],
     "Payment Approval Log" : "public/js/payment_approval_log_list.js"
 }
 
