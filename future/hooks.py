@@ -82,13 +82,17 @@ doc_events = {
     },
     "Opportunity": {
         "before_insert": "future.lead_stages.validate_opportunity_from_lead",
+        "validate": "future.lead_stages.validate_opportunity_reasons",
     },
     "ToDo": {
         "validate": "future.lead_management.validate_todo_assignment",
         "after_insert": "future.lead_management.on_todo_insert",
     },
     "Lead": {
-        "validate": "future.events.lead.validate_mobile_no_unique",
+        "validate": [
+            "future.events.lead.validate_mobile_no_unique",
+            "future.lead_stages.validate_lead_reasons",
+        ],
         "on_update": [
             "future.events.lead.on_update",
             "future.lead_management.on_lead_update",

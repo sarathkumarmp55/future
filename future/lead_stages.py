@@ -94,3 +94,30 @@ def validate_opportunity_from_lead(doc, method=None):
 			frappe._("Create the opportunity once the lead is Connected and Interested. Update the call status on the lead first."),
 			title=frappe._("Lead not interested yet"),
 		)
+
+
+# ----------------------------------------------------------------------------- required reasons
+#
+# The forms mark these as required (mandatory_depends_on), but Frappe evaluates that only in the
+# browser. These validate hooks hold the same rules on the server (API, scripts); data imports are
+# exempt so historic rows without reasons can still be loaded.
+
+
+def _skip():
+	return frappe.flags.in_import or frappe.flags.in_migrate or frappe.flags.in_install or frappe.flags.in_patch
+
+
+def validate_lead_reasons(doc, method=None):
+	if _skip():
+		return
+	if doc.get("custom_connected_status") == "Not Interested" and not (doc.get("custom_reason") or "").strip():
+		frappe.throw(frappe._("Type why the student is not interested (Reason)."), frappe.MandatoryError, title=frappe._("Reason needed"))
+	if doc.get("custom_student_class") == "Other" and not (doc.get("custom_class") or "").strip():
+		frappe.throw(frappe._("Student Class is Other: type which class (Which class?)."), frappe.MandatoryError, title=frappe._("Class needed"))
+
+
+def validate_opportunity_reasons(doc, method=None):
+	if _skip():
+		return
+	if doc.status in ("Lost", "Closed") and not (doc.get("order_lost_reason") or "").strip():
+		frappe.throw(frappe._("Type why this opportunity was lost (Why was it lost?)."), frappe.MandatoryError, title=frappe._("Reason needed"))

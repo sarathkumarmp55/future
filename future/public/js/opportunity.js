@@ -1,5 +1,12 @@
 
 frappe.ui.form.on("Opportunity", {
+    // Lost / Closed needs the reason typed (required; see opportunity.json property setters).
+    status(frm) {
+        if (["Lost", "Closed"].includes(frm.doc.status)) {
+            setTimeout(() => frm.scroll_to_field("order_lost_reason"), 200);
+        }
+    },
+
     refresh(frm) {
         
         calculate_total_amount(frm);
