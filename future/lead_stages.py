@@ -69,3 +69,28 @@ def tiles():
 		"lost": ("Lost", [["Lead", "status", "in", stage_statuses("Lost")]]),
 		"late": ("Past First-call Limit", late_filters()),
 	}
+
+
+def ready_for_opportunity(lead):
+	"""A lead moves to an Opportunity only once the call connected and the student is interested
+	(or it is already further along the pipeline)."""
+	return lead.get("custom_connected_status") == "Interested" or stage_of(lead.get("status")) in ("Interested", "Won")
+
+
+@frappe.whitelist()
+def can_make_opportunity(lead):
+	doc = frappe.get_doc("Lead", lead)
+	doc.check_permission("read")
+	return ready_for_opportunity(doc)
+
+
+def validate_opportunity_from_lead(doc, method=None):
+	"""Opportunity before_insert: block opportunities from leads that are not interested yet."""
+	if doc.opportunity_from != "Lead" or not doc.party_name or frappe.flags.in_import or frappe.flags.in_migrate:
+		return
+	lead = frappe.db.get_value("Lead", doc.party_name, ["status", "custom_connected_status"], as_dict=True)
+	if lead and not ready_for_opportunity(lead):
+		frappe.throw(
+			frappe._("Create the opportunity once the lead is Connected and Interested. Update the call status on the lead first."),
+			title=frappe._("Lead not interested yet"),
+		)

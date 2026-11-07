@@ -80,6 +80,9 @@ doc_events = {
         "on_submit": "future.admissions.on_pal_submit",
         "on_cancel": "future.admissions.on_pal_cancel",
     },
+    "Opportunity": {
+        "before_insert": "future.lead_stages.validate_opportunity_from_lead",
+    },
     "ToDo": {
         "validate": "future.lead_management.validate_todo_assignment",
         "after_insert": "future.lead_management.on_todo_insert",

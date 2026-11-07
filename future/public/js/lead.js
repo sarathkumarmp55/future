@@ -136,6 +136,8 @@ frappe.ui.form.on("Lead", {
 
     refresh(frm) {
         patch_interaction_composer_role_field();
+        // Gender is required when a person fills the form; imports may leave it blank (lead_form_fixes).
+        frm.set_df_property("gender", "reqd", 1);
 
         // Hide "Customer" from the "Create" group button
         setTimeout(() => {
@@ -145,7 +147,13 @@ frappe.ui.form.on("Lead", {
             frm.remove_custom_button(__("Add to Prospect"), __("Action"));
             frm.remove_custom_button(__("Opportunity"), __("Create"));
 
-            if (!frm.is_new()) {
+            // Opportunity only after the call connected and the student is interested
+            // (same rule is enforced on the server: future.lead_stages.validate_opportunity_from_lead).
+            const interested_stage = ["Interested", "Demo Scheduled", "Negotiation", "Opportunity", "Qualified",
+                "Manager Approval", "Discount Approval Pending", "Discount Approved", "Payment Approval Pending",
+                "Payment Done", "Won", "Converted Student"];
+            const ready = frm.doc.custom_connected_status === "Interested" || interested_stage.includes(frm.doc.status);
+            if (!frm.is_new() && ready) {
                 frm.add_custom_button(__("Opportunity"), function () {
                     frappe.model.open_mapped_doc({
                         method: "erpnext.crm.doctype.lead.lead.make_opportunity",
