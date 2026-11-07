@@ -18,9 +18,13 @@ import frappe
 
 UNRESTRICTED_ROLES = {"System Manager", "Sales Manager"}
 
-# Lead fields naming the heads responsible for it. The Lead User is deliberately
-# not here: a salesperson's access follows the live assignment (`_assign`) only.
-LEAD_PEOPLE_FIELDS = ("custom_team_leader", "custom_lead_manager_name")
+# Lead fields naming the people responsible for it. The Lead User (current salesperson) is
+# included because Frappe drops a user from `_assign` as soon as their ToDo is Closed: without
+# it, completing a follow-up took the lead away from the salesperson ("Not permitted" on save).
+# custom_lead_user always holds the current salesperson: hand-overs, auto-assign and every new
+# Lead User assignment (lead_management.on_todo_insert) update it.
+LEAD_PEOPLE_FIELDS = ("custom_lead_user", "custom_team_leader", "custom_lead_manager_name")
+OPPORTUNITY_PEOPLE_FIELDS = ("opportunity_owner",)
 
 
 def is_unrestricted(user=None):
@@ -120,11 +124,11 @@ def opportunity_query_conditions(user=None):
 	users = get_visible_users(user)
 	if users is None:
 		return ""
-	return record_condition("`tabOpportunity`", users)
+	return record_condition("`tabOpportunity`", users, OPPORTUNITY_PEOPLE_FIELDS)
 
 
 def opportunity_has_permission(doc, ptype=None, user=None, debug=False):
-	return can_see(doc, get_visible_users(user))
+	return can_see(doc, get_visible_users(user), OPPORTUNITY_PEOPLE_FIELDS)
 
 
 # ----------------------------------------------------------------------------- contacts & addresses
