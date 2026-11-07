@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, date_diff, flt, get_first_day, get_last_day, getdate, nowdate
 
-MANAGER_ROLES = {"System Manager", "Sales Manager", "Accounts Manager", "Accounts User", "Academics User"}
+MANAGER_ROLES = {"System Manager", "Sales Manager", "Accounts Manager", "Accounts User", "Academics User", "Education Manager"}
 
 
 def _check():
@@ -352,4 +352,108 @@ def admissions_dashboard(filters=None):
 		],
 		"waiting": waiting,
 		"overdue": overdue,
+	}
+
+
+# ----------------------------------------------------------------------------- education
+
+
+def _academic_year_start(today=None):
+	"""The academic and financial year starts on 1 April."""
+	t = getdate(today or nowdate())
+	return getdate(f"{t.year if t.month >= 4 else t.year - 1}-04-01")
+
+
+@frappe.whitelist()
+def education_dashboard(filters=None):
+	_check()
+	filters = frappe.parse_json(filters) if filters else {}
+	today = getdate(nowdate())
+	ay_start = _academic_year_start(today)
+
+	active = frappe.db.count("Student", {"enabled": 1})
+	new_this_year = frappe.db.count("Student", {"enabled": 1, "joining_date": [">=", ay_start]})
+	groups = frappe.db.count("Student Group", {"disabled": 0})
+	instructors = frappe.db.count("Instructor", {"status": "Active"}) if frappe.get_meta("Instructor").has_field("status") else frappe.db.count("Instructor")
+	running = frappe.db.sql(
+		"""select count(distinct program) from `tabProgram Enrollment`
+		where docstatus = 1 and ifnull(custom_admission_status, 'Pending') not in ('Dropped', 'Cancelled', 'Completed')"""
+	)[0][0]
+
+	att_today = frappe.db.sql(
+		"""select sum(status = 'Present') as present, sum(status = 'Absent') as absent, count(*) as marked
+		from `tabStudent Attendance` where docstatus = 1 and date = %s""",
+		today,
+		as_dict=True,
+	)[0]
+	start = add_days(today, -13)
+	att_rows = {
+		str(r.d): r
+		for r in frappe.db.sql(
+			"""select date as d, sum(status = 'Present') as present, count(*) as marked
+			from `tabStudent Attendance` where docstatus = 1 and date between %s and %s group by date""",
+			(start, today),
+			as_dict=True,
+		)
+	}
+	attendance = []
+	for i in range(14):
+		d = str(add_days(start, i))
+		r = att_rows.get(d)
+		attendance.append({"date": d, "rate": _pct(cint(r.present), cint(r.marked)) if r and r.marked else 0, "marked": cint(r.marked) if r else 0})
+
+	def group(col):
+		return frappe.db.sql(
+			f"""select coalesce(nullif({col}, ''), 'Not set') as label, count(*) as n
+			from `tabProgram Enrollment` pe
+			where pe.docstatus = 1 and ifnull(pe.custom_admission_status, 'Pending') not in ('Dropped', 'Cancelled', 'Completed')
+			group by label order by n desc limit 8""",
+			as_dict=True,
+		)
+
+	student_groups = frappe.db.sql(
+		"""select sg.name, sg.student_group_name, sg.program, sg.max_strength,
+			(select count(*) from `tabStudent Group Student` s where s.parent = sg.name and ifnull(s.active, 1) = 1) as students,
+			(select group_concat(i.instructor_name separator ', ') from `tabStudent Group Instructor` i where i.parent = sg.name) as instructors
+		from `tabStudent Group` sg where sg.disabled = 0
+		order by students desc limit 8""",
+		as_dict=True,
+	)
+	recent = frappe.get_all(
+		"Student",
+		filters={"enabled": 1},
+		fields=["name", "student_name", "joining_date", "custom_program"],
+		order_by="joining_date desc, creation desc",
+		limit_page_length=8,
+	)
+	low_attendance = frappe.db.sql(
+		"""select sa.student, sa.student_name, sum(sa.status = 'Present') as present, count(*) as marked
+		from `tabStudent Attendance` sa where sa.docstatus = 1 and sa.date between %s and %s
+		group by sa.student
+		having count(*) >= 3 and sum(sa.status = 'Present') / count(*) < 0.75
+		order by sum(sa.status = 'Present') / count(*) asc limit 8""",
+		(add_days(today, -29), today),
+		as_dict=True,
+	)
+	for r in low_attendance:
+		r.rate = _pct(cint(r.present), cint(r.marked))
+	return {
+		"year_start": str(ay_start),
+		"kpis": {
+			"active": active,
+			"new_this_year": new_this_year,
+			"running": running,
+			"groups": groups,
+			"instructors": instructors,
+			"present_today": cint(att_today.present),
+			"absent_today": cint(att_today.absent),
+			"marked_today": cint(att_today.marked),
+			"rate_today": _pct(cint(att_today.present), cint(att_today.marked)),
+		},
+		"attendance": attendance,
+		"programs": group("pe.program"),
+		"centers": group("pe.custom_center"),
+		"groups": student_groups,
+		"recent": recent,
+		"low_attendance": low_attendance,
 	}

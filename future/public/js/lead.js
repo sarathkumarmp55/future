@@ -165,12 +165,14 @@ frappe.ui.form.on("Lead", {
 
     },
 
-    custom_student_class(frm){
-        if(frm.doc.custom_student_class){
-            frm.set_value("custom_class",frm.doc.custom_student_class);
+    custom_student_class(frm) {
+        // "Other" means the class has to be typed (e.g. Class 4); otherwise Class mirrors Student Class.
+        if (frm.doc.custom_student_class === "Other") {
+            frm.set_value("custom_class", "");
+            setTimeout(() => frm.scroll_to_field("custom_class"), 200);
+        } else {
+            frm.set_value("custom_class", frm.doc.custom_student_class || "");
         }
-        else
-        frm.set_value("custom_class",frm.doc.custom_student_class);
     },
 
 
@@ -237,9 +239,9 @@ frappe.ui.form.on("Lead", {
 
         }
         if (frm.doc.custom_connected_status === "Not Interested") {
+            // No auto-save here: the reason has to be typed first (required for Not Interested).
             frm.set_value("status", "Disqualified");
-            frm.save();
-
+            setTimeout(() => frm.scroll_to_field("custom_reason"), 200);
         }
         if (frm.doc.custom_connected_status === "") {
             frm.set_value("status", "Lead");
