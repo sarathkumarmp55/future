@@ -181,7 +181,11 @@ add_to_apps_screen = [
 # before_install = "future.install.before_install"
 # after_install = "future.install.after_install"
 
-after_migrate = ["future.setup.workspace.hide_unused_workspaces"]
+after_install = "future.setup.install.after_install"
+after_migrate = [
+    "future.setup.workspace.hide_unused_workspaces",
+    "future.setup.install.after_migrate",
+]
 
 # Uninstallation
 # ------------

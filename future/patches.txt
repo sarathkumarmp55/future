@@ -8,3 +8,8 @@ future.patches.copy_lead_source_to_utm_source
 future.patches.unblock_future_module_for_sales_users
 future.patches.backfill_lead_assignment
 future.patches.remove_broken_workspace_links
+# Re-run (2026-11-07): on sites where Future was installed fresh, Frappe marked the patches above as done without running them.
+future.patches.copy_lead_source_to_utm_source #2026-11-07
+future.patches.backfill_lead_assignment #2026-11-07
+future.patches.unblock_future_module_for_sales_users #2026-11-07
+future.patches.remove_broken_workspace_links #2026-11-07
