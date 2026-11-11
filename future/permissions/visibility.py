@@ -12,18 +12,24 @@ working it and to their line managers:
 Team Lead / Lead Manager, or created by them while nobody is assigned. A creator
 loses sight of a lead once it is handed to someone else, so leads moved from one
 salesperson to another really move.
+
+A Lead's current salesperson is its Lead User (`custom_lead_user`). Once that is set it
+alone decides which salesperson sees the lead: `_assign` no longer counts, so when a lead
+is re-assigned with "Assign To" the previous salesperson loses it even while their old
+follow-up task is still open (they can still close that task from their ToDo list).
 """
 
 import frappe
 
 UNRESTRICTED_ROLES = {"System Manager", "Sales Manager"}
 
-# Lead fields naming the people responsible for it. The Lead User (current salesperson) is
-# included because Frappe drops a user from `_assign` as soon as their ToDo is Closed: without
-# it, completing a follow-up took the lead away from the salesperson ("Not permitted" on save).
 # custom_lead_user always holds the current salesperson: hand-overs, auto-assign and every new
-# Lead User assignment (lead_management.on_todo_insert) update it.
-LEAD_PEOPLE_FIELDS = ("custom_lead_user", "custom_team_leader", "custom_lead_manager_name")
+# Lead User assignment (lead_management.on_todo_insert) update it. It is used instead of
+# `_assign` because Frappe drops a user from `_assign` when their ToDo is Closed (completing a
+# follow-up would take the lead away), and keeps the previous salesperson in `_assign` while
+# their old ToDo is open (a re-assigned lead would stay visible to both).
+LEAD_OWNER_FIELD = "custom_lead_user"
+LEAD_PEOPLE_FIELDS = ("custom_team_leader", "custom_lead_manager_name")
 OPPORTUNITY_PEOPLE_FIELDS = ("opportunity_owner",)
 
 
@@ -75,15 +81,23 @@ def _quote_json_member(user):
 	return frappe.db.escape(f'%"{escaped}"%')
 
 
-def record_condition(table, users, people_fields=()):
-	"""SQL condition limiting `table` (e.g. "`tabLead`" or an alias) to records of `users`."""
+def record_condition(table, users, people_fields=(), owner_field=None):
+	"""SQL condition limiting `table` (e.g. "`tabLead`" or an alias) to records of `users`.
+
+	With `owner_field`, a record whose owner field is set belongs to that user only; `_assign`
+	and the creator count just for records where it is still empty."""
 	if not users:
 		return "1 = 0"
 
 	in_list = ", ".join(frappe.db.escape(u) for u in sorted(users))
-	parts = [f"{table}.`_assign` like {_quote_json_member(u)}" for u in sorted(users)]
-	parts += [f"{table}.`{field}` in ({in_list})" for field in people_fields]
-	parts.append(f"({table}.`owner` in ({in_list}) and ifnull({table}.`_assign`, '') in ('', '[]'))")
+	loose = [f"{table}.`_assign` like {_quote_json_member(u)}" for u in sorted(users)]
+	loose.append(f"({table}.`owner` in ({in_list}) and ifnull({table}.`_assign`, '') in ('', '[]'))")
+	parts = [f"{table}.`{field}` in ({in_list})" for field in people_fields]
+	if owner_field:
+		parts.append(f"{table}.`{owner_field}` in ({in_list})")
+		parts.append(f"(ifnull({table}.`{owner_field}`, '') = '' and ({' or '.join(loose)}))")
+	else:
+		parts += loose
 	return "(" + " or ".join(parts) + ")"
 
 
@@ -92,14 +106,18 @@ def lead_condition(table="`tabLead`", user=None):
 	users = get_visible_users(user)
 	if users is None:
 		return None
-	return record_condition(table, users, LEAD_PEOPLE_FIELDS)
+	return record_condition(table, users, LEAD_PEOPLE_FIELDS, LEAD_OWNER_FIELD)
 
 
-def can_see(doc, users, people_fields=()):
+def can_see(doc, users, people_fields=(), owner_field=None):
 	if users is None:
 		return True
 	if doc.get("__islocal") or doc.is_new():
 		return True
+	if any(doc.get(f) in users for f in people_fields):
+		return True
+	if owner_field and doc.get(owner_field):
+		return doc.get(owner_field) in users
 	assigned = set(frappe.parse_json(doc.get("_assign") or "[]") or [])
 	if assigned & users:
 		return True
@@ -117,7 +135,7 @@ def lead_query_conditions(user=None):
 
 def lead_has_permission(doc, ptype=None, user=None, debug=False):
 	# frappe treats a falsy return as "deny", so always answer True/False explicitly.
-	return can_see(doc, get_visible_users(user), LEAD_PEOPLE_FIELDS)
+	return can_see(doc, get_visible_users(user), LEAD_PEOPLE_FIELDS, LEAD_OWNER_FIELD)
 
 
 def opportunity_query_conditions(user=None):
@@ -141,7 +159,7 @@ def _linked_condition(parent_doctype, table, user):
 	users = get_visible_users(user)
 	if users is None:
 		return ""
-	visible_leads = record_condition("l", users, LEAD_PEOPLE_FIELDS)
+	visible_leads = record_condition("l", users, LEAD_PEOPLE_FIELDS, LEAD_OWNER_FIELD)
 	return f"""(not exists (
 			select 1 from `tabDynamic Link` dl
 			where dl.parent = {table}.name and dl.parenttype = '{parent_doctype}' and dl.link_doctype = 'Lead')
@@ -159,7 +177,7 @@ def _linked_visible(doc, user):
 	if not leads:
 		return True
 	return any(
-		can_see(frappe.get_doc("Lead", lead), users, LEAD_PEOPLE_FIELDS)
+		can_see(frappe.get_doc("Lead", lead), users, LEAD_PEOPLE_FIELDS, LEAD_OWNER_FIELD)
 		for lead in leads
 		if frappe.db.exists("Lead", lead)
 	)
