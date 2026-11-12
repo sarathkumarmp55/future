@@ -70,14 +70,8 @@ class LeadDashboard {
 		this.f_course = this.page.add_field({
 			fieldname: "course_category",
 			label: __("Course"),
-			fieldtype: "Select",
-			options: [
-				"",
-				"School Tuition",
-				"Higher Secondary",
-				"NEET & JEE Programs",
-				"Integrated School Program",
-			],
+			fieldtype: "Link",
+			options: "Course Category",
 			change: () => this.refresh(),
 		});
 		this.f_location = this.page.add_field({

@@ -11,6 +11,7 @@ def after_install():
 	from future.patches import (
 		backfill_lead_assignment,
 		copy_lead_source_to_utm_source,
+		course_category_master,
 		remove_broken_workspace_links,
 		unblock_future_module_for_sales_users,
 	)
@@ -20,6 +21,7 @@ def after_install():
 		backfill_lead_assignment,
 		unblock_future_module_for_sales_users,
 		remove_broken_workspace_links,
+		course_category_master,
 	):
 		patch.execute()
 	frappe.db.commit()

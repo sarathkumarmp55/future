@@ -14,3 +14,4 @@ future.patches.backfill_lead_assignment #2026-11-07
 future.patches.unblock_future_module_for_sales_users #2026-11-07
 future.patches.remove_broken_workspace_links #2026-11-07
 future.patches.lead_form_fixes #gender-reqd
+future.patches.course_category_master
