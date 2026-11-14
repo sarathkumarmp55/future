@@ -31,8 +31,9 @@ def execute():
 	"""Board and the Lead's "Categories" became DocTypes (Board, Course Sub Category).
 
 	Creates the old dropdown values plus any value already saved on a lead, then copies each
-	lead's category from the four per-course dropdowns into the single Categories link. The old
-	fields stay (hidden) with their data. Records that already exist are left alone."""
+	lead's category from the four per-course dropdowns into the single Categories link (when the
+	field exists; otherwise after_migrate does it). The old fields stay (hidden) with their data.
+	Records that already exist are left alone."""
 	from future.patches import course_category_master
 
 	course_category_master.execute()
@@ -53,25 +54,34 @@ def execute():
 				{"doctype": "Course Sub Category", "sub_category_name": sub, "course_category": course}
 			).insert(ignore_permissions=True)
 
-	# Patches run before the app's custom fields are synced: create the new Lead field now.
-	from frappe.modules.utils import sync_customizations
+	copy_lead_categories()
 
-	sync_customizations("future")
+
+def copy_lead_categories():
+	"""Fill Lead.custom_course_sub_category from the old per-course dropdowns, once per lead.
+
+	Called from after_migrate (the new Lead field only exists after customizations are synced,
+	which happens after patches). Touches only leads whose new field is still empty."""
 	if not frappe.db.has_column("Lead", "custom_course_sub_category"):
 		return
-	for field, course in OLD_FIELDS.items():
-		if not frappe.db.has_column("Lead", field):
-			continue
-		# Take the dropdown that matches the lead's course category; fall back to any filled one.
+	fields = [f for f in OLD_FIELDS if frappe.db.has_column("Lead", f)]
+	if not fields:
+		return
+	pending = " or ".join(f"ifnull(`{f}`, '') != ''" for f in fields)
+	if not frappe.db.sql(
+		f"select 1 from `tabLead` where ifnull(custom_course_sub_category, '') = '' and ({pending}) limit 1"
+	):
+		return
+	# Take the dropdown that matches the lead's course category first, then any filled one.
+	for field in fields:
 		frappe.db.sql(
 			f"""update `tabLead` set custom_course_sub_category = `{field}`
 			where ifnull(custom_course_sub_category, '') = '' and ifnull(`{field}`, '') != ''
 			and custom_course_categories = %s""",
-			course,
+			OLD_FIELDS[field],
 		)
-	for field in OLD_FIELDS:
-		if frappe.db.has_column("Lead", field):
-			frappe.db.sql(
-				f"""update `tabLead` set custom_course_sub_category = `{field}`
-				where ifnull(custom_course_sub_category, '') = '' and ifnull(`{field}`, '') != ''"""
-			)
+	for field in fields:
+		frappe.db.sql(
+			f"""update `tabLead` set custom_course_sub_category = `{field}`
+			where ifnull(custom_course_sub_category, '') = '' and ifnull(`{field}`, '') != ''"""
+		)

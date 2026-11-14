@@ -32,8 +32,10 @@ def after_install():
 def after_migrate():
 	# Workspaces are synced on every migrate; drop links to DocTypes/Reports/Pages that do not exist
 	# (e.g. "Timetable Generator" left behind by an app that was removed).
+	from future.patches.lead_board_and_categories import copy_lead_categories
 	from future.patches.remove_broken_workspace_links import execute
 	from future.setup import education_home
 
 	execute()
 	education_home.ensure()
+	copy_lead_categories()
