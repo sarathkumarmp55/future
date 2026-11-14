@@ -49,6 +49,8 @@ SPEC = {
                     ("doctype", "Lead Settings", "Lead Settings"),
                     ("doctype", "Lead Source", "UTM Source"),
                     ("doctype", "Course Categories", "Course Category"),
+                    ("doctype", "Course Sub Categories", "Course Sub Category"),
+                    ("doctype", "Boards", "Board"),
                     ("doctype", "Discount", "Discount"),
                     ("doctype", "Base of Discount", "Base of Discount"),
                 ]),

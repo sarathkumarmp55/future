@@ -119,6 +119,11 @@ patch_interaction_composer_role_field();
 
 frappe.ui.form.on("Lead", {
     setup(frm) {
+        // Categories offers only the sub-categories of the chosen Course Category.
+        frm.set_query("custom_course_sub_category", () => ({
+            filters: { course_category: frm.doc.custom_course_categories || "", disabled: 0 },
+        }));
+
         frm.set_query("custom_lead_manager_name", function () {
             return {
                 query: "future.api.get_team_heirarchy_users",
@@ -163,6 +168,10 @@ frappe.ui.form.on("Lead", {
             }
         }, 200);
 
+    },
+
+    custom_course_categories(frm) {
+        if (frm.doc.custom_course_sub_category) frm.set_value("custom_course_sub_category", "");
     },
 
     custom_student_class(frm) {

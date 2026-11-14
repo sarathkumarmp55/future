@@ -114,6 +114,14 @@ def validate_lead_reasons(doc, method=None):
 		frappe.throw(frappe._("Type why the student is not interested (Reason)."), frappe.MandatoryError, title=frappe._("Reason needed"))
 	if doc.get("custom_student_class") == "Other" and not (doc.get("custom_class") or "").strip():
 		frappe.throw(frappe._("Student Class is Other: type which class (Which class?)."), frappe.MandatoryError, title=frappe._("Class needed"))
+	sub = doc.get("custom_course_sub_category")
+	if sub:
+		course = frappe.db.get_value("Course Sub Category", sub, "course_category")
+		if course and course != doc.get("custom_course_categories"):
+			frappe.throw(
+				frappe._("Category {0} belongs to {1}, not {2}.").format(sub, course, doc.get("custom_course_categories") or "-"),
+				title=frappe._("Wrong category"),
+			)
 
 
 def validate_opportunity_reasons(doc, method=None):

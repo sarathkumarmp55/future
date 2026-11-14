@@ -12,6 +12,7 @@ def after_install():
 		backfill_lead_assignment,
 		copy_lead_source_to_utm_source,
 		course_category_master,
+		lead_board_and_categories,
 		remove_broken_workspace_links,
 		unblock_future_module_for_sales_users,
 	)
@@ -22,6 +23,7 @@ def after_install():
 		unblock_future_module_for_sales_users,
 		remove_broken_workspace_links,
 		course_category_master,
+		lead_board_and_categories,
 	):
 		patch.execute()
 	frappe.db.commit()
