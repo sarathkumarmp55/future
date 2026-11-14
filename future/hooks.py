@@ -89,6 +89,7 @@ doc_events = {
         "after_insert": "future.lead_management.on_todo_insert",
     },
     "Lead": {
+        "after_insert": "future.notifications.on_lead_insert",
         "validate": [
             "future.events.lead.validate_mobile_no_unique",
             "future.lead_stages.validate_lead_reasons",
@@ -128,6 +129,10 @@ has_permission = {
 
 scheduler_events = {
     "hourly": ["future.lead_management.check_first_call_sla"],
+    "cron": {
+        # 7:30 every morning: each salesperson's follow-ups due today or overdue.
+        "30 7 * * *": ["future.notifications.send_followup_emails"],
+    },
     "daily": [
         "future.lead_management.send_daily_digest",
         "future.hostel_management.refresh_all_occupancy",

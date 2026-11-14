@@ -12,7 +12,12 @@
   "untouched_statuses",
   "section_digest",
   "daily_digest",
-  "digest_by_email"
+  "digest_by_email",
+  "section_email",
+  "new_lead_email",
+  "email_alerts",
+  "column_break_email",
+  "followup_email"
  ],
  "fields": [
   {
@@ -63,9 +68,38 @@
    "fieldtype": "Check",
    "label": "Also Send the Digest by Email",
    "depends_on": "daily_digest"
+  },
+  {
+   "fieldname": "section_email",
+   "fieldtype": "Section Break",
+   "label": "Email Notifications",
+   "description": "Sent through the default outgoing Email Account. Lead assignments are always emailed by Frappe."
+  },
+  {
+   "default": "1",
+   "fieldname": "new_lead_email",
+   "fieldtype": "Check",
+   "label": "Email Sales Managers About New Unassigned Leads"
+  },
+  {
+   "default": "1",
+   "fieldname": "email_alerts",
+   "fieldtype": "Check",
+   "label": "Email Hand-overs and First-Call Alerts Too"
+  },
+  {
+   "fieldname": "column_break_email",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "followup_email",
+   "fieldtype": "Check",
+   "label": "Morning Email of Due and Overdue Follow-ups",
+   "description": "Each salesperson, every day at 7:30."
   }
  ],
- "modified": "2026-11-06 15:00:00.000000",
+ "modified": "2026-11-14 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Lead Settings",

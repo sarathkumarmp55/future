@@ -411,12 +411,18 @@ def late_first_call_condition(alias="l", settings=None):
 	return f"({alias}.status in ({statuses}) and {alias}.custom_assigned_on < '{cutoff}')"
 
 
-def _notify(users, subject, document_type=None, document_name=None, from_user=None):
+def _notify(users, subject, document_type=None, document_name=None, from_user=None, email=True):
+	"""Bell notification, and (unless switched off in Lead Settings) the same by email: Frappe never
+	emails "Alert" notifications itself."""
 	from frappe.desk.doctype.notification_log.notification_log import enqueue_create_notification
 
 	users = [u for u in set(users) if u and frappe.db.get_value("User", u, "enabled")]
 	if not users:
 		return
+	if email:
+		from future.notifications import email_alert
+
+		email_alert(users, subject, document_type, document_name)
 	enqueue_create_notification(
 		users,
 		{
@@ -486,7 +492,7 @@ def send_daily_digest():
 		total_overdue = sum(x[1] for x in lines)
 		total_late = sum(x[2] for x in lines)
 		subject = _("Daily lead digest: {0} overdue follow-ups, {1} leads not called in time").format(total_overdue, total_late)
-		_notify([head], subject)
+		_notify([head], subject, email=not cint(settings.digest_by_email))
 		if cint(settings.digest_by_email):
 			rows = "".join(f"<tr><td>{frappe.utils.escape_html(n)}</td><td>{o}</td><td>{l}</td></tr>" for n, o, l in lines)
 			frappe.sendmail(

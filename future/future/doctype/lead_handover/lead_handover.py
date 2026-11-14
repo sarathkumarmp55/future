@@ -116,10 +116,15 @@ class LeadHandover(Document):
 			self.request_status = "Approved"
 
 	def on_submit(self):
+		received, lost = {}, {}
 		for row in self.leads:
 			previous = hand_over_lead(row.lead, row.to_user, self.role, reason=self.reason, reference=self.name)
 			row.db_set("from_users", ", ".join(previous))
+			received.setdefault(row.to_user, []).append(row.lead)
+			for user in previous:
+				lost.setdefault(user, []).append(row.lead)
 		self.db_set("handover_on", now_datetime())
+		self.email_people(received, lost)
 		if self.requested_by:
 			_notify(
 				[self.requested_by],
@@ -127,6 +132,44 @@ class LeadHandover(Document):
 				"Lead Handover",
 				self.name,
 				frappe.session.user,
+			)
+
+	def email_people(self, received, lost):
+		"""One email per person: the leads they received, or the leads moved away from them."""
+		from future.notifications import _enabled, lead_link, render, send, doc_link
+
+		if not _enabled("email_alerts"):
+			return
+		names = dict(frappe.get_all("Lead", filters={"name": ["in", [r.lead for r in self.leads]]}, fields=["name", "lead_name"], as_list=True))
+		by = frappe.utils.get_fullname(frappe.session.user)
+		for user, leads in received.items():
+			send(
+				[user],
+				_("{0} lead(s) handed over to you").format(len(leads)),
+				render(
+					_("{0} handed these leads over to you as {1}.").format(frappe.utils.escape_html(by), _(self.role)),
+					[_("Lead")],
+					[(lead_link(l, names.get(l)),) for l in leads],
+					doc_link("Lead Handover", self.name),
+					_("Open the hand-over"),
+				),
+				"Lead Handover",
+				self.name,
+			)
+		for user, leads in lost.items():
+			send(
+				[user],
+				_("{0} of your lead(s) were handed over").format(len(leads)),
+				render(
+					_("{0} moved {1} of your lead(s) to a colleague. They no longer appear in your list.").format(
+						frappe.utils.escape_html(by), len(leads)
+					)
+					+ (" " + _("Reason: {0}").format(frappe.utils.escape_html(self.reason)) if self.reason else ""),
+					link=doc_link("Lead Handover", self.name),
+					link_label=_("Open the hand-over"),
+				),
+				"Lead Handover",
+				self.name,
 			)
 
 	def on_cancel(self):
