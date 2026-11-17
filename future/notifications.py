@@ -194,3 +194,84 @@ def send_followup_emails():
 				_("Open my follow-ups"),
 			),
 		)
+
+
+# ----------------------------------------------------------------------------- bulk assignments
+#
+# Frappe emails every assignment. Assigning hundreds of leads at once (list view bulk assign,
+# imports, hand-overs) sent one email per lead, used up the email provider's daily quota and
+# blocked everyone else's notifications. After a few assignments in a short window, further
+# ones stay in the bell only, and the person gets one summary email instead.
+
+ASSIGN_WINDOW_MINUTES = 10
+ASSIGN_EMAILS_PER_WINDOW = 3
+SUMMARY_DOCTYPES = ("Lead", "Opportunity")
+
+
+def throttle_assignment_email(doc, method=None):
+	"""Notification Log before_insert: keep bulk assignment notifications out of email."""
+	if doc.type != "Assignment" or doc.document_type not in SUMMARY_DOCTYPES or not doc.for_user:
+		return
+	since = frappe.utils.add_to_date(frappe.utils.now_datetime(), minutes=-ASSIGN_WINDOW_MINUTES)
+	recent = frappe.db.count(
+		"Notification Log",
+		{
+			"for_user": doc.for_user,
+			"document_type": ["in", SUMMARY_DOCTYPES],
+			"type": ["in", ["Assignment", "Alert"]],
+			"subject": ["like", "%assigned%"],
+			"creation": [">", since],
+		},
+	)
+	if recent < ASSIGN_EMAILS_PER_WINDOW:
+		return
+	doc.type = "Alert"  # still in the bell; "Alert" logs are never emailed by Frappe
+	frappe.enqueue(
+		"future.notifications.email_assignment_summary",
+		user=doc.for_user,
+		queue="short",
+		enqueue_after_commit=True,
+		job_id=f"future-assignment-summary-{doc.for_user}",
+		deduplicate=True,
+	)
+
+
+def email_assignment_summary(user):
+	"""One email listing the assignments that were kept out of email since the last summary."""
+	key = f"future:assignment_summary:{user}"
+	last = frappe.cache.get_value(key) or frappe.utils.add_to_date(frappe.utils.now_datetime(), hours=-24)
+	rows = frappe.get_all(
+		"Notification Log",
+		filters={
+			"for_user": user,
+			"type": "Alert",
+			"document_type": ["in", SUMMARY_DOCTYPES],
+			"subject": ["like", "%assigned%"],
+			"creation": [">", last],
+		},
+		fields=["document_type", "document_name", "from_user", "creation"],
+		order_by="creation desc",
+	)
+	frappe.cache.set_value(key, frappe.utils.now_datetime())
+	if not rows:
+		return
+	by = sorted({frappe.utils.get_fullname(r.from_user) for r in rows if r.from_user})
+	leads = [r.document_name for r in rows if r.document_type == "Lead"]
+	names = dict(frappe.get_all("Lead", filters={"name": ["in", leads[:50]]}, fields=["name", "lead_name"], as_list=True)) if leads else {}
+	table = [
+		(escape_html(_(r.document_type)), lead_link(r.document_name, names.get(r.document_name)) if r.document_type == "Lead" else escape_html(r.document_name))
+		for r in rows[:50]
+	]
+	more = len(rows) - len(table)
+	send(
+		[user],
+		_("You were assigned {0} record(s)").format(len(rows)),
+		render(
+			_("{0} assigned {1} record(s) to you.").format(escape_html(", ".join(by) or _("Someone")), len(rows))
+			+ (" " + _("The first 50 are listed below.") if more > 0 else ""),
+			[_("Type"), _("Record")],
+			table,
+			get_url("/desk/todo?status=Open"),
+			_("Open my follow-ups"),
+		),
+	)

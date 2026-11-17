@@ -84,6 +84,9 @@ doc_events = {
         "before_insert": "future.lead_stages.validate_opportunity_from_lead",
         "validate": "future.lead_stages.validate_opportunity_reasons",
     },
+    "Notification Log": {
+        "before_insert": "future.notifications.throttle_assignment_email",
+    },
     "ToDo": {
         "validate": "future.lead_management.validate_todo_assignment",
         "after_insert": "future.lead_management.on_todo_insert",
