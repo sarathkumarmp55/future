@@ -82,7 +82,10 @@ doc_events = {
     },
     "Opportunity": {
         "before_insert": "future.lead_stages.validate_opportunity_from_lead",
-        "validate": "future.lead_stages.validate_opportunity_reasons",
+        "validate": [
+            "future.lead_stages.validate_opportunity_reasons",
+            "future.lead_stages.set_opportunity_discount",
+        ],
     },
     "Notification Log": {
         "before_insert": "future.notifications.throttle_assignment_email",

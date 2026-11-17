@@ -98,13 +98,27 @@ frappe.ui.form.on("Opportunity", {
     },
 
     setup(frm) { 
-        frm.set_query('custom_discount_id', function () { 
+        // Discounts of the chosen type for this programme; the percentage comes from the discount.
+        frm.set_query('custom_discount_id', function () {
             return { query: "future.api_2.get_discounts_for_program",
-                filters: { percentage: frm.doc.custom_percentage, 
-                base_of_discount: frm.doc.custom_base_of_discount,
-                 program: frm.doc.custom_program } }; 
-                }); 
+                filters: { base_of_discount: frm.doc.custom_base_of_discount,
+                 program: frm.doc.custom_program } };
+                });
             },
+
+    custom_base_of_discount(frm) {
+        if (frm.doc.custom_merit_based && frm.doc.custom_discount_id) frm.set_value("custom_discount_id", "");
+    },
+    custom_discount_id(frm) {
+        if (!frm.doc.custom_discount_id) {
+            frm.set_value({ custom_percentage: "", custom_discount_amount: 0 });
+        }
+        future_set_fee_after_discount(frm);
+    },
+    custom_discount_amount: future_set_fee_after_discount,
+    custom_special_discount_amount: future_set_fee_after_discount,
+    custom_total_amount_gst: future_set_fee_after_discount,
+    custom_add_discount: future_set_fee_after_discount,
 
     // custom_add_discount: function(frm){
     //     if(doc.custom_add_discount===1){
@@ -305,3 +319,13 @@ function calculate_total_received_amount_pgm(frm) {
 }
 
 
+
+
+function future_set_fee_after_discount(frm) {
+    const discount = frm.doc.custom_merit_based
+        ? flt(frm.doc.custom_discount_amount)
+        : flt(frm.doc.custom_special_discount_amount);
+    const total = flt(frm.doc.custom_total_amount_gst);
+    const after = frm.doc.custom_add_discount && total && discount ? Math.max(total - discount, 0) : 0;
+    if (flt(frm.doc.custom_fee_after_discount) !== after) frm.set_value("custom_fee_after_discount", after);
+}

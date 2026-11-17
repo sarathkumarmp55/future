@@ -129,3 +129,32 @@ def validate_opportunity_reasons(doc, method=None):
 		return
 	if doc.status in ("Lost", "Closed") and not (doc.get("order_lost_reason") or "").strip():
 		frappe.throw(frappe._("Type why this opportunity was lost (Why was it lost?)."), frappe.MandatoryError, title=frappe._("Reason needed"))
+
+
+def set_opportunity_discount(doc, method=None):
+	"""Opportunity validate: the chosen Discount decides percentage and amount; work out the fee to pay."""
+	from frappe.utils import flt
+
+	if not doc.get("custom_add_discount"):
+		doc.custom_fee_after_discount = 0
+		return
+	discount = 0
+	if doc.get("custom_merit_based") and doc.get("custom_discount_id"):
+		row = frappe.db.get_value(
+			"Discount", doc.custom_discount_id, ["percentage", "discount_amount", "base_of_discount"], as_dict=True
+		)
+		if row:
+			if doc.get("custom_base_of_discount") and row.base_of_discount != doc.custom_base_of_discount and not _skip():
+				frappe.throw(
+					frappe._("Discount {0} is of type {1}, not {2}.").format(
+						doc.custom_discount_id, row.base_of_discount, doc.custom_base_of_discount
+					),
+					title=frappe._("Wrong discount"),
+				)
+			doc.custom_percentage = row.percentage
+			doc.custom_discount_amount = row.discount_amount
+			discount = flt(row.discount_amount)
+	elif doc.get("custom_customer_based"):
+		discount = flt(doc.get("custom_special_discount_amount"))
+	total = flt(doc.get("custom_total_amount_gst"))
+	doc.custom_fee_after_discount = max(total - discount, 0) if total and discount else 0

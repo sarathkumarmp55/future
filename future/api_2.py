@@ -26,15 +26,19 @@ def get_discounts_for_program(doctype, txt, searchfield, start, page_len, filter
 		)
 		conditions["name"] = ["in", discount_names or [""]]
 
-	return frappe.get_list(
+	# The dropdown shows what each discount gives, so it can be picked without knowing the percentage first.
+	rows = frappe.get_list(
 		"Discount",
-		fields=["name", "discount_name"],
+		fields=["name", "percentage", "discount_amount"],
 		filters=conditions,
 		or_filters=or_filters,
 		limit_start=start,
 		limit_page_length=page_len,
-		as_list=True,
 	)
+	return [
+		(r.name, " · ".join(x for x in (r.percentage, frappe.utils.fmt_money(r.discount_amount, precision=0, currency="INR")) if x))
+		for r in rows
+	]
 
 
 @frappe.whitelist()
