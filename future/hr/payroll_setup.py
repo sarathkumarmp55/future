@@ -324,7 +324,8 @@ def assign(dry_run=1):
 				"company": company,
 				"from_date": from_date,
 				"base": gross,
-				"income_tax_slab": TAX_SLAB if structure == STAFF and frappe.db.exists("Income Tax Slab", TAX_SLAB) else None,
+				# HRMS asks for a slab on every assignment once a Payroll Period exists, also where no tax is due.
+				"income_tax_slab": TAX_SLAB if frappe.db.exists("Income Tax Slab", TAX_SLAB) else None,
 				"currency": frappe.get_cached_value("Company", company, "default_currency"),
 			}
 		)
