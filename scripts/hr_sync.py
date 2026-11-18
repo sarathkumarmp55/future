@@ -43,6 +43,7 @@ CUSTOM_FIELDS = [
 	{"fieldname": "custom_payroll_group", "fieldtype": "Select", "label": "Payroll Group", "options": "\nStaff\nApprentice\nConsultant", "insert_after": "grade", "in_standard_filter": 1},
 	{"fieldname": "custom_salary_band", "fieldtype": "Data", "label": "Salary Band", "insert_after": "custom_payroll_group"},
 	{"fieldname": "custom_monthly_gross", "fieldtype": "Currency", "label": "Monthly Gross / Stipend / Fee", "insert_after": "custom_salary_band", "description": "Staff: gross salary. Apprentice: stipend. Consultant: professional fee."},
+	{"fieldname": "custom_supplier", "fieldtype": "Link", "options": "Supplier", "label": "Supplier (Consultant)", "insert_after": "custom_monthly_gross", "depends_on": "eval:doc.custom_payroll_group==='Consultant'", "description": "Consultants are paid through Purchase Invoices to this supplier."},
 	{"fieldname": "custom_work_location", "fieldtype": "Data", "label": "Work Location", "insert_after": "branch"},
 	{"fieldname": "custom_sub_department", "fieldtype": "Data", "label": "Function / Sub-department", "insert_after": "department"},
 	{"fieldname": "custom_father_name", "fieldtype": "Data", "label": "Father's Name", "insert_after": "date_of_birth"},

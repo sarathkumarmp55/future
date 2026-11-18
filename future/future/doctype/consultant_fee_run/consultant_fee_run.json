@@ -1,0 +1,171 @@
+{
+ "actions": [],
+ "creation": "2026-11-18 11:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-18 11:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Consultant Fee Run",
+ "is_submittable": 1,
+ "autoname": "format:CFR-{fee_month}",
+ "naming_rule": "Expression",
+ "title_field": "title",
+ "track_changes": 1,
+ "fields": [
+  {
+   "fieldname": "fee_month",
+   "fieldtype": "Date",
+   "label": "Fee Month",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "Any date in the month; saved as the first of the month.",
+   "unique": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "options": "Company",
+   "label": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "Attendance From",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "Attendance To",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_in_month",
+   "fieldtype": "Int",
+   "label": "Days in Month",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Consultants"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "options": "Consultant Fee Run Item",
+   "label": "Consultants"
+  },
+  {
+   "fieldname": "section_total",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Fee",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "invoices_created",
+   "fieldtype": "Int",
+   "label": "Purchase Invoices Created",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "options": "Consultant Fee Run",
+   "label": "Amended From",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "print": 1,
+   "email": 1,
+   "export": 1,
+   "share": 1
+  },
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "print": 1,
+   "email": 1,
+   "export": 1,
+   "share": 1
+  },
+  {
+   "role": "Accounts Manager",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1
+  },
+  {
+   "role": "Accounts User",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "field_order": [
+  "fee_month",
+  "title",
+  "company",
+  "column_break_1",
+  "from_date",
+  "to_date",
+  "days_in_month",
+  "section_items",
+  "items",
+  "section_total",
+  "total_amount",
+  "column_break_2",
+  "invoices_created",
+  "amended_from"
+ ]
+}

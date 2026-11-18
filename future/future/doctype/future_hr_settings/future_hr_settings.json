@@ -1,0 +1,89 @@
+{
+ "actions": [],
+ "creation": "2026-11-18 11:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-18 11:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Future HR Settings",
+ "issingle": 1,
+ "fields": [
+  {
+   "fieldname": "section_attendance",
+   "fieldtype": "Section Break",
+   "label": "Attendance Cycle"
+  },
+  {
+   "fieldname": "attendance_cutoff_day",
+   "fieldtype": "Int",
+   "label": "Attendance Cut-off Day",
+   "default": "23",
+   "description": "Salary for a month counts absences from the day after this date in the previous month up to this date. Example 23: November salary uses 24 October to 23 November; later days are taken as present and corrected next month. 0 = use the calendar month."
+  },
+  {
+   "fieldname": "section_consultant",
+   "fieldtype": "Section Break",
+   "label": "Consultants (paid through Purchase)"
+  },
+  {
+   "fieldname": "consultant_leaves_per_month",
+   "fieldtype": "Float",
+   "label": "Paid Days Off per Month",
+   "default": "4",
+   "description": "Days off a consultant can take each month without losing fee. Unused days carry forward."
+  },
+  {
+   "fieldname": "consultant_fee_item",
+   "fieldtype": "Link",
+   "options": "Item",
+   "label": "Fee Item"
+  },
+  {
+   "fieldname": "column_break_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "consultant_tds_category",
+   "fieldtype": "Link",
+   "options": "Tax Withholding Category",
+   "label": "TDS Category (194J)"
+  },
+  {
+   "fieldname": "consultant_supplier_group",
+   "fieldtype": "Link",
+   "options": "Supplier Group",
+   "label": "Supplier Group"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "field_order": [
+  "section_attendance",
+  "attendance_cutoff_day",
+  "section_consultant",
+  "consultant_leaves_per_month",
+  "consultant_fee_item",
+  "column_break_c",
+  "consultant_tds_category",
+  "consultant_supplier_group"
+ ]
+}

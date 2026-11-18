@@ -256,3 +256,81 @@ def assign(dry_run=1):
 		doc.insert(ignore_permissions=True)
 		doc.submit()
 	return {"dry_run": dry_run, "assigned": len(log), "skipped": skipped, "log": log}
+
+
+# ----------------------------------------------------------------------------- consultants (Purchase)
+
+FEE_ITEM = "Professional Fee"
+SUPPLIER_GROUP = "Consultants"
+
+
+@frappe.whitelist()
+def setup_consultants(dry_run=1):
+	"""Fee item, supplier group, TDS category in Future HR Settings, and a Supplier per consultant.
+
+	Suppliers are linked on Employee.custom_supplier; consultants that already have one are skipped."""
+	frappe.only_for("System Manager")
+	dry_run = frappe.utils.cint(dry_run)
+	company = _company()
+	log = []
+
+	tds = frappe.db.get_value("Tax Withholding Category", {"name": ["like", "%194J%"]}, "name")
+	if not tds:
+		log.append("No Tax Withholding Category for Section 194J found: set it in Future HR Settings.")
+
+	if not dry_run:
+		if not frappe.db.exists("Supplier Group", SUPPLIER_GROUP):
+			frappe.get_doc({"doctype": "Supplier Group", "supplier_group_name": SUPPLIER_GROUP}).insert(ignore_permissions=True)
+		if not frappe.db.exists("Item", FEE_ITEM):
+			expense = _account(company, "Professional Fees", "Expense", ("Indirect Expenses", "Expenses"), log)
+			item = frappe.get_doc(
+				{
+					"doctype": "Item",
+					"item_code": FEE_ITEM,
+					"item_name": FEE_ITEM,
+					"item_group": frappe.db.get_value("Item Group", {"is_group": 0, "name": "Services"}, "name")
+					or frappe.db.get_value("Item Group", {"is_group": 0}, "name"),
+					"stock_uom": "Nos",
+					"is_stock_item": 0,
+					"is_purchase_item": 1,
+					"is_sales_item": 0,
+					"gst_hsn_code": frappe.db.get_value("GST HSN Code", {"name": ["like", "9983%"]}, "name")
+					or frappe.db.get_value("GST HSN Code", {"name": ["like", "99%"]}, "name"),
+					"item_defaults": [{"company": company, "expense_account": expense}],
+				}
+			)
+			item.insert(ignore_permissions=True)
+			log.append(f"Item created: {FEE_ITEM}")
+		settings = frappe.get_single("Future HR Settings")
+		settings.consultant_fee_item = settings.consultant_fee_item or FEE_ITEM
+		settings.consultant_supplier_group = settings.consultant_supplier_group or SUPPLIER_GROUP
+		settings.consultant_tds_category = settings.consultant_tds_category or tds
+		settings.attendance_cutoff_day = settings.attendance_cutoff_day or 23
+		settings.consultant_leaves_per_month = settings.consultant_leaves_per_month or 4
+		settings.save(ignore_permissions=True)
+
+	for e in frappe.get_all(
+		"Employee",
+		filters={"custom_payroll_group": "Consultant", "status": "Active", "custom_supplier": ["is", "not set"]},
+		fields=["name", "employee_name", "pan_number"],
+		order_by="name",
+	):
+		supplier_name = e.employee_name
+		if frappe.db.exists("Supplier", supplier_name):
+			supplier_name = f"{e.employee_name} ({e.name})"
+		log.append(f"Supplier for {e.name}: {supplier_name}")
+		if dry_run:
+			continue
+		supplier = frappe.get_doc(
+			{
+				"doctype": "Supplier",
+				"supplier_name": supplier_name,
+				"supplier_group": SUPPLIER_GROUP,
+				"supplier_type": "Individual",
+				"pan": e.pan_number,
+				"tax_withholding_category": tds,
+			}
+		)
+		supplier.insert(ignore_permissions=True)
+		frappe.db.set_value("Employee", e.name, "custom_supplier", supplier.name, update_modified=False)
+	return {"dry_run": dry_run, "log": log}

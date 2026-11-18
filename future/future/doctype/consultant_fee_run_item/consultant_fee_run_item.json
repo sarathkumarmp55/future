@@ -1,0 +1,153 @@
+{
+ "actions": [],
+ "creation": "2026-11-18 11:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-18 11:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "future",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Consultant Fee Run Item",
+ "istable": 1,
+ "editable_grid": 1,
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "options": "Employee",
+   "label": "Consultant",
+   "in_list_view": 1,
+   "reqd": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "options": "Supplier",
+   "label": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "monthly_fee",
+   "fieldtype": "Currency",
+   "label": "Monthly Fee",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "worked_days",
+   "fieldtype": "Float",
+   "label": "Days Worked",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "off_days",
+   "fieldtype": "Float",
+   "label": "Days Off",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Change only to correct the attendance."
+  },
+  {
+   "fieldname": "leave_opening",
+   "fieldtype": "Float",
+   "label": "Days Off Carried In",
+   "read_only": 1
+  },
+  {
+   "fieldname": "leave_allowed",
+   "fieldtype": "Float",
+   "label": "Paid Days Off Available",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_b",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lwp_days",
+   "fieldtype": "Float",
+   "label": "Unpaid Days",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "leave_closing",
+   "fieldtype": "Float",
+   "label": "Days Off Carried Forward",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payable_days",
+   "fieldtype": "Float",
+   "label": "Paid Days",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Fee This Month",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "purchase_invoice",
+   "fieldtype": "Link",
+   "options": "Purchase Invoice",
+   "label": "Purchase Invoice",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks",
+   "read_only": 1
+  }
+ ],
+ "permissions": [],
+ "field_order": [
+  "employee",
+  "employee_name",
+  "supplier",
+  "monthly_fee",
+  "column_break_a",
+  "worked_days",
+  "off_days",
+  "leave_opening",
+  "leave_allowed",
+  "column_break_b",
+  "lwp_days",
+  "leave_closing",
+  "payable_days",
+  "amount",
+  "purchase_invoice",
+  "remarks"
+ ]
+}
