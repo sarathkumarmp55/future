@@ -155,6 +155,9 @@ def ensure_components(company, accounts, log):
 
 def ensure_structures(company, log):
 	abbr = {name: frappe.db.get_value("Salary Component", name, "salary_component_abbr") for name, *_ in COMPONENTS}
+	# Rows carry their own payment-days flag: components that existed before (ERPNext's defaults)
+	# may be set differently, and deductions written from earned Basic must not be reduced again.
+	by_days = {name: extra.get("depends_on_payment_days", 0) for name, _a, _t, _k, extra in COMPONENTS}
 	for name, tables in STRUCTURES.items():
 		if frappe.db.exists("Salary Structure", name):
 			continue
@@ -177,8 +180,8 @@ def ensure_structures(company, log):
 						"abbr": abbr[component],
 						"condition": condition,
 						"amount_based_on_formula": 1,
-						"formula": formula,
-						"depends_on_payment_days": frappe.db.get_value("Salary Component", component, "depends_on_payment_days"),
+						"formula": formula.replace("B * 0.12", f"{abbr['Basic']} * 0.12"),
+						"depends_on_payment_days": by_days[component],
 					},
 				)
 		doc.insert(ignore_permissions=True)
