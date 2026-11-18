@@ -22,6 +22,10 @@ WORKED = {"Present": 1, "Work From Home": 1, "Half Day": 0.5}
 
 
 class ConsultantFeeRun(Document):
+	def autoname(self):
+		self.fee_month = get_first_day(self.fee_month)
+		self.name = "CFR-" + getdate(self.fee_month).strftime("%Y-%m")
+
 	def validate(self):
 		self.fee_month = get_first_day(self.fee_month)
 		self.title = getdate(self.fee_month).strftime("%B %Y")

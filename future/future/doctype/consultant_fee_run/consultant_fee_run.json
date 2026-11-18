@@ -14,8 +14,7 @@
  "states": [],
  "name": "Consultant Fee Run",
  "is_submittable": 1,
- "autoname": "format:CFR-{fee_month}",
- "naming_rule": "Expression",
+ "naming_rule": "By script",
  "title_field": "title",
  "track_changes": 1,
  "fields": [
