@@ -274,7 +274,11 @@ def setup_consultants(dry_run=1):
 	company = _company()
 	log = []
 
-	tds = frappe.db.get_value("Tax Withholding Category", {"name": ["like", "%194J%"]}, "name")
+	tds = None
+	for pattern in ("Professional Fees - Individual", "%194J%", "Professional Fees%"):
+		tds = frappe.db.get_value("Tax Withholding Category", {"name": ["like", pattern]}, "name")
+		if tds:
+			break
 	if not tds:
 		log.append("No Tax Withholding Category for Section 194J found: set it in Future HR Settings.")
 
