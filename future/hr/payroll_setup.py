@@ -144,6 +144,9 @@ def ensure_components(company, accounts, log):
 				{"doctype": "Salary Component", "salary_component": name, "salary_component_abbr": abbr, "type": ctype, **extra}
 			)
 			log.append(f"Salary Component created: {name}")
+		# ERPNext's default "Provident Fund" / "Professional Tax" are reduced by payment days; ours are
+		# worked out from earned Basic or fixed, and the structure takes this flag from the component.
+		doc.depends_on_payment_days = extra.get("depends_on_payment_days", 0)
 		if not any(a.company == company for a in doc.get("accounts")):
 			row = {"company": company, "account": accounts[key]}
 			if key in liability_for:
