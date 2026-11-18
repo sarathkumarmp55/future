@@ -7,7 +7,10 @@ Staff
   PF               12% of earned Basic, at most 3,000 (employee and employer), if PF applies
   ESI              0.75% employee + 3.25% employer of earned gross, if ESI applies and gross <= 21,000
   LWF              50 employee + 50 employer, if LWF applies (Kerala)
-  Professional Tax Kerala half-yearly slab on six months of gross, spread over the six months
+  Professional Tax Kerala half-yearly slab: one sixth a month, trued up to the actual half-year
+                   earnings in its last two months (see professional_tax.py)
+  Income Tax       new regime slabs on the year's taxable salary, spread over the remaining months
+Amounts are rounded half up, as in HR's "Salary Components for Split" sheet.
 Apprentice (incl. management trainees)
   Stipend          fixed, no deductions
 Consultants are paid through Purchase (see consultant fees), not payroll.
@@ -25,25 +28,45 @@ PAYROLL_START = "2026-04-01"
 MIN_BASIC = 15100
 STAFF, APPRENTICE = "Future Staff", "Future Apprentice"
 
-# Kerala Professional Tax, half-yearly income slab -> half-yearly tax, collected as one sixth a month.
-PT_SLABS = ((125000, 1250), (100000, 1000), (45000, 750), (30000, 600), (18000, 450), (12000, 320))
+from future.hr.professional_tax import PT_SLABS, monthly_share
+
+INCOME_TAX = "Income Tax"
+TAX_SLAB = "New Regime 2026-27"
+# New regime: (from, to, percent). Standard deduction 75,000; no tax up to 12,00,000 of taxable
+# income, with marginal relief just above it; 4% cess. Checked against HR's October 2026 pay sheet.
+TAX_SLABS = (
+	(0, 400000, 0),
+	(400001, 800000, 5),
+	(800001, 1200000, 10),
+	(1200001, 1600000, 15),
+	(1600001, 2000000, 20),
+	(2000001, 2400000, 25),
+	(2400001, 0, 30),
+)
 
 
 def _pt_formula():
-	parts = [f"{-(-tax // 6)} if base * 6 >= {limit}" for limit, tax in PT_SLABS]
+	"""Usual monthly share; the salary slip replaces it with the trued-up amount."""
+	parts = [f"{monthly_share(tax)} if base * 6 >= {limit}" for limit, tax in PT_SLABS]
 	return " else ".join(parts) + " else 0"
+
+
+def _r(expr):
+	"""Round half up (Python's round() rounds halves to the even number)."""
+	return f"int({expr} + 0.5)"
 
 
 COMPONENTS = [
 	# name, abbr, type, account key, extra
-	("Basic", "B", "Earning", "salary", {"depends_on_payment_days": 1}),
-	("House Rent Allowance", "HRA", "Earning", "salary", {"depends_on_payment_days": 1}),
-	("Other Allowance", "OA", "Earning", "salary", {"depends_on_payment_days": 1}),
+	("Basic", "B", "Earning", "salary", {"depends_on_payment_days": 1, "is_tax_applicable": 1}),
+	("House Rent Allowance", "HRA", "Earning", "salary", {"depends_on_payment_days": 1, "is_tax_applicable": 1}),
+	("Other Allowance", "OA", "Earning", "salary", {"depends_on_payment_days": 1, "is_tax_applicable": 1}),
 	("Stipend", "STP", "Earning", "stipend", {"depends_on_payment_days": 1}),
 	("Provident Fund", "PF", "Deduction", "pf", {}),
 	("Employee State Insurance", "ESI", "Deduction", "esi", {}),
 	("Labour Welfare Fund", "LWF", "Deduction", "lwf", {}),
 	("Professional Tax", "PT", "Deduction", "pt", {}),
+	(INCOME_TAX, "IT", "Deduction", "tds", {"variable_based_on_taxable_salary": 1}),
 	("Employer Provident Fund", "PFER", "Employer Contribution", "pf_er", {}),
 	("Employer ESI", "ESIER", "Employer Contribution", "esi_er", {}),
 	("Employer Labour Welfare Fund", "LWFER", "Employer Contribution", "lwf_er", {}),
@@ -51,8 +74,8 @@ COMPONENTS = [
 
 # HRMS does not let one payment-days component use another in its formula (it would be reduced
 # twice), so HRA and Other Allowance are written from `base` (monthly gross) alone.
-_BASIC = f"min(base, max(round(base * 0.51), {MIN_BASIC}))"
-_HRA = f"min(round(({_BASIC}) * 0.4), base - ({_BASIC}))"
+_BASIC = f"min(base, max({_r('base * 0.51')}, {MIN_BASIC}))"
+_HRA = f"min({_r(f'({_BASIC}) * 0.4')}, base - ({_BASIC}))"
 _OTHER = f"base - ({_BASIC}) - ({_HRA})"
 
 STRUCTURES = {
@@ -63,13 +86,14 @@ STRUCTURES = {
 			("Other Allowance", f"({_OTHER}) > 0", _OTHER),
 		],
 		"deductions": [
-			("Provident Fund", "custom_pf_applicable == 1", "min(round(B * 0.12), 3000)"),
+			("Provident Fund", "custom_pf_applicable == 1", f"min({_r('B * 0.12')}, 3000)"),
 			("Employee State Insurance", "custom_esi_applicable == 1 and base <= 21000", "ceil(gross_pay * 0.0075)"),
 			("Labour Welfare Fund", "custom_lwf_applicable == 1", "50"),
 			("Professional Tax", "base * 6 >= 12000", _pt_formula()),
+			(INCOME_TAX, None, None),
 		],
 		"employer_contributions": [
-			("Employer Provident Fund", "custom_pf_applicable == 1", "min(round(B * 0.12), 3000)"),
+			("Employer Provident Fund", "custom_pf_applicable == 1", f"min({_r('B * 0.12')}, 3000)"),
 			("Employer ESI", "custom_esi_applicable == 1 and base <= 21000", "ceil(gross_pay * 0.0325)"),
 			("Employer Labour Welfare Fund", "custom_lwf_applicable == 1", "50"),
 		],
@@ -125,6 +149,7 @@ def ensure_accounts(company, log):
 		"esi": _account(company, "ESI Payable", "Liability", liability, log),
 		"lwf": _account(company, "Labour Welfare Fund Payable", "Liability", liability, log),
 		"pt": _account(company, "Professional Tax Payable", "Liability", liability, log),
+		"tds": _account(company, "TDS Payable", "Liability", liability, log),
 		"pf_er": _account(company, "Employer PF Contribution", "Expense", expense, log),
 		"esi_er": _account(company, "Employer ESI Contribution", "Expense", expense, log),
 		"lwf_er": _account(company, "Employer LWF Contribution", "Expense", expense, log),
@@ -147,6 +172,9 @@ def ensure_components(company, accounts, log):
 		# ERPNext's default "Provident Fund" / "Professional Tax" are reduced by payment days; ours are
 		# worked out from earned Basic or fixed, and the structure takes this flag from the component.
 		doc.depends_on_payment_days = extra.get("depends_on_payment_days", 0)
+		for flag in ("is_tax_applicable", "variable_based_on_taxable_salary"):
+			if extra.get(flag):
+				doc.set(flag, 1)
 		if not any(a.company == company for a in doc.get("accounts")):
 			row = {"company": company, "account": accounts[key]}
 			if key in liability_for:
@@ -182,8 +210,8 @@ def ensure_structures(company, log):
 						"salary_component": component,
 						"abbr": abbr[component],
 						"condition": condition,
-						"amount_based_on_formula": 1,
-						"formula": formula.replace("B * 0.12", f"{abbr['Basic']} * 0.12"),
+						"amount_based_on_formula": 1 if formula else 0,
+						"formula": (formula or "").replace("B * 0.12", f"{abbr['Basic']} * 0.12"),
 						"depends_on_payment_days": by_days[component],
 					},
 				)
@@ -199,8 +227,54 @@ def setup():
 	company = _company()
 	accounts = ensure_accounts(company, log)
 	ensure_components(company, accounts, log)
+	ensure_income_tax(company, log)
 	ensure_structures(company, log)
 	return log
+
+
+def ensure_income_tax(company, log):
+	"""Payroll Period for the current fiscal year and the new-regime Income Tax Slab."""
+	fy = frappe.get_all(
+		"Fiscal Year",
+		filters={"year_start_date": ["<=", frappe.utils.today()], "year_end_date": [">=", frappe.utils.today()]},
+		fields=["name", "year_start_date", "year_end_date"],
+		limit=1,
+	)
+	if fy and not frappe.db.exists(
+		"Payroll Period", {"company": company, "start_date": ["<=", fy[0].year_end_date], "end_date": [">=", fy[0].year_start_date]}
+	):
+		frappe.get_doc(
+			{
+				"doctype": "Payroll Period",
+				"__newname": fy[0].name,
+				"company": company,
+				"start_date": fy[0].year_start_date,
+				"end_date": fy[0].year_end_date,
+			}
+		).insert(ignore_permissions=True)
+		log.append(f"Payroll Period created: {fy[0].name}")
+
+	if frappe.db.exists("Income Tax Slab", TAX_SLAB):
+		return
+	doc = frappe.get_doc(
+		{
+			"doctype": "Income Tax Slab",
+			"__newname": TAX_SLAB,
+			"company": company,
+			"currency": frappe.get_cached_value("Company", company, "default_currency"),
+			"effective_from": fy[0].year_start_date if fy else PAYROLL_START,
+			"allow_tax_exemption": 0,
+			"standard_tax_exemption_amount": 75000,
+			"tax_relief_limit": 1200000,
+			"slabs": [{"from_amount": a, "to_amount": b, "percent_deduction": pct} for a, b, pct in TAX_SLABS],
+			"other_taxes_and_charges": [{"description": "Health and Education Cess", "percent": 4}],
+		}
+	)
+	if doc.meta.has_field("marginal_relief_limit"):
+		doc.marginal_relief_limit = 1275000
+	doc.insert(ignore_permissions=True)
+	doc.submit()
+	log.append(f"Income Tax Slab created: {TAX_SLAB}")
 
 
 # ----------------------------------------------------------------------------- assignments
@@ -250,6 +324,7 @@ def assign(dry_run=1):
 				"company": company,
 				"from_date": from_date,
 				"base": gross,
+				"income_tax_slab": TAX_SLAB if structure == STAFF and frappe.db.exists("Income Tax Slab", TAX_SLAB) else None,
 				"currency": frappe.get_cached_value("Company", company, "default_currency"),
 			}
 		)

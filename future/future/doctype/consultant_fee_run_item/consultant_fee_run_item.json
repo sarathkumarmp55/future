@@ -5,7 +5,7 @@
  "engine": "InnoDB",
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-18 11:00:00.000000",
+ "modified": "2026-11-18 20:00:00",
  "modified_by": "Administrator",
  "module": "future",
  "owner": "Administrator",
@@ -117,6 +117,13 @@
    "bold": 1
   },
   {
+   "fieldname": "manual_amount",
+   "fieldtype": "Currency",
+   "label": "Amount to Pay (if different)",
+   "description": "Leave empty to pay the calculated amount.",
+   "in_list_view": 0
+  },
+  {
    "fieldname": "purchase_invoice",
    "fieldtype": "Link",
    "options": "Purchase Invoice",
@@ -147,6 +154,7 @@
   "leave_closing",
   "payable_days",
   "amount",
+  "manual_amount",
   "purchase_invoice",
   "remarks"
  ]

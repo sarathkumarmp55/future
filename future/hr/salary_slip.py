@@ -1,14 +1,31 @@
-"""Salary Slip that reads attendance for Future's attendance cycle (see cycle.py)."""
+"""Salary Slip for Future: attendance is read for the attendance cycle (see cycle.py) and
+Professional Tax is trued up at the end of each half-year (see professional_tax.py)."""
 
 import frappe
 from frappe.query_builder.functions import Count
 from frappe.utils import add_days, getdate
 from hrms.payroll.doctype.salary_slip.salary_slip import SalarySlip
 
+from future.hr import professional_tax as pt
 from future.hr.cycle import attendance_cycle
 
 
 class FutureSalarySlip(SalarySlip):
+	def eval_condition_and_formula(self, struct_row, data):
+		amount = super().eval_condition_and_formula(struct_row, data)
+		# Only the actual deduction (prorated context) on our structures; the full-month default keeps the formula.
+		if (
+			struct_row.salary_component == pt.COMPONENT
+			and struct_row.formula
+			and data is getattr(self, "data", None)
+			and self.payroll_frequency == "Monthly"
+			and (self.salary_structure or "").startswith("Future ")
+		):
+			amount = pt.professional_tax(self, data.get("base"), data.get("gross_pay")) or None
+			if amount:
+				data[struct_row.abbr] = amount
+		return amount
+
 	def _cycle(self):
 		"""Cycle for a monthly slip, kept inside the employee's joining and relieving dates."""
 		if self.payroll_frequency != "Monthly" or not self.end_date:

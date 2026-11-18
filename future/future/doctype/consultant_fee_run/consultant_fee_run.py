@@ -4,9 +4,10 @@ Rule (HR, 2026-11-17): a consultant has a number of paid days off each month (4)
 carry forward; days off beyond that are unpaid and reduce the monthly fee by days. Example: in a
 30-day month, 25 days worked = 5 days off, 4 are paid, 1 unpaid: fee for 29 days.
 
-Attendance is read for the attendance cycle (Future HR Settings: cut-off day), like payroll.
-Submitting creates one draft Purchase Invoice per consultant for accounts to check (GST, TDS)
-and submit.
+Attendance is read for the calendar month, 1st to last day (HR, 2026-11-18: the 24th-23rd cycle
+is for staff only). HR may type a different amount for a consultant ("Amount to Pay"); that
+amount is invoiced. Submitting creates one draft Purchase Invoice per consultant for accounts to
+check (GST, TDS) and submit.
 """
 
 import calendar
@@ -16,7 +17,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, get_first_day, get_last_day, getdate
 
-from future.hr.cycle import attendance_cycle, hr_setting
+from future.hr.cycle import hr_setting
 
 WORKED = {"Present": 1, "Work From Home": 1, "Half Day": 0.5}
 
@@ -29,7 +30,7 @@ class ConsultantFeeRun(Document):
 	def validate(self):
 		self.fee_month = get_first_day(self.fee_month)
 		self.title = getdate(self.fee_month).strftime("%B %Y")
-		self.from_date, self.to_date = attendance_cycle(self.fee_month)
+		self.from_date, self.to_date = self.fee_month, get_last_day(self.fee_month)
 		self.days_in_month = calendar.monthrange(getdate(self.fee_month).year, getdate(self.fee_month).month)[1]
 		if not self.items:
 			self.get_consultants()
@@ -67,7 +68,7 @@ class ConsultantFeeRun(Document):
 
 	def validate_dates(self):
 		self.fee_month = get_first_day(self.fee_month)
-		self.from_date, self.to_date = attendance_cycle(self.fee_month)
+		self.from_date, self.to_date = self.fee_month, get_last_day(self.fee_month)
 		self.days_in_month = calendar.monthrange(getdate(self.fee_month).year, getdate(self.fee_month).month)[1]
 
 	def worked_days(self, employee):
@@ -100,11 +101,16 @@ class ConsultantFeeRun(Document):
 			row.leave_closing = row.leave_allowed - paid_off
 			row.payable_days = max(self.days_in_month - row.lwp_days, 0)
 			row.amount = flt(flt(row.monthly_fee) * row.payable_days / self.days_in_month, 0)
-			total += row.amount
+			total += self.to_pay(row)
 		self.total_amount = total
 
+	@staticmethod
+	def to_pay(row):
+		"""HR's own figure when they typed one, else the calculated amount."""
+		return flt(row.manual_amount) if row.manual_amount not in (None, "") and flt(row.manual_amount) > 0 else flt(row.amount)
+
 	def before_submit(self):
-		missing = [f"{r.employee} {r.employee_name}" for r in self.items if flt(r.amount) and not r.supplier]
+		missing = [f"{r.employee} {r.employee_name}" for r in self.items if self.to_pay(r) and not r.supplier]
 		if missing:
 			frappe.throw(
 				_("These consultants have no Supplier yet (run 'Create Suppliers' first):<br>{0}").format("<br>".join(missing)),
@@ -117,7 +123,7 @@ class ConsultantFeeRun(Document):
 			frappe.throw(_("Set the Fee Item in Future HR Settings."))
 		created = 0
 		for row in self.items:
-			if not flt(row.amount) or row.purchase_invoice:
+			if not self.to_pay(row) or row.purchase_invoice:
 				continue
 			pi = frappe.get_doc(
 				{
@@ -134,7 +140,7 @@ class ConsultantFeeRun(Document):
 						{
 							"item_code": item,
 							"qty": 1,
-							"rate": row.amount,
+							"rate": self.to_pay(row),
 							"description": _("Professional fee, {0}").format(self.title),
 						}
 					],
