@@ -49,12 +49,18 @@ COMPONENTS = [
 	("Employer Labour Welfare Fund", "LWFER", "Employer Contribution", "lwf_er", {}),
 ]
 
+# HRMS does not let one payment-days component use another in its formula (it would be reduced
+# twice), so HRA and Other Allowance are written from `base` (monthly gross) alone.
+_BASIC = f"min(base, max(round(base * 0.51), {MIN_BASIC}))"
+_HRA = f"min(round(({_BASIC}) * 0.4), base - ({_BASIC}))"
+_OTHER = f"base - ({_BASIC}) - ({_HRA})"
+
 STRUCTURES = {
 	STAFF: {
 		"earnings": [
-			("Basic", None, f"min(base, max(round(base * 0.51), {MIN_BASIC}))"),
-			("House Rent Allowance", None, "min(round(B * 0.4), base - B)"),
-			("Other Allowance", "base - B - HRA > 0", "base - B - HRA"),
+			("Basic", None, _BASIC),
+			("House Rent Allowance", f"({_HRA}) > 0", _HRA),
+			("Other Allowance", f"({_OTHER}) > 0", _OTHER),
 		],
 		"deductions": [
 			("Provident Fund", "custom_pf_applicable == 1", "min(round(B * 0.12), 3000)"),
