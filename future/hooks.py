@@ -45,6 +45,7 @@ required_apps = ["frappe/erpnext", "frappe/education"]
 # include js, css files in header of desk.html
 # app_include_css = "/assets/future/css/future.css"
 # app_include_js = "/assets/future/js/future.js"
+app_include_js = ["/assets/future/js/hrms_datatable_fix.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/future/css/future.css"
