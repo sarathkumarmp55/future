@@ -345,7 +345,7 @@ def setup_consultants(dry_run=1):
 	"""Fee item, supplier group, TDS category in Future HR Settings, and a Supplier per consultant.
 
 	Suppliers are linked on Employee.custom_supplier; consultants that already have one are skipped."""
-	frappe.only_for("System Manager")
+	frappe.only_for(("System Manager", "HR Manager"))
 	dry_run = frappe.utils.cint(dry_run)
 	company = _company()
 	log = []

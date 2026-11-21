@@ -34,6 +34,7 @@ class ConsultantFeeRun(Document):
 		self.days_in_month = calendar.monthrange(getdate(self.fee_month).year, getdate(self.fee_month).month)[1]
 		if not self.items:
 			self.get_consultants()
+		self.fill_suppliers()
 		self.calculate()
 
 	@frappe.whitelist()
@@ -65,6 +66,12 @@ class ConsultantFeeRun(Document):
 				},
 			)
 		self.calculate()
+
+	def fill_suppliers(self):
+		"""Rows listed before the consultant had a Supplier pick it up from the Employee."""
+		for row in self.items:
+			if not row.supplier and row.employee:
+				row.supplier = frappe.db.get_value("Employee", row.employee, "custom_supplier")
 
 	def validate_dates(self):
 		self.fee_month = get_first_day(self.fee_month)
