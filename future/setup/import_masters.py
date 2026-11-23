@@ -22,14 +22,71 @@ GENERIC_ITEMS = {
 }
 
 
+# The client's "All Data.xlsx" carries the same masters under shorter sheet names.
+SHEET_ALIASES = {
+	"Center Master": ("Center",),
+	"Hostel Master": ("Hostel",),
+	"Program Master": ("Progarm", "Program"),
+	"Price Chart - Others": ("Other Price Chart",),
+}
+
+
+def _ws(wb, name):
+	for candidate in (name, *SHEET_ALIASES.get(name, ())):
+		if candidate in wb.sheetnames:
+			return wb[candidate]
+	frappe.throw(f"Sheet '{name}' not found in the workbook")
+
+
 def _sheet(wb, name, header_word):
-	ws = wb[name]
+	ws = _ws(wb, name)
 	rows = [list(r) for r in ws.iter_rows(values_only=True)]
 	for i, r in enumerate(rows):
 		if any(isinstance(c, str) and c.strip().lower() == header_word.lower() for c in r):
 			header = [str(c).strip() if c is not None else "" for c in r]
 			return header, [r for r in rows[i + 1 :] if any(c not in (None, "", " ") for c in r)]
 	frappe.throw(f"Header '{header_word}' not found in sheet {name}")
+
+
+# Field -> workbook columns it comes from. A shorter workbook (All Data.xlsx has no RCM,
+# escalation or area columns) must not blank what an earlier, fuller import filled in.
+CENTER_COLUMNS = {
+	"location": ("Location",),
+	"address": ("Address",),
+	"capacity": ("Capacity",),
+	"area_sqft": ("Area (Sq ft)",),
+	"is_active": ("Status",),
+}
+HOSTEL_COLUMNS = {
+	"location": ("Location",),
+	"locality": ("Location",),
+	"address": ("Address",),
+	"start_date": ("Hostel Start Date",),
+	"vacated_date": ("Hostel Vacated Date", "Hostel Closed Date"),
+	"security_deposit": ("Security Deposit",),
+	"monthly_rent": ("Monthly Rent",),
+	"rcm_applicable": ("RCM Applicability",),
+	"rcm_gst": ("RCM GST",),
+	"payment_day": ("Payment Date",),
+	"escalation_period": ("Escalation Period",),
+	"escalation_rate": ("Escalation Rate",),
+	"notice_period": ("Notice Period",),
+	"ac_capacity": ("Ac Capacity",),
+	"non_ac_capacity": ("Non Ac Capacity",),
+	"area_sqft": ("Area (Sq ft)",),
+}
+
+
+def _only_given(values, header, columns):
+	"""Drop the fields whose source column is not in this workbook."""
+	present = {h.lower() for h in header}
+	return {
+		k: v for k, v in values.items() if k not in columns or any(c.lower() in present for c in columns[k])
+	}
+
+
+def _inactive(status):
+	return str(status or "").strip().lower().replace("-", " ") in ("non active", "inactive", "closed")
 
 
 def _col(header, row, *names, nth=0):
@@ -118,7 +175,8 @@ def _match_program(excel_name, academic_year_text, existing):
 	"""Map Excel names like 'DHRUVA NEET - 2027' / 'FUTURE INTEGRATED SCHOOL - NEET [2026-2028]' to Program names."""
 	years = re.findall(r"20\d\d", str(academic_year_text or ""))
 	suffix = f"{years[0]} - {years[-1]}" if years else ""
-	base = re.sub(r"\s*-\s*20\d\d\s*$", "", excel_name.strip())
+	# "X - 2027", "X 2027" and "X - 2027 [2.0]" -> "X" / "X [2.0]"; a year inside the name stays.
+	base = re.sub(r"\s*-?\s*20\d\d(\s*\[[^\]]*\])?\s*$", r"\1", excel_name.strip())
 	fsp = re.match(r"FUTURE INTEGRATED SCHOOL\s*-\s*(NEET|JEE)\s*\[(20\d\d)-(20\d\d)\]", excel_name.strip(), re.I)
 	candidates = []
 	if fsp:
@@ -155,7 +213,9 @@ def run(path, dry_run=0):
 			"address": _col(header, r, "Address"),
 			"capacity": cint(_col(header, r, "Capacity")),
 			"area_sqft": flt(_col(header, r, "Area (Sq ft)")),
+			"is_active": 0 if _inactive(_col(header, r, "Status")) else 1,
 		}
+		values = _only_given(values, header, CENTER_COLUMNS)
 		if frappe.db.exists("Center", name):
 			frappe.get_doc("Center", name).update(values).save(ignore_permissions=True)
 		else:
@@ -170,8 +230,11 @@ def run(path, dry_run=0):
 			continue
 		start = _col(header, r, "Hostel Start Date")
 		status = _col(header, r, "Hostel Status") or "Active"
+		if _inactive(status):
+			status = "Vacated"
 		if isinstance(start, str) and "yet" in start.lower():
 			status, start = "Yet to Open", None
+		vacated = _col(header, r, "Hostel Vacated Date", "Hostel Closed Date")
 		esc = _col(header, r, "Escalation Rate")
 		values = {
 			"hostel_code": code,
@@ -181,7 +244,7 @@ def run(path, dry_run=0):
 			"address": _col(header, r, "Address"),
 			"status": status if status in ("Active", "Yet to Open", "Vacated") else "Active",
 			"start_date": getdate(start) if start else None,
-			"vacated_date": getdate(_col(header, r, "Hostel Vacated Date")) if _col(header, r, "Hostel Vacated Date") else None,
+			"vacated_date": getdate(vacated) if vacated else None,
 			"security_deposit": flt(_col(header, r, "Security Deposit")),
 			"monthly_rent": flt(_col(header, r, "Monthly Rent")),
 			"rcm_applicable": 1 if str(_col(header, r, "RCM Applicability") or "").lower() == "applicable" else 0,
@@ -194,6 +257,7 @@ def run(path, dry_run=0):
 			"non_ac_capacity": cint(_col(header, r, "Non Ac Capacity")),
 			"area_sqft": flt(_col(header, r, "Area (Sq ft)")),
 		}
+		values = _only_given(values, header, HOSTEL_COLUMNS)
 		name = frappe.db.get_value("Hostel", {"hostel_code": code}, "name")
 		if name:
 			frappe.get_doc("Hostel", name).update(values).save(ignore_permissions=True)
@@ -213,7 +277,7 @@ def run(path, dry_run=0):
 			continue
 		ay_text = _col(header, r, "Academic Year")
 		match, proposed = _match_program(excel_name, ay_text, existing)
-		start, end = _col(header, r, "Start Date"), _col(header, r, "End Date")
+		start, end = _col(header, r, "Start Date"), _col(header, r, "End Date", "Program End Date")
 		vertical, sub = _col(header, r, "Vertical"), _col(header, r, "Sub Vertical")
 		stream = "NEET" if "NEET" in excel_name.upper() else "JEE" if "JEE" in excel_name.upper() else sub
 		values = {
@@ -254,7 +318,7 @@ def run(path, dry_run=0):
 		log.append(f"Program created: {doc.name}")
 
 	# ---- Price chart -> Admission Settings
-	ws = wb["Price Chart - Others"]
+	ws = _ws(wb, "Price Chart - Others")
 	flat = [[c for c in r if c is not None] for r in ws.iter_rows(values_only=True)]
 	s = frappe.get_single("Admission Settings")
 	section, rates = None, {}
