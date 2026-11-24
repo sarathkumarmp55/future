@@ -1,13 +1,17 @@
-"""Import Future's "All Data.xlsx": masters, discounts, students, receipts and balances.
+"""Import Future's "All Data.xlsx": masters, discounts, students, enrollments and receipts.
 
 Stages, in this order, each safe to run again (records are matched, never duplicated):
 
-  masters    Center, Hostel, Program, price chart (future.setup.import_masters)
-  discounts  "Discount Master" -> Discount
-  students   "Student Master"  -> Student (+ its Customer), matched on the Future student ID
-  receipts   "Invoice Data"    -> submitted Sales Invoice + Payment Entry per receipt, built
-             the way Payment Approval Log builds them; matched on Sales Invoice.custom_import_key
-  balances   per student: program / hostel / transport amounts received and balance
+  masters      Center, Hostel, Program, price chart (future.setup.import_masters)
+  discounts    "Discount Master" -> Discount
+  students     "Student Master"  -> Student (+ its Customer), matched on the Future student ID
+  enrollments  "Student Master"  -> submitted Program Enrollment with the course fee schedule and,
+               for hostellers, the monthly hostel schedule (future.admissions), as an approved
+               Payment Approval Log would create it
+  receipts     "Invoice Data"    -> submitted Sales Invoice + Payment Entry per receipt, built the
+               way Payment Approval Log builds them; matched on Sales Invoice.custom_import_key.
+               future.admissions counts these invoices as payments.
+  refresh      recompute every imported enrollment (paid amounts, balances, schedule status)
 
 Dry run by default: everything is rolled back and only the report is kept. A receipts dry run
 checks every row and posts the first `limit` (default 200) before rolling back.
@@ -28,10 +32,10 @@ from frappe.utils import cint, flt, getdate
 from future.future.doctype.payment_approval_log.payment_approval_log import set_inclusive_item_taxes
 from future.setup import import_masters as masters
 
-STAGES = ("masters", "discounts", "students", "receipts", "balances")
+STAGES = ("masters", "discounts", "students", "enrollments", "receipts", "refresh")
 
 # Receipt column -> fee item. "Course Fee" goes to the student's program item. GST follows each
-# item's tax template (Material 18%, Hostel / Transport / Tablet Non-GST on the site today).
+# item's tax template, set from FEE_GST before the receipts are posted.
 RECEIPT_COLUMNS = {
 	"Course Fee": None,
 	"Material Fee": "Material Fee",
@@ -41,10 +45,13 @@ RECEIPT_COLUMNS = {
 	"Tab Locking Fee": "Tab Locking Fee",
 	"Mess Fee": "Mess Fee",
 }
-NEW_FEE_ITEMS = {"Tab Locking Fee": "Non-GST", "Mess Fee": "Non-GST"}  # GST to be confirmed by Future
-PROGRAM_COLUMNS = ("Course Fee", "Material Fee")  # Selling Price = Reg + Material + Orientation + Course
-HOSTEL_COLUMNS = ("Hostel Fee",)
-TRANSPORT_COLUMNS = ("Transportation Fee",)
+# GST confirmed by Future on 2026-11-24 (course, material 18% and hostel Non-GST are already set).
+FEE_GST = {
+	"Transportation Fee": "GST 18%",
+	"Tablet Fee": "GST 18%",
+	"Tab Locking Fee": "GST 18%",
+	"Mess Fee": "GST 5%",
+}
 
 # (mode in the workbook, last digits of the bank account) -> (Mode of Payment, account number prefix)
 PAYMENTS = {
@@ -321,10 +328,26 @@ def _payment_key(r):
 	return (mode, digits[0] if digits else "")
 
 
+def _set_fee_gst(report):
+	"""Give each fee item in FEE_GST exactly that Item Tax Template (creating the item if needed)."""
+	for item, prefix in FEE_GST.items():
+		masters._ensure_item(item, prefix)
+		template = masters._tax_template(prefix)
+		if not template:
+			report.note(f"No Item Tax Template like '{prefix}' for {item}")
+			continue
+		doc = frappe.get_doc("Item", item)
+		if [t.item_tax_template for t in doc.taxes] == [template]:
+			continue
+		doc.set("taxes", [{"item_tax_template": template}])
+		doc.save(ignore_permissions=True)
+		report.note(f"{item}: GST set to {template}")
+		report.count("fee items GST updated")
+
+
 def import_receipts(wb, report, limit=None, dry_run=1):
 	company = frappe.defaults.get_global_default("company") or frappe.get_all("Company", pluck="name")[0]
-	for item, tax in NEW_FEE_ITEMS.items():
-		masters._ensure_item(item, tax)
+	_set_fee_gst(report)
 	payments = _payment_setup(company, report)
 	students = {
 		code: (name, customer, program)
@@ -444,43 +467,138 @@ def _post_receipt(r, student, lines, pay, key, company):
 	payment.submit()
 
 
-# ----------------------------------------------------------------------------- balances
+# ----------------------------------------------------------------------------- enrollments
 
 
-def import_balances(wb, report):
-	"""Amounts received per student from the receipts sheet; program balance = Final Offered - received.
-
-	Hostel and transport totals are not in the workbook, so only what was received is set."""
-	received = {}
+def _receipt_dates(wb):
+	"""First receipt date per student: the admission date when the workbook has no joining date."""
+	first = {}
 	for r in _rows(wb, "Invoice Data", "Transaction Date"):
-		code = _text(r.get("Student ID"))
-		got = received.setdefault(code, [0.0, 0.0, 0.0])
-		got[0] += sum(_amount(r.get(c)) for c in PROGRAM_COLUMNS)
-		got[1] += sum(_amount(r.get(c)) for c in HOSTEL_COLUMNS)
-		got[2] += sum(_amount(r.get(c)) for c in TRANSPORT_COLUMNS)
-	for code, name, total in frappe.get_all(
-		"Student",
-		filters={"custom_student_code": ["is", "set"]},
-		fields=["custom_student_code", "name", "custom_program_total_amount"],
-		as_list=True,
-	):
-		program, hostel, transport = received.get(code, (0.0, 0.0, 0.0))
-		balance = flt(total) - program
-		if balance < -1:
-			report.note(f"{code}: paid {program} towards the program, more than its total {flt(total)}")
-			report.count("students paid more than the program total")
-		frappe.db.set_value(
-			"Student",
-			name,
-			{
-				"custom_program_total_received_amount": program,
-				"custom_program_balance_amount": balance,
-				"custom_hostel_total_received_amount": hostel,
-				"custom_vehicle_total_received_amount": transport,
-			},
-			update_modified=False,
+		code, date = _text(r.get("Student ID")), _date(r.get("Transaction Date"))
+		if date and (code not in first or date < first[code]):
+			first[code] = date
+		if _amount(r.get("Transportation Fee")):
+			first.setdefault(f"transport:{code}", True)
+	return first
+
+
+def import_enrollments(wb, report, limit=None, commit=False):
+	from future.admissions import build_course_schedule, build_hostel_schedule
+
+	programs = _program_map(wb)
+	centers = {c.lower(): c for c in frappe.get_all("Center", pluck="name")}
+	hostels = {
+		h.hostel_code: h for h in frappe.get_all("Hostel", fields=["name", "hostel_code", "hostel_type"]) if h.hostel_code
+	}
+	students = dict(
+		frappe.get_all("Student", filters={"custom_student_code": ["is", "set"]}, fields=["custom_student_code", "name"], as_list=True)
+	)
+	enrolled = {
+		(s, p)
+		for s, p in frappe.get_all("Program Enrollment", filters={"docstatus": ["<", 2]}, fields=["student", "program"], as_list=True)
+	}
+	first = _receipt_dates(wb)
+	done = 0
+	for r in _rows(wb, "Student Master", "Student Name"):
+		if limit and done >= cint(limit):
+			break
+		code = _text(r.get("ID"))
+		student, program = students.get(code), programs.get(_text(r.get("Program")))
+		if not student or not program:
+			report.note(f"{code}: {'student' if not student else 'program'} not on the site")
+			report.count("enrollments skipped")
+			continue
+		if (student, program) in enrolled:
+			report.count("enrollments already there")
+			continue
+
+		dropped = cint(r.get("Is Dropped")) == 1
+		joined = _text(r.get("Is Joined")).lower() == "joined"
+		start = (
+			_date(r.get("Joining Date"))
+			or first.get(code)
+			or frappe.db.get_value("Program", program, "custom_start_date")
+			or getdate()
 		)
-		report.count("students updated")
+		left = _date(r.get("Date of Leaving")) if dropped else None
+		offered = flt(r.get("Offered Amount")) or flt(frappe.db.get_value("Program", program, "custom_selling_price"))
+		discount_id = _text(r.get("Discount Id 1")) or _text(r.get("Discount Id 2"))
+		discount_id = discount_id if discount_id and frappe.db.exists("Discount", discount_id) else None
+		discount = max(flt(r.get("Discount Amount")) or (offered - flt(r.get("Final Offered"))), 0)
+
+		hostel = hostels.get(_text(r.get("Hostel Code")))
+		# Room type is not in the workbook yet (asked from Future); the hostel's own type or Non AC until then.
+		room = ("AC" if hostel.hostel_type == "AC" else "Non AC") if hostel else None
+		hostel_rows = build_hostel_schedule(program, room, start) if hostel else []
+		if left:
+			hostel_rows = [h for h in hostel_rows if getdate(h["due_date"]) < getdate(left)]
+
+		center = centers.get(_text(r.get("Centre")).lower())
+		location = frappe.db.get_value("Center", center, "location") if center else None
+		pe = frappe.get_doc(
+			{
+				"doctype": "Program Enrollment",
+				"student": student,
+				"program": program,
+				"academic_year": masters._academic_year(r.get("Academic Year"))
+				or frappe.db.get_value("Program", program, "custom_academic_year"),
+				"enrollment_date": start,
+				"custom_center": center,
+				"custom_location": location,
+				"custom_admission_status": "Dropped" if dropped else "Joined" if joined else "Pending",
+				"custom_has_joined": 1 if joined else 0,
+				"custom_date_of_joined": _date(r.get("Joining Date")) if joined else None,
+				"custom_offered_amount": offered,
+				"custom_discount": discount_id,
+				"custom_discount_amount": discount,
+				"custom_hosteller": "Hosteller" if hostel else "Day Scholar",
+				"custom_hostel": hostel.name if hostel else None,
+				"custom_hostel_type": room,
+				"custom_hostel_status": ("Vacated" if left else "Allotted") if hostel else None,
+				"custom_hostel_joining_date": start if hostel else None,
+				"custom_transport_required": 1 if first.get(f"transport:{code}") else 0,
+				"custom_total_transport_fee": flt(frappe.db.get_value("Program", program, "custom_transport_fee"))
+				if first.get(f"transport:{code}")
+				else 0,
+				"custom_fee_schedule": build_course_schedule(program, start, discount),
+				"custom_hostel_schedule": hostel_rows,
+			}
+		)
+		if hostel:
+			pe.append("custom_hostel_log", {"hostel": hostel.name, "log_type": "Allotted", "room_type": room, "log_date": start, "notes": "Imported"})
+			if left:
+				pe.append("custom_hostel_log", {"hostel": hostel.name, "log_type": "Vacated", "room_type": room, "log_date": left, "notes": "Imported (dropped)"})
+		pe.flags.ignore_permissions = pe.flags.ignore_mandatory = True
+		frappe.db.savepoint("enrollment")
+		try:
+			pe.insert()
+			pe.submit()
+			enrolled.add((student, program))
+			report.count("enrollments created")
+			if hostel:
+				report.count("hostellers (room type assumed until Future confirms)")
+			done += 1
+		except Exception as e:
+			frappe.db.rollback(save_point="enrollment")
+			report.count("enrollments failed")
+			report.note(f"{code}: {str(e)[:300]}")
+		if commit and done and done % COMMIT_EVERY == 0:
+			frappe.db.commit()
+
+
+def refresh_enrollments(report, commit=False):
+	"""Recompute paid amounts, balances and schedule status of every imported student's enrollment."""
+	from future.admissions import refresh_enrollment
+
+	names = frappe.db.sql_list(
+		"""select pe.name from `tabProgram Enrollment` pe join `tabStudent` s on s.name = pe.student
+		where pe.docstatus = 1 and ifnull(s.custom_student_code, '') != ''"""
+	)
+	for i, name in enumerate(names, 1):
+		refresh_enrollment(name)
+		report.count("enrollments refreshed")
+		if commit and i % COMMIT_EVERY == 0:
+			frappe.db.commit()
 
 
 # ----------------------------------------------------------------------------- entry points
@@ -503,10 +621,12 @@ def run(path, stage, dry_run=1, limit=None):
 			import_discounts(wb, report)
 		elif stage == "students":
 			import_students(wb, report, limit=limit, commit=not dry_run)
+		elif stage == "enrollments":
+			import_enrollments(wb, report, limit=limit, commit=not dry_run)
 		elif stage == "receipts":
 			import_receipts(wb, report, limit=limit, dry_run=dry_run)
 		else:
-			import_balances(wb, report)
+			refresh_enrollments(report, commit=not dry_run)
 	except Exception:
 		frappe.db.rollback()
 		raise

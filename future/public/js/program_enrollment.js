@@ -270,7 +270,7 @@ function render_360(d) {
 			${d.payments.length
 				? `<table class="fe-table"><thead><tr><th>${__("Date")}</th><th>${__("For")}</th><th class="num">${__("Amount")}</th><th>${__("Mode")}</th><th>${__("Approval")}</th></tr></thead>
 				<tbody>${d.payments.map((p) => `<tr><td>${date(p.date)}</td><td>${esc(p.category)}<span class="fe-muted"> · ${esc(p.item)}</span></td>
-				<td class="num">${money(p.amount)}</td><td>${esc(p.mode || "")}</td><td>${link("payment-approval-log", p.log)}</td></tr>`).join("")}</tbody></table>`
+				<td class="num">${money(p.amount)}</td><td>${esc(p.mode || "")}</td><td>${link(p.route || "payment-approval-log", p.log)}</td></tr>`).join("")}</tbody></table>`
 				: `<p class="fe-empty">${__("No approved payments yet")}</p>`}
 		</section>`;
 

@@ -68,6 +68,42 @@ def get_payments(student):
 						amount=amount,
 					)
 				)
+	return out + _imported_payments(student, s)
+
+
+# Items that count towards the course fee besides the program's own item.
+COURSE_ITEMS = ("Registration Fee", "Material Fee", "Orientation Fee")
+
+
+def _imported_payments(student, s):
+	"""Receipts brought in from Future's records (future.setup.import_all_data): one submitted, paid
+	Sales Invoice per receipt, with no Payment Approval Log behind it."""
+	rows = frappe.db.sql(
+		"""select si.name, si.posting_date, si.custom_receipt_no, sii.item_code, sii.amount,
+			(select pe.mode_of_payment from `tabPayment Entry Reference` per
+				join `tabPayment Entry` pe on pe.name = per.parent and pe.docstatus = 1
+				where per.reference_doctype = 'Sales Invoice' and per.reference_name = si.name limit 1) as mode
+		from `tabSales Invoice` si join `tabSales Invoice Item` sii on sii.parent = si.name
+		where si.student = %s and si.docstatus = 1 and ifnull(si.custom_import_key, '') != ''
+		order by si.posting_date, si.name, sii.idx""",
+		student,
+		as_dict=True,
+	)
+	out = []
+	for r in rows:
+		course = r.item_code in COURSE_ITEMS or frappe.db.exists("Program", r.item_code)
+		out.append(
+			frappe._dict(
+				log=r.name,
+				route="sales-invoice",
+				date=r.posting_date,
+				mode=r.mode,
+				reference=r.custom_receipt_no,
+				item=r.item_code,
+				category=_classify(r.item_code, "course" if course else "other", s),
+				amount=flt(r.amount),
+			)
+		)
 	return out
 
 

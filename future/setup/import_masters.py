@@ -15,9 +15,9 @@ GENERIC_ITEMS = {
 	"Registration Fee": "GST 18%",
 	"Material Fee": "GST 18%",
 	"Orientation Fee": "GST 18%",
-	# Same treatment as the existing "Hostel Fee" item; confirm with the accountant.
-	"Transportation Fee": "Non-GST",
-	"Tablet Fee": "Non-GST",
+	# GST confirmed by Future on 2026-11-24 (hostel stays Non-GST).
+	"Transportation Fee": "GST 18%",
+	"Tablet Fee": "GST 18%",
 	"Caution Deposit": "Non-GST",
 }
 
