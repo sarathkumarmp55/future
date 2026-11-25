@@ -39,3 +39,10 @@ def after_migrate():
 	execute()
 	education_home.ensure()
 	copy_lead_categories()
+	ensure_roles()
+
+
+def ensure_roles():
+	"""Roles the app's permission rules refer to (see future.permissions.visibility)."""
+	if not frappe.db.exists("Role", "Lead Uploader"):
+		frappe.get_doc({"doctype": "Role", "role_name": "Lead Uploader", "desk_access": 1}).insert(ignore_permissions=True)

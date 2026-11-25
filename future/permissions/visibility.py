@@ -3,10 +3,12 @@
 Salespeople compete with each other, so a record is private to the people
 working it and to their line managers:
 
-- Administrator, System Manager, Sales Manager ........ everything
+- Administrator and the roles in Lead Settings > "Roles that see all leads"
+  (System Manager, Sales Manager by default) ........... everything
 - Lead Manager (Team Heirarchy) ....................... own + their team leads + those team leads' users
 - Team Lead (Team Heirarchy) .......................... own + their active team users
 - Everyone else (Lead User) ........................... only records assigned to them
+- Lead uploader role (Lead Settings) .................. also, read-only, the leads they uploaded
 
 "Own" means assigned to the user (`_assign`), or set as the record's
 Team Lead / Lead Manager, or created by them while nobody is assigned. A creator
@@ -33,11 +35,34 @@ LEAD_PEOPLE_FIELDS = ("custom_team_leader", "custom_lead_manager_name")
 OPPORTUNITY_PEOPLE_FIELDS = ("opportunity_owner",)
 
 
+UPLOADER_ROLE = "Lead Uploader"
+READ_ONLY = ("read", "print", "email", "report", "export")
+
+
+def _lead_setting(field):
+	cache = getattr(frappe.local, "future_lead_settings", None)
+	if cache is None:
+		cache = frappe.local.future_lead_settings = {}
+	if field not in cache:
+		cache[field] = frappe.db.get_single_value("Lead Settings", field)
+	return cache[field]
+
+
+def full_access_roles():
+	roles = {r.strip() for r in (_lead_setting("full_access_roles") or "").splitlines() if r.strip()}
+	return roles or UNRESTRICTED_ROLES
+
+
+def is_uploader(user=None):
+	role = _lead_setting("uploader_role") or UPLOADER_ROLE
+	return role in frappe.get_roles(user or frappe.session.user)
+
+
 def is_unrestricted(user=None):
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return True
-	return bool(UNRESTRICTED_ROLES & set(frappe.get_roles(user)))
+	return bool(full_access_roles() & set(frappe.get_roles(user)))
 
 
 def _team_of(head, role):
@@ -130,12 +155,20 @@ def can_see(doc, users, people_fields=(), owner_field=None):
 
 
 def lead_query_conditions(user=None):
-	return lead_condition("`tabLead`", user) or ""
+	user = user or frappe.session.user
+	condition = lead_condition("`tabLead`", user)
+	if condition and is_uploader(user):
+		# uploaders keep their own uploads in lists and reports; editing still follows the hierarchy
+		condition = f"({condition} or `tabLead`.`owner` = {frappe.db.escape(user)})"
+	return condition or ""
 
 
 def lead_has_permission(doc, ptype=None, user=None, debug=False):
 	# frappe treats a falsy return as "deny", so always answer True/False explicitly.
-	return can_see(doc, get_visible_users(user), LEAD_PEOPLE_FIELDS, LEAD_OWNER_FIELD)
+	user = user or frappe.session.user
+	if can_see(doc, get_visible_users(user), LEAD_PEOPLE_FIELDS, LEAD_OWNER_FIELD):
+		return True
+	return bool((ptype or "read") in READ_ONLY and doc.get("owner") == user and is_uploader(user))
 
 
 def opportunity_query_conditions(user=None):

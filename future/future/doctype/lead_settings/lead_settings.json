@@ -5,6 +5,10 @@
  "engine": "InnoDB",
  "issingle": 1,
  "field_order": [
+  "section_visibility",
+  "full_access_roles",
+  "column_break_visibility",
+  "uploader_role",
   "section_sla",
   "sla_alerts",
   "first_call_hours",
@@ -20,6 +24,30 @@
   "followup_email"
  ],
  "fields": [
+  {
+   "fieldname": "section_visibility",
+   "fieldtype": "Section Break",
+   "label": "Who sees which leads"
+  },
+  {
+   "fieldname": "full_access_roles",
+   "fieldtype": "Small Text",
+   "label": "Roles that see all leads",
+   "default": "System Manager\nSales Manager",
+   "description": "One role per line. Only management should have these roles. Everyone else sees leads through the Team Heirarchy: a Lead Manager sees their team leads' and executives' leads, a Team Lead sees their executives', an executive sees only leads assigned to them."
+  },
+  {
+   "fieldname": "column_break_visibility",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "uploader_role",
+   "fieldtype": "Link",
+   "options": "Role",
+   "label": "Lead uploader role",
+   "default": "Lead Uploader",
+   "description": "People with this role (e.g. marketing) keep read-only access to the leads they uploaded after they are assigned, and see their own figures in the Lead Conversion by Uploader report."
+  },
   {
    "fieldname": "section_sla",
    "fieldtype": "Section Break",
@@ -99,7 +127,7 @@
    "description": "Each salesperson, every day at 7:30."
   }
  ],
- "modified": "2026-11-14 18:00:00.000000",
+ "modified": "2026-11-25 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "future",
  "name": "Lead Settings",
